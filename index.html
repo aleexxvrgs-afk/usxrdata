@@ -617,16 +617,28 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   }
   function openAdmin() {
     openSheet($('#ovAdmin'));
-    if (admin.unlocked || !admin.db) { admReady(); return; }
+    // Si ya está desbloqueado o no hay DB, entra directo
+    if (admin.unlocked) { admReady(); return; }
+    // Verificar si el usuario logueado es admin
+    if (auth.user && auth.user.mail) {
+      supaFetch('admins?email=eq.' + encodeURIComponent(auth.user.mail) + '&select=email')
+        .then(function (rows) {
+          if (rows && rows.length > 0) {
+            admin.unlocked = true; admReady();
+          } else {
+            $('#admMain').hidden = true; $('#admGate').hidden = false;
+            $('#gUser').value = ''; $('#gPass').value = ''; $('#gMsg').textContent = '';
+            $('#gNote').textContent = 'No tienes acceso al panel de administración.';
+            $('#gGo').hidden = true;
+          }
+        })
+        .catch(function () { admReady(); });
+      return;
+    }
     $('#admMain').hidden = true; $('#admGate').hidden = false;
-    $('#gUser').value = ''; $('#gPass').value = ''; $('#gPass2').value = ''; $('#gMsg').textContent = '';
-    $('#gNote').textContent = 'Comprobando…'; $('#gGo').disabled = true;
-    admin.db.doc('adminauth/cred').get().then(function (s) {
-      admin.cred = s.exists ? s.data() : null;
-      $('#gNote').textContent = admin.cred ? 'Ingresa tus credenciales de administrador.' : 'Primer acceso: crea tu usuario y contraseña de administrador.';
-      $('#gPass2').hidden = !!admin.cred; $('#gPass').autocomplete = admin.cred ? 'current-password' : 'new-password';
-      $('#gGo').textContent = admin.cred ? 'Entrar al panel' : 'Crear acceso'; $('#gGo').disabled = false;
-    }).catch(function () { $('#gNote').textContent = 'No se pudo comprobar el acceso. Cierra e intenta de nuevo.'; });
+    $('#gUser').value = ''; $('#gPass').value = ''; $('#gMsg').textContent = '';
+    $('#gNote').textContent = 'Debes iniciar sesión con tu cuenta de administrador.';
+    $('#gGo').hidden = true;
   }
   function gErr(t) { $('#gMsg').textContent = t; $('#gMsg').className = 'auth-msg err'; }
   function admGate() {
@@ -775,10 +787,22 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     var m = $('#userMenu');
     if (!m.hidden) { m.hidden = true; return; }
     var u = auth.user;
-    m.innerHTML = '<div class="pop-head"><b>' + esc(u.name) + '</b><span>' + esc(u.mail) + '</span></div>' +
-      '<a href="' + waLink('Hola USXR Store, necesito ayuda.') + '" target="_blank" rel="noopener">💬 Soporte por WhatsApp</a>' +
-      '<button type="button" data-um="logout">🚪 Cerrar sesión</button>';
-    m.hidden = false;
+    // Verificar si es admin
+    supaFetch('admins?email=eq.' + encodeURIComponent(u.mail) + '&select=email')
+      .then(function (rows) {
+        var isAdmin = rows && rows.length > 0;
+        m.innerHTML = '<div class="pop-head"><b>' + esc(u.name) + '</b><span>' + esc(u.mail) + '</span></div>' +
+          (isAdmin ? '<button type="button" data-um="admin">⚙️ Panel Admin</button>' : '') +
+          '<a href="' + waLink('Hola USXR Store, necesito ayuda.') + '" target="_blank" rel="noopener">💬 Soporte por WhatsApp</a>' +
+          '<button type="button" data-um="logout">🚪 Cerrar sesión</button>';
+        m.hidden = false;
+      })
+      .catch(function () {
+        m.innerHTML = '<div class="pop-head"><b>' + esc(u.name) + '</b><span>' + esc(u.mail) + '</span></div>' +
+          '<a href="' + waLink('Hola USXR Store, necesito ayuda.') + '" target="_blank" rel="noopener">💬 Soporte por WhatsApp</a>' +
+          '<button type="button" data-um="logout">🚪 Cerrar sesión</button>';
+        m.hidden = false;
+      });
   }
   function setMode(m) {
     auth.mode = m; var reg = m === 'register';
