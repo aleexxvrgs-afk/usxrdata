@@ -425,17 +425,6 @@ select.fld{cursor:pointer}
   </div>
 </div>
 
-<!-- CONFIRM DELETE -->
-<div class="confirm-overlay" id="confirmOverlay" hidden>
-  <div class="confirm-box">
-    <h3>¿Eliminar producto?</h3>
-    <p id="confirmMsg">Esta acción no se puede deshacer.</p>
-    <div class="btns">
-      <button class="btn btn-ghost" id="btnCancelDel">Cancelar</button>
-      <button class="btn btn-danger" id="btnConfirmDel">Eliminar</button>
-    </div>
-  </div>
-</div>
 
 <script>
 (function () {
@@ -575,7 +564,14 @@ select.fld{cursor:pointer}
     var editBtn = e.target.closest('[data-edit]');
     var delBtn = e.target.closest('[data-del]');
     if (editBtn) openModal(editBtn.dataset.edit);
-    if (delBtn) openConfirmDel(delBtn.dataset.del);
+    if (delBtn) {
+      var p = products.find(function (x) { return x.id === delBtn.dataset.del; });
+      if (window.confirm('¿Eliminar "' + (p ? p.name : '') + '"?\nEsta acción no se puede deshacer.')) {
+        sbFetch('products?id=eq.' + encodeURIComponent(delBtn.dataset.del), { method: 'DELETE' })
+          .then(function () { toast('🗑 Producto eliminado'); loadProducts(); })
+          .catch(function () { toast('Error al eliminar', true); });
+      }
+    }
   });
 
   // --- MODAL ---
@@ -760,36 +756,6 @@ select.fld{cursor:pointer}
 
   $('btnNewProduct').addEventListener('click', function () { openModal(null); });
 
-  // --- DELETE ---
-  function openConfirmDel(id) {
-    pendingDeleteId = id;
-    var p = products.find(function (x) { return x.id === id; });
-    $('confirmMsg').textContent = '¿Eliminar "' + (p ? p.name : id) + '"? Esta acción no se puede deshacer.';
-    // Bloquear todo lo de abajo
-    $('modalOverlay').style.pointerEvents = 'none';
-    $('adminPanel').style.pointerEvents = 'none';
-    $('confirmOverlay').style.pointerEvents = 'auto';
-    $('confirmOverlay').hidden = false;
-  }
-
-  function closeConfirm() {
-    $('confirmOverlay').hidden = true;
-    $('modalOverlay').style.pointerEvents = '';
-    $('adminPanel').style.pointerEvents = '';
-    pendingDeleteId = null;
-  }
-
-  $('btnCancelDel').addEventListener('click', closeConfirm);
-
-  $('btnConfirmDel').addEventListener('click', function () {
-    if (!pendingDeleteId) return;
-    var idToDel = pendingDeleteId;
-    closeConfirm();
-    closeModal();
-    sbFetch('products?id=eq.' + encodeURIComponent(idToDel), { method: 'DELETE' })
-      .then(function () { toast('🗑 Producto eliminado'); loadProducts(); })
-      .catch(function () { toast('Error al eliminar', true); });
-  });
 
   // --- FLASH SALE ---
   function loadFlashSelects() {
