@@ -593,8 +593,6 @@ select.fld{cursor:pointer}
   }
 
   function closeModal() { $('modalOverlay').hidden = true; }
-  $('btnCloseModal').onclick = closeModal;
-  $('btnCancelModal').onclick = closeModal;
   $('modalOverlay').addEventListener('click', function (e) { 
     if (e.target === $('modalOverlay')) closeModal(); 
   });
