@@ -764,6 +764,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   var auth = { mode: 'login', user: null };
   function authMsg(t, err) { var m = $('#authMsg'); m.textContent = t; m.className = 'auth-msg' + (err ? ' err' : ''); }
   function toast(t) { var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 2600); }
+  function logOut() { _supa.auth.signOut().then(function () { setUser(null); toast('Sesión cerrada'); }); }
   function setUser(u) {
     auth.user = u;
     var b = $('#btnLogin'); $('#userMenu').hidden = true;
