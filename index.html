@@ -1090,13 +1090,16 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     var t = e.target.closest('button, a, .overlay'); if (!t) return;
     if (t.dataset.um === 'logout') { logOut(); return; }
     if (t.dataset.um === 'admin') { $('#userMenu').hidden = true; openAdmin(); return; }
-    // Verificar sesión antes de comprar
-    if (t.dataset.bp || t.dataset.sp || t.dataset.yp || t.dataset.bn) {
+    // Verificar sesión antes de comprar - TODOS los métodos de pago
+    if (t.dataset.bp || t.dataset.sp || t.dataset.yp || t.dataset.bn || t.dataset.plans) {
       if (!auth.user) {
         e.preventDefault();
+        closeAll(); // cerrar modal de pago si está abierto
         setMode('login');
         openSheet($('#ovLogin'));
-        setTimeout(function() { authMsg('⚠️ Debes iniciar sesión para comprar.'); }, 100);
+        setTimeout(function() { 
+          authMsg('⚠️ Necesitas registrarte para comprar. Crea tu cuenta o inicia sesión.'); 
+        }, 100);
         return;
       }
     }
