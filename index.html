@@ -153,6 +153,7 @@ button { cursor: pointer; }
   padding: 3px 16px; font: 700 14px var(--font-mono); letter-spacing: .12em; white-space: nowrap;
 }
 .stock { position: absolute; top: 10px; right: 10px; z-index: 1; background: var(--ok-bg); color: var(--ok-fg); border-radius: 999px; padding: 3px 10px; font: 700 11px var(--font-mono); letter-spacing: .06em; }
+.stock.out { background: rgba(232,64,47,.15); color: #e8402f; }
 .art {
   aspect-ratio: 1 / 1; max-width: 100%; border-radius: 18px 18px 0 0; border-bottom: 2.5px solid var(--ink);
   display: grid; place-items: center; overflow: hidden;
@@ -540,15 +541,21 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       var pls = eff(p);
       var min = Math.min.apply(null, pls.map(function (x) { return x[1]; }));
       var flash = flashOn() && p.id === FLASH.productId;
-      return '<article class="card' + (p.hot ? ' is-hot' : '') + '">' +
+      var sinStock = p.stock <= 0;
+      return '<article class="card' + (p.hot ? ' is-hot' : '') + (sinStock ? ' out-of-stock' : '') + '">' +
         (p.hot ? '<span class="hot-tag">🔥 HOT!</span>' : '') +
-        '<span class="stock">' + p.stock + ' DISP.</span>' +
+        (sinStock
+          ? '<span class="stock out">❌ Sin stock</span>'
+          : '<span class="stock">' + p.stock + ' DISP.</span>') +
         '<div class="art" style="background-color:' + p.tile + '">' + (p.img ? '<img src="' + p.img + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '<b>' + p.glyph + '</b>') + '</div>' +
         '<div class="body"><h3>' + p.name + '</h3>' + (p.desc ? '<p class="desc">' + esc(p.desc) + '</p>' : '') +
         '<div class="plans">' + p.plans.length + ' planes disponibles</div>' +
-        '<div class="offer">' + (flash ? '⏰ Oferta: <span class="left"></span>' : '') + '</div>' +
+        '<div class="offer">' + (flash && !sinStock ? '⏰ Oferta: <span class="left"></span>' : '') + '</div>' +
         '<div class="foot"><div><div class="since">DESDE</div><div class="price">' + fmt(min) + '</div><div class="usdt">' + fmtU(min) + '</div></div>' +
-        '<button type="button" class="btn accent" data-plans="' + esc(p.id) + '">Comprar</button></div></div></article>';
+        (sinStock
+          ? '<button type="button" class="btn" disabled style="background:var(--surface);color:var(--muted);border:2.5px solid var(--ink);opacity:.6;cursor:not-allowed">Sin stock</button>'
+          : '<button type="button" class="btn accent" data-plans="' + esc(p.id) + '">Comprar</button>') +
+        '</div></div></article>';
     }).join('');
     tick();
   }
