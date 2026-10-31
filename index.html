@@ -1135,7 +1135,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   }
 
   function loadFromSupabase() {
-    supaFetch('products?select=*&order=created_at.asc')
+    supaFetch('products?select=*&order=sort_order.asc,created_at.asc')
       .then(function (rows) {
         if (!rows || !rows.length) return;
         PRODUCTS = rows.map(function (r) {

@@ -70,8 +70,8 @@ button{cursor:pointer}
 
 /* Table */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-.table-head{display:grid;grid-template-columns:48px 2fr 1fr 1fr 80px 100px 120px;padding:10px 16px;border-bottom:1px solid var(--border);font:700 11px/1 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;gap:12px;align-items:center}
-.table-row{display:grid;grid-template-columns:48px 2fr 1fr 1fr 80px 100px 120px;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px;align-items:center;transition:background .12s}
+.table-head{display:grid;grid-template-columns:48px 2fr 1fr 1fr 80px 100px 60px 120px;padding:10px 16px;border-bottom:1px solid var(--border);font:700 11px/1 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;gap:12px;align-items:center}
+.table-row{display:grid;grid-template-columns:48px 2fr 1fr 1fr 80px 100px 60px 120px;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px;align-items:center;transition:background .12s}
 .table-row:last-child{border-bottom:0}
 .table-row:hover{background:var(--surface2)}
 @media(max-width:900px){
@@ -274,6 +274,7 @@ select.fld{cursor:pointer}
             <div class="h-plans">Planes</div>
             <div>Stock</div>
             <div>Estado</div>
+            <div>Orden</div>
             <div>Acciones</div>
           </div>
           <div id="productsTable"></div>
@@ -719,7 +720,7 @@ select.fld{cursor:pointer}
 
   // --- LOAD PRODUCTS ---
   function loadProducts() {
-    sbFetch('products?select=*&order=created_at.asc')
+    sbFetch('products?select=*&order=sort_order.asc,created_at.asc')
       .then(function (rows) {
         products = rows || [];
         renderStats();
@@ -744,11 +745,13 @@ select.fld{cursor:pointer}
       el.innerHTML = '<div class="empty"><div class="ei">📦</div><p>No hay productos. ¡Crea el primero!</p></div>';
       return;
     }
-    el.innerHTML = rows.map(function (p) {
+    el.innerHTML = rows.map(function (p, idx) {
       var plans = Array.isArray(p.plans) ? p.plans : [];
       var thumb = p.image_url
         ? '<img src="' + esc(p.image_url) + '" alt="">'
         : '<span style="font-size:16px;font-weight:700">' + esc(p.emoji || '?') + '</span>';
+      var isFirst = idx === 0;
+      var isLast = idx === rows.length - 1;
       return '<div class="table-row">' +
         '<div class="prod-thumb" style="background:' + esc(p.color || '#333') + '">' + thumb + '</div>' +
         '<div><div class="prod-name">' + (p.is_hot ? '<span class="hot-dot"></span>' : '') + esc(p.name) + '</div>' +
@@ -757,6 +760,10 @@ select.fld{cursor:pointer}
         '<div class="c-plans" style="color:var(--muted);font-size:13px">' + plans.length + ' plan' + (plans.length !== 1 ? 'es' : '') + '</div>' +
         '<div class="stock-val">' + (p.stock || 0) + '</div>' +
         '<div>' + (Number(p.stock) > 0 ? '<span class="tag" style="background:rgba(34,197,94,.1);color:#4ade80;border-color:rgba(34,197,94,.2)">En stock</span>' : '<span class="tag" style="background:rgba(232,64,47,.1);color:#f87171;border-color:rgba(232,64,47,.2)">Sin stock</span>') + '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:3px">' +
+        '<button class="btn btn-ghost btn-sm" style="height:24px;padding:0 8px;font-size:12px" data-move-up="' + esc(p.id) + '"' + (isFirst ? ' disabled style="opacity:.3;height:24px;padding:0 8px"' : '') + '>↑</button>' +
+        '<button class="btn btn-ghost btn-sm" style="height:24px;padding:0 8px;font-size:12px" data-move-down="' + esc(p.id) + '"' + (isLast ? ' disabled style="opacity:.3;height:24px;padding:0 8px"' : '') + '>↓</button>' +
+        '</div>' +
         '<div class="actions">' +
         '<button class="btn btn-ghost btn-sm" data-edit="' + esc(p.id) + '">✏️ Editar</button>' +
         '<button class="btn btn-sm" style="background:rgba(232,64,47,.15);color:#f87171;border:1px solid rgba(232,64,47,.3)" data-del="' + esc(p.id) + '">🗑</button>' +
@@ -780,6 +787,9 @@ select.fld{cursor:pointer}
   $('productsTable').addEventListener('click', function (e) {
     var editBtn = e.target.closest('[data-edit]');
     var delBtn = e.target.closest('[data-del]');
+    var upBtn = e.target.closest('[data-move-up]');
+    var downBtn = e.target.closest('[data-move-down]');
+    
     if (editBtn) openModal(editBtn.dataset.edit);
     if (delBtn) {
       var p = products.find(function (x) { return x.id === delBtn.dataset.del; });
@@ -788,6 +798,29 @@ select.fld{cursor:pointer}
           .then(function () { toast('🗑 Producto eliminado'); loadProducts(); })
           .catch(function () { toast('Error al eliminar', true); });
       }
+    }
+    if (upBtn || downBtn) {
+      var id = upBtn ? upBtn.dataset.moveUp : downBtn.dataset.moveDown;
+      var idx = products.findIndex(function(x) { return x.id === id; });
+      if (idx === -1) return;
+      var newIdx = upBtn ? idx - 1 : idx + 1;
+      if (newIdx < 0 || newIdx >= products.length) return;
+      // Intercambiar posiciones
+      var temp = products[idx];
+      products[idx] = products[newIdx];
+      products[newIdx] = temp;
+      // Guardar nuevo orden en Supabase (campo sort_order)
+      var updates = products.map(function(p, i) {
+        return sbFetch('products?id=eq.' + encodeURIComponent(p.id), {
+          method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ sort_order: i })
+        });
+      });
+      Promise.all(updates).catch(function() {});
+      renderStats();
+      renderTable(products);
+      toast('✅ Orden actualizado');
     }
   });
 
