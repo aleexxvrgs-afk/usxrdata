@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>USXR Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" defer></script>
+<script>
+  window.onTurnstileLoad = function() { window._turnstileReady = true; };
+</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -507,18 +510,25 @@ select.fld{cursor:pointer}
     .then(function(cfg) {
       SUPA_URL = cfg.supabaseUrl;
       SUPA_KEY = cfg.supabaseKey;
-      // Renderizar Turnstile en admin con sitekey directa
+      // Renderizar Turnstile en admin esperando a que el script esté listo
       if (cfg.turnstileSiteKey) {
-        var tw = document.getElementById('adminTurnstile');
-        if (tw && tw.children.length === 0 && window.turnstile) {
-          window.turnstile.render(tw, {
-            sitekey: '0x4AAAAAAAAFuLYxob1DYuf72y',
-            theme: 'dark',
-            callback: function(token) { 
-              if (window.onTurnstileSuccess) window.onTurnstileSuccess(token); 
+        var renderAdmin = function() {
+          var tw = document.getElementById('adminTurnstile');
+          if (tw && tw.children.length === 0) {
+            if (window.turnstile) {
+              window.turnstile.render(tw, {
+                sitekey: '0x4AAAAAAAAFuLYxob1DYuf72y',
+                theme: 'dark',
+                callback: function(token) { 
+                  if (window.onTurnstileSuccess) window.onTurnstileSuccess(token); 
+                }
+              });
+            } else {
+              setTimeout(renderAdmin, 100);
             }
-          });
-        }
+          }
+        };
+        renderAdmin();
       }
       _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { detectSessionInUrl: true, persistSession: true } });
       initAdmin();
