@@ -416,8 +416,8 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       <input class="fld" id="fPass" type="password" placeholder="Contraseña" aria-label="Contraseña" autocomplete="current-password">
       <button type="button" class="link" id="authForgot">¿Olvidaste tu contraseña?</button>
       <div class="auth-msg" id="authMsg" role="status"></div>
-      <!-- Cloudflare Turnstile - sitekey se inyecta dinámicamente desde /api/config -->
-      <div class="cf-turnstile" id="turnstileWidget" data-theme="auto" style="margin:12px 0"></div>
+      <!-- Cloudflare Turnstile - se renderiza cuando se abre el modal -->
+      <div id="turnstileWidget" style="margin:12px 0"></div>
       <button type="submit" class="btn accent block" id="authSubmit" style="margin-top:8px">Entrar</button>
     </form>
     <div class="auth-sw" id="authSw"></div>
@@ -450,20 +450,9 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     .then(function(cfg) {
       SUPA_URL = cfg.supabaseUrl;
       SUPA_KEY = cfg.supabaseKey;
-      // Renderizar Turnstile manualmente con la sitekey de Vercel
+      // Guardar sitekey para usar cuando se abra el modal
       if (cfg.turnstileSiteKey) {
-        window._turnstileSiteKey = cfg.turnstileSiteKey; // guardar para usar al abrir modal
-        var tw = document.getElementById('turnstileWidget');
-        if (tw) {
-          if (window.turnstile) {
-            window.turnstile.render('#turnstileWidget', {
-              sitekey: cfg.turnstileSiteKey,
-              theme: 'auto'
-            });
-          } else {
-            tw.setAttribute('data-sitekey', cfg.turnstileSiteKey);
-          }
-        }
+        window._turnstileSiteKey = cfg.turnstileSiteKey;
       }
       _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
         auth: { detectSessionInUrl: true, persistSession: true }
@@ -586,13 +575,16 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   function openSheet(el) { 
     el.hidden = false;
     // Renderizar Turnstile cuando se abre el modal de login
-    if (el.id === 'ovLogin' && window._turnstileSiteKey && window.turnstile) {
+    if (el.id === 'ovLogin' && window._turnstileSiteKey) {
       var tw = document.getElementById('turnstileWidget');
-      if (tw && !tw.querySelector('iframe')) {
-        window.turnstile.render('#turnstileWidget', {
-          sitekey: window._turnstileSiteKey,
-          theme: 'auto'
-        });
+      if (tw) {
+        tw.innerHTML = ''; // limpiar render anterior
+        if (window.turnstile) {
+          window.turnstile.render(tw, {
+            sitekey: window._turnstileSiteKey,
+            theme: 'auto'
+          });
+        }
       }
     }
   }
