@@ -3,6 +3,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Bricolage+Grotesque:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
 /* Layout: storefront neo-brutalista en una columna fluida: cabecera fija, oferta relámpago, catálogo en tarjetas con sombra dura. */
 :root {
@@ -415,6 +416,8 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       <input class="fld" id="fPass" type="password" placeholder="Contraseña" aria-label="Contraseña" autocomplete="current-password">
       <button type="button" class="link" id="authForgot">¿Olvidaste tu contraseña?</button>
       <div class="auth-msg" id="authMsg" role="status"></div>
+      <!-- Cloudflare Turnstile -->
+      <div class="cf-turnstile" id="turnstileWidget" data-sitekey="0x4AAAAAAAAFuLYxob1DYuf72y" data-theme="auto" style="margin:12px 0"></div>
       <button type="submit" class="btn accent block" id="authSubmit" style="margin-top:8px">Entrar</button>
     </form>
     <div class="auth-sw" id="authSw"></div>
@@ -803,6 +806,14 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   // Handler del formulario de autenticación
   $('#authForm').addEventListener('submit', function(e) {
     e.preventDefault();
+    
+    // Verificar Turnstile
+    var turnstileToken = document.querySelector('[name="cf-turnstile-response"]');
+    if (!turnstileToken || !turnstileToken.value) {
+      authMsg('Por favor completa la verificación de seguridad', true);
+      return;
+    }
+    
     var email = $('#fMail').value.trim();
     var password = $('#fPass').value;
     var name = $('#fName').value.trim();
@@ -827,6 +838,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         $('#authSubmit').disabled = false;
         if (res.error) {
           authMsg('Error: ' + res.error.message, true);
+          if (window.turnstile) window.turnstile.reset('#turnstileWidget');
         } else {
           authMsg('✅ Cuenta creada. Revisa tu email para confirmar.');
           setTimeout(function() { closeAll(); }, 2000);
@@ -834,6 +846,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       }).catch(function(err) {
         $('#authSubmit').disabled = false;
         authMsg('Error al crear cuenta', true);
+        if (window.turnstile) window.turnstile.reset('#turnstileWidget');
       });
     } else {
       // Login
