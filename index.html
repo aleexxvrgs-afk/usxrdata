@@ -911,11 +911,14 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
 
   // Carga configuración desde Supabase settings
   function loadStoreSettings() {
-    supaFetch('settings?key=eq.store&select=value')
+    supaFetch('settings?select=key,value')
       .then(function (rows) {
         if (!rows || !rows.length) return;
-        var s;
-        try { s = JSON.parse(rows[0].value); } catch (e) { return; }
+        var map = {};
+        rows.forEach(function(r) { try { map[r.key] = JSON.parse(r.value); } catch(e) { map[r.key] = r.value; } });
+        
+        // Cargar configuración de tienda
+        var s = map.store || {};
         if (s.whatsapp) WA_NUMBER = s.whatsapp;
         if (s.telegram) TG_USER = s.telegram;
         if (s.tc) TC = parseFloat(s.tc) || TC;
@@ -925,12 +928,23 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         if (s.binance_id) BINANCE.id = s.binance_id;
         if (s.binance_name) BINANCE.name = s.binance_name;
         if (s.binance_qr) BINANCE.qr = s.binance_qr;
+        
+        // Cargar flash sale desde Supabase
+        var f = map.flash;
+        if (f && f.productId && f.end && f.end > Date.now()) {
+          FLASH.productId = f.productId;
+          FLASH.plan = f.plan || '';
+          FLASH.price = parseFloat(f.price) || FLASH.price;
+          FLASH.regular = parseFloat(f.regular) || FLASH.regular;
+          FLASH.end = f.end;
+        }
+        
         // Actualizar links de WhatsApp en la página
         var waGroup = document.getElementById('waGroup');
         if (waGroup) waGroup.href = 'https://chat.whatsapp.com/';
         var waSupport = document.getElementById('waSupport');
         if (waSupport) waSupport.href = waLink('Hola USXR Store, necesito soporte.');
-        // Re-renderizar por si cambió el tipo de cambio
+        // Re-renderizar
         renderGrid(); renderFlash();
       })
       .catch(function () {});
