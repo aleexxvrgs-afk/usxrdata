@@ -416,8 +416,8 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       <input class="fld" id="fPass" type="password" placeholder="Contraseña" aria-label="Contraseña" autocomplete="current-password">
       <button type="button" class="link" id="authForgot">¿Olvidaste tu contraseña?</button>
       <div class="auth-msg" id="authMsg" role="status"></div>
-      <!-- Cloudflare Turnstile -->
-      <div class="cf-turnstile" id="turnstileWidget" data-sitekey="0x4AAAAAAAAFuLYxob1DYuf72y" data-theme="auto" style="margin:12px 0"></div>
+      <!-- Cloudflare Turnstile - sitekey se inyecta dinámicamente desde /api/config -->
+      <div class="cf-turnstile" id="turnstileWidget" data-theme="auto" style="margin:12px 0"></div>
       <button type="submit" class="btn accent block" id="authSubmit" style="margin-top:8px">Entrar</button>
     </form>
     <div class="auth-sw" id="authSw"></div>
@@ -881,10 +881,9 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     }
   });
 
-  // Pon aquí el número de WhatsApp de la tienda con código de país y sin signos (ej. '51999999999').
-  var WA_NUMBER = '51922055086';
-  // Usuario de Telegram de la tienda, sin @ (ej. 'usxrdata').
-  var TG_USER = 'usxr_py';
+  // WA_NUMBER y TG_USER se cargan desde Supabase settings al inicio
+  var WA_NUMBER = '';
+  var TG_USER = '';
   function waLink(text) { return 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(text); }
 
   // Carga configuración desde Supabase settings
