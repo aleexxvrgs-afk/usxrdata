@@ -408,6 +408,9 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="sheet-head"><h2 id="authTitle">Entrar</h2><button class="x" data-close aria-label="Cerrar">✕</button></div>
     <button type="button" class="btn light block" id="btnGoogle"><span style="font:800 20px var(--font-body);color:#4285F4">G</span> Continuar con Google</button>
+    <div style="background:var(--ok-bg);color:var(--ok-fg);padding:12px;border-radius:14px;font-size:13px;margin-top:12px;border:2.5px solid var(--ink)">
+      ⚠️ <strong>Nota:</strong> Solo el administrador (aleexxvrgs@gmail.com) puede iniciar sesión.
+    </div>
     <div class="or">O CON TU CORREO</div>
     <form id="authForm" novalidate>
       <input class="fld" id="fName" type="text" placeholder="Tu nombre" aria-label="Nombre" autocomplete="name" hidden>
@@ -449,6 +452,20 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   _supa.auth.onAuthStateChange(function (event, session) {
     if (session && session.user) {
       var u = session.user;
+      var email = u.email;
+      
+      // RESTRICCIÓN: Solo permitir aleexxvrgs@gmail.com
+      var ALLOWED_EMAIL = 'aleexxvrgs@gmail.com';
+      
+      if (email !== ALLOWED_EMAIL) {
+        // Rechazar cualquier otro correo
+        _supa.auth.signOut();
+        setUser(null);
+        toast('❌ Acceso denegado. Solo el administrador puede iniciar sesión.');
+        return;
+      }
+      
+      // Permitir acceso solo al correo autorizado
       setUser({
         name: (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || u.email.split('@')[0],
         mail: u.email
@@ -981,6 +998,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     else if (t.dataset.delp !== undefined) admDel(t);
     else if (t.dataset.mode) setMode(t.dataset.mode);
     else if (t.id === 'btnGoogle') {
+      // Advertencia antes de iniciar sesión con Google
       _supa.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
     }
     else if (t.id === 'authForgot') authMsg('Para recuperar tu contraseña, escríbenos por Soporte.');
