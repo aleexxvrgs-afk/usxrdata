@@ -304,6 +304,14 @@ select.fld{cursor:pointer}
             <div class="field">
               <label>Fecha y hora de fin (hora Lima)</label>
               <input class="fld" type="datetime-local" id="flashEnd">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                <button type="button" class="btn btn-ghost btn-sm" data-add-hours="1">+1h</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-add-hours="6">+6h</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-add-hours="12">+12h</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-add-hours="24">+1 día</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-add-hours="72">+3 días</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-add-hours="168">+7 días</button>
+              </div>
             </div>
             <button class="btn btn-primary" id="btnSaveFlash">Guardar flash sale</button>
           </div>
@@ -986,6 +994,14 @@ select.fld{cursor:pointer}
       return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>';
     }).join('');
     updateFlashPlans();
+    
+    // Poner fecha actual por defecto si no hay valor
+    if (!$('flashEnd').value) {
+      var now = new Date();
+      var pad = function(n) { return String(n).padStart(2,'0'); };
+      $('flashEnd').value = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+    }
+    
     // Pre-cargar valores guardados del flash sale
     sbFetch('settings?key=eq.flash&select=value').then(function(rows) {
       if (!rows || !rows[0]) return;
@@ -1008,6 +1024,17 @@ select.fld{cursor:pointer}
       } catch(e) {}
     }).catch(function() {});
   }
+
+  // Botones de duración rápida para flash sale
+  document.querySelectorAll('[data-add-hours]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var hours = parseInt(this.dataset.addHours);
+      var base = $('flashEnd').value ? new Date($('flashEnd').value) : new Date();
+      var newDate = new Date(base.getTime() + hours * 3600000);
+      var pad = function(n) { return String(n).padStart(2,'0'); };
+      $('flashEnd').value = newDate.getFullYear() + '-' + pad(newDate.getMonth()+1) + '-' + pad(newDate.getDate()) + 'T' + pad(newDate.getHours()) + ':' + pad(newDate.getMinutes());
+    });
+  });
 
   function updateFlashPlans() {
     var pid = $('flashProd').value;
