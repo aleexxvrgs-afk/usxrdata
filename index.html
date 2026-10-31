@@ -557,6 +557,16 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     var on = flashOn() && !!p && p.plans.some(function (pl) { return pl[0] === FLASH.plan; });
     sec.hidden = !on;
     if (!on) return;
+    // Actualizar imagen/thumbnail del producto en el flash
+    var tileSm = $('.flash .tile-sm');
+    if (tileSm) {
+      tileSm.style.background = p.tile || '#E1E8FF';
+      if (p.img) {
+        tileSm.innerHTML = '<img src="' + p.img + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:13px">';
+      } else {
+        tileSm.textContent = p.glyph || p.name.slice(0,2);
+      }
+    }
     $('#flashName').textContent = p.name + ' ' + FLASH.plan;
     $('#flashOld').textContent = fmt(FLASH.regular) + ' (' + fmtU(FLASH.regular) + ')';
     $('#flashNew').textContent = fmt(FLASH.price);
