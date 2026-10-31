@@ -152,7 +152,7 @@ select.fld{cursor:pointer}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* Confirm */
-.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
 .confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:360px;width:100%;text-align:center}
 .confirm-box h3{font-size:18px;font-weight:700;margin-bottom:8px}
 .confirm-box p{color:var(--muted);margin-bottom:24px;font-size:14px}
@@ -760,6 +760,7 @@ select.fld{cursor:pointer}
   $('btnCancelDel').addEventListener('click', function () { $('confirmOverlay').hidden = true; pendingDeleteId = null; });
   $('btnConfirmDel').addEventListener('click', function () {
     if (!pendingDeleteId) return;
+    closeModal();
     sbFetch('products?id=eq.' + encodeURIComponent(pendingDeleteId), { method: 'DELETE' })
       .then(function () { toast('🗑 Producto eliminado'); loadProducts(); })
       .catch(function () { toast('Error al eliminar', true); });
