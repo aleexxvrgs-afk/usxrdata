@@ -443,29 +443,21 @@ select.fld{cursor:pointer}
   var pendingDeleteId = null;
 
   // --- AUTH ---
-  console.log('🔐 Iniciando auth check...');
-  
   _supa.auth.onAuthStateChange(function (event, session) {
-    console.log('🔄 Auth state change:', event, session ? 'con sesión' : 'sin sesión');
     if (session && session.user) {
       var email = session.user.email;
-      console.log('👤 Usuario detectado:', email);
       if (email !== ADMIN_EMAIL) {
-        console.log('❌ Email no autorizado');
         _supa.auth.signOut();
         $('loginErr').textContent = 'Acceso denegado. Solo el administrador puede entrar.';
         return;
       }
-      console.log('✅ Email autorizado, mostrando panel');
       showPanel(session.user);
     } else {
-      console.log('🔓 Sin sesión, mostrando login');
       showLogin();
     }
   });
 
   $('btnGoogleLogin').addEventListener('click', function () {
-    console.log('🚀 Iniciando login con Google...');
     $('loginErr').textContent = '';
     _supa.auth.signInWithOAuth({ 
       provider: 'google', 
@@ -481,7 +473,6 @@ select.fld{cursor:pointer}
   });
 
   function showLogin() {
-    console.log('🔓 Mostrando pantalla de login');
     var loginScreen = $('loginScreen');
     var adminPanel = $('adminPanel');
     loginScreen.hidden = false;
@@ -491,22 +482,12 @@ select.fld{cursor:pointer}
   }
 
   function showPanel(user) {
-    console.log('✅ Mostrando panel admin para:', user.email);
     var loginScreen = $('loginScreen');
     var adminPanel = $('adminPanel');
     loginScreen.hidden = true;
     loginScreen.style.display = 'none';
     adminPanel.hidden = false;
     adminPanel.style.display = 'grid';
-    
-    // Verificar que se aplicó
-    setTimeout(function() {
-      console.log('🔍 Estado visual después de showPanel:');
-      console.log('  - loginScreen.hidden:', loginScreen.hidden, ', display:', loginScreen.style.display);
-      console.log('  - adminPanel.hidden:', adminPanel.hidden, ', display:', adminPanel.style.display);
-      console.log('  - loginScreen computed display:', window.getComputedStyle(loginScreen).display);
-      console.log('  - adminPanel computed display:', window.getComputedStyle(adminPanel).display);
-    }, 100);
     
     var name = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email.split('@')[0];
     $('userAvatar').textContent = name.charAt(0).toUpperCase();
@@ -616,7 +597,6 @@ select.fld{cursor:pointer}
   var plans = [];
 
   function openModal(id) {
-    console.log('🚀 Abriendo modal, id:', id);
     editingId = id || null;
     plans = [];
     $('modalTitle').textContent = id ? 'Editar producto' : 'Nuevo producto';
@@ -633,38 +613,27 @@ select.fld{cursor:pointer}
     overlay.hidden = false;
     overlay.classList.remove('hidden');
     overlay.style.display = 'flex';
-    
-    // Verificar que el botón existe
-    var closeBtn = $('btnCloseModal');
-    console.log('🔍 Botón close existe:', !!closeBtn);
-    console.log('🔍 Botón close HTML:', closeBtn ? closeBtn.outerHTML : 'NO ENCONTRADO');
   }
 
   function closeModal() { 
-    console.log('📦 Ejecutando closeModal - ocultando overlay');
     var overlay = $('modalOverlay');
     overlay.hidden = true;
     overlay.classList.add('hidden');
     overlay.style.display = 'none';
     editingId = null;
-    console.log('✅ Modal cerrado - overlay.hidden =', overlay.hidden, ', display =', overlay.style.display);
   }
   
   // Close modal handlers - with explicit event stopping
   $('btnCloseModal').addEventListener('click', function(e) { 
-    console.log('🔴 CLICK EN BOTÓN X DETECTADO');
     e.preventDefault();
     e.stopPropagation();
     closeModal(); 
-    console.log('✅ closeModal() ejecutado');
   });
   
   $('btnCancelModal').addEventListener('click', function(e) { 
-    console.log('🔴 CLICK EN BOTÓN CANCELAR DETECTADO');
     e.preventDefault();
     e.stopPropagation();
     closeModal(); 
-    console.log('✅ closeModal() ejecutado');
   });
   
   // Overlay click - only if clicking outside modal
@@ -926,20 +895,7 @@ select.fld{cursor:pointer}
   }
 
   // Check session on load
-  console.log('📍 URL actual:', window.location.href);
-  console.log('📍 Hash:', window.location.hash);
-  
-  _supa.auth.getSession().then(function (res) {
-    console.log('🔍 getSession resultado:', res);
-    if (!res.data || !res.data.session) {
-      console.log('⚠️ No hay sesión guardada');
-      // No forzar showLogin aquí, dejar que onAuthStateChange lo maneje
-    } else {
-      console.log('✅ Sesión encontrada:', res.data.session.user.email);
-    }
-  }).catch(function(err) {
-    console.error('❌ Error en getSession:', err);
-  });
+  _supa.auth.getSession();
 
 })();
 </script>
