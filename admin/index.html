@@ -122,7 +122,7 @@ select.fld{cursor:pointer}
 
 /* Planes */
 .plans-list{display:flex;flex-direction:column;gap:8px}
-.plan-row{display:grid;grid-template-columns:1fr 90px 90px 90px 36px;gap:8px;align-items:center}
+.plan-row{display:grid;grid-template-columns:1fr 90px 30px 90px 30px 90px 36px;gap:6px;align-items:center}
 .plan-row .fld{font-size:13px}
 .add-plan-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface2);border:1px solid dashed;border-color:var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:4px}
 .add-plan-btn:hover{border-color:var(--accent);color:var(--accent)}
@@ -453,8 +453,8 @@ select.fld{cursor:pointer}
         </div>
         <div class="field form-full">
           <label>Planes de precios</label>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:grid;grid-template-columns:1fr 90px 90px 90px 36px;gap:8px">
-            <span>Nombre del plan</span><span>Precio (USD)</span><span>Antes (USD)</span><span>Duración</span><span></span>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:grid;grid-template-columns:1fr 90px 30px 90px 30px 90px 36px;gap:6px">
+            <span>Nombre del plan</span><span>Precio (S/)</span><span></span><span>Antes (S/)</span><span></span><span>Duración</span><span></span>
           </div>
           <div class="plans-list" id="plansList"></div>
           <button class="add-plan-btn" id="btnAddPlan">+ Agregar plan</button>
@@ -898,21 +898,35 @@ select.fld{cursor:pointer}
     var row = document.createElement('div');
     row.className = 'plan-row';
     row.dataset.pi = i;
+    var TC = 3.95;
     row.innerHTML =
       '<input class="fld" placeholder="Nombre (ej: 1 mes)" data-pi="' + i + '" data-pk="0" value="' + esc(String(pl[0] || '')) + '">' +
-      '<input class="fld" type="number" step="0.01" min="0" placeholder="Precio" data-pi="' + i + '" data-pk="1" value="' + (pl[1] || '') + '">' +
-      '<input class="fld" type="number" step="0.01" min="0" placeholder="Antes" data-pi="' + i + '" data-pk="3" value="' + (pl[3] || '') + '">' +
+      '<input class="fld" type="number" step="0.01" min="0" placeholder="S/ precio" data-pi="' + i + '" data-pk="1" data-soles="price" value="' + (pl[1] ? (pl[1] * TC).toFixed(2) : '') + '">' +
+      '<span style="font-size:10px;color:var(--muted);text-align:center" data-usdt-price-' + i + '>' + (pl[1] ? pl[1].toFixed(2) + '$' : '') + '</span>' +
+      '<input class="fld" type="number" step="0.01" min="0" placeholder="S/ antes" data-pi="' + i + '" data-pk="3" data-soles="before" value="' + (pl[3] ? (pl[3] * TC).toFixed(2) : '') + '">' +
+      '<span style="font-size:10px;color:var(--muted);text-align:center" data-usdt-before-' + i + '>' + (pl[3] ? pl[3].toFixed(2) + '$' : '') + '</span>' +
       '<input class="fld" placeholder="30 días" data-pi="' + i + '" data-pk="2" value="' + esc(String(pl[2] || '')) + '">' +
       '<button class="del-plan" data-del-plan="' + i + '">✕</button>';
     $('plansList').appendChild(row);
   }
 
+  var TC_PLANS = 3.95;
   $('plansList').addEventListener('input', function (e) {
     var t = e.target; if (t.dataset.pi === undefined) return;
     var i = +t.dataset.pi, k = +t.dataset.pk;
     if (!plans[i]) return;
     plans[i] = plans[i].slice();
-    plans[i][k] = k === 1 || k === 3 ? (parseFloat(t.value) || 0) : t.value;
+    if (k === 1 || k === 3) {
+      // Convertir Soles a USDT para guardar
+      var soles = parseFloat(t.value) || 0;
+      var usdt = Math.round(soles / TC_PLANS * 100) / 100;
+      plans[i][k] = usdt;
+      // Mostrar el equivalente en USDT
+      var span = t.nextElementSibling;
+      if (span) span.textContent = usdt > 0 ? usdt.toFixed(2) + '$' : '';
+    } else {
+      plans[i][k] = t.value;
+    }
   });
 
   $('plansList').addEventListener('click', function (e) {
