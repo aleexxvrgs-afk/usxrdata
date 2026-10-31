@@ -818,8 +818,35 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   // Pon aquí el número de WhatsApp de la tienda con código de país y sin signos (ej. '51999999999').
   var WA_NUMBER = '51922055086';
   // Usuario de Telegram de la tienda, sin @ (ej. 'usxrdata').
-  var TG_USER = '';
+  var TG_USER = 'usxr_py';
   function waLink(text) { return 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(text); }
+
+  // Carga configuración desde Supabase settings
+  function loadStoreSettings() {
+    supaFetch('settings?key=eq.store&select=value')
+      .then(function (rows) {
+        if (!rows || !rows.length) return;
+        var s;
+        try { s = JSON.parse(rows[0].value); } catch (e) { return; }
+        if (s.whatsapp) WA_NUMBER = s.whatsapp;
+        if (s.telegram) TG_USER = s.telegram;
+        if (s.tc) TC = parseFloat(s.tc) || TC;
+        if (s.yape_number) YAPE.number = s.yape_number;
+        if (s.yape_name) YAPE.name = s.yape_name;
+        if (s.yape_qr) YAPE.qr = s.yape_qr;
+        if (s.binance_id) BINANCE.id = s.binance_id;
+        if (s.binance_name) BINANCE.name = s.binance_name;
+        if (s.binance_qr) BINANCE.qr = s.binance_qr;
+        // Actualizar links de WhatsApp en la página
+        var waGroup = document.getElementById('waGroup');
+        if (waGroup) waGroup.href = 'https://chat.whatsapp.com/';
+        var waSupport = document.getElementById('waSupport');
+        if (waSupport) waSupport.href = waLink('Hola USXR Store, necesito soporte.');
+        // Re-renderizar por si cambió el tipo de cambio
+        renderGrid(); renderFlash();
+      })
+      .catch(function () {});
+  }
   var dur = function (pl) { return /^\d+ días$/.test(pl[2]) ? 'Dura ' + pl[2] + ' desde la entrega' : pl[2]; };
   var kind = function (p, pl) {
     var n = pl[0];
@@ -1052,6 +1079,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
 
   renderChips(); renderGrid(); initAdmin();
   loadFromSupabase();
+  loadStoreSettings();
   // Verificar sesión activa al cargar
   _supa.auth.getSession().then(function(res) {
     if (res.data && res.data.session && res.data.session.user) {

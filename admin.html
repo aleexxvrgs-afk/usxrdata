@@ -332,6 +332,14 @@ select.fld{cursor:pointer}
               <label>Nombre Binance</label>
               <input class="fld" id="cfgBinanceName" placeholder="USXR STORE">
             </div>
+            <div class="field form-full" style="grid-column:1/-1">
+              <label>QR Yape (imagen Base64 o URL)</label>
+              <textarea class="fld" rows="2" id="cfgYapeQr" placeholder="data:image/png;base64,..."></textarea>
+            </div>
+            <div class="field form-full" style="grid-column:1/-1">
+              <label>QR Binance (imagen Base64 o URL)</label>
+              <textarea class="fld" rows="2" id="cfgBinanceQr" placeholder="data:image/png;base64,..."></textarea>
+            </div>
             <button class="btn btn-primary" id="btnSaveSettings">Guardar configuración</button>
           </div>
         </div>
@@ -825,6 +833,8 @@ select.fld{cursor:pointer}
       $('cfgYapeName').value = s.yape_name || '';
       $('cfgBinanceId').value = s.binance_id || '';
       $('cfgBinanceName').value = s.binance_name || '';
+      $('cfgYapeQr').value = s.yape_qr || '';
+      $('cfgBinanceQr').value = s.binance_qr || '';
     }).catch(function () {});
   }
 
@@ -836,7 +846,9 @@ select.fld{cursor:pointer}
       yape_number: $('cfgYapeNum').value.trim(),
       yape_name: $('cfgYapeName').value.trim(),
       binance_id: $('cfgBinanceId').value.trim(),
-      binance_name: $('cfgBinanceName').value.trim()
+      binance_name: $('cfgBinanceName').value.trim(),
+      yape_qr: $('cfgYapeQr').value.trim(),
+      binance_qr: $('cfgBinanceQr').value.trim()
     };
     sbFetch('settings', {
       method: 'POST',
