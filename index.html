@@ -447,13 +447,19 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   });
 
   _supa.auth.onAuthStateChange(function (event, session) {
+    console.log('🔄 Auth event:', event);
+    console.log('📧 Session:', session ? session.user.email : 'null');
+    
     if (session && session.user) {
       var u = session.user;
+      console.log('✅ Usuario autenticado:', u.email);
       setUser({
         name: (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || u.email.split('@')[0],
         mail: u.email
       });
+      toast('✅ Sesión iniciada como ' + u.email);
     } else {
+      console.log('❌ Sin sesión');
       setUser(null);
     }
   });
@@ -793,6 +799,61 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     $('#authSw').innerHTML = reg ? '¿Ya tienes cuenta? <button type="button" class="link" data-mode="login">Entrar</button>' : '¿No tienes cuenta? <button type="button" class="link" data-mode="register">Crear cuenta</button>';
     authMsg('');
   }
+
+  // Handler del formulario de autenticación
+  $('#authForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var email = $('#fMail').value.trim();
+    var password = $('#fPass').value;
+    var name = $('#fName').value.trim();
+    
+    if (!email || !password) {
+      authMsg('Por favor completa todos los campos', true);
+      return;
+    }
+    
+    authMsg('Procesando...');
+    $('#authSubmit').disabled = true;
+    
+    if (auth.mode === 'register') {
+      // Registro
+      _supa.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: { full_name: name || email.split('@')[0] }
+        }
+      }).then(function(res) {
+        $('#authSubmit').disabled = false;
+        if (res.error) {
+          authMsg('Error: ' + res.error.message, true);
+        } else {
+          authMsg('✅ Cuenta creada. Revisa tu email para confirmar.');
+          setTimeout(function() { closeAll(); }, 2000);
+        }
+      }).catch(function(err) {
+        $('#authSubmit').disabled = false;
+        authMsg('Error al crear cuenta', true);
+      });
+    } else {
+      // Login
+      _supa.auth.signInWithPassword({
+        email: email,
+        password: password
+      }).then(function(res) {
+        $('#authSubmit').disabled = false;
+        if (res.error) {
+          authMsg('Error: ' + res.error.message, true);
+        } else {
+          authMsg('✅ Sesión iniciada');
+          setTimeout(function() { closeAll(); }, 1000);
+        }
+      }).catch(function(err) {
+        $('#authSubmit').disabled = false;
+        authMsg('Error al iniciar sesión', true);
+      });
+    }
+  });
 
   // Pon aquí el número de WhatsApp de la tienda con código de país y sin signos (ej. '51999999999').
   var WA_NUMBER = '51922055086';
