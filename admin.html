@@ -354,7 +354,7 @@ select.fld{cursor:pointer}
   <div class="modal" id="modal">
     <div class="modal-head">
       <h2 id="modalTitle">Nuevo producto</h2>
-      <button class="close-btn" id="btnCloseModal">✕</button>
+      <button class="close-btn" onclick="document.getElementById('modalOverlay').hidden=true" aria-label="Cerrar">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-grid">
@@ -419,7 +419,7 @@ select.fld{cursor:pointer}
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-ghost" id="btnCancelModal">Cancelar</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('modalOverlay').hidden=true">Cancelar</button>
       <button class="btn btn-primary" id="btnSaveProduct"><span id="saveBtnText">Guardar producto</span></button>
     </div>
   </div>
