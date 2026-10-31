@@ -450,9 +450,20 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     .then(function(cfg) {
       SUPA_URL = cfg.supabaseUrl;
       SUPA_KEY = cfg.supabaseKey;
-      // Inyectar Turnstile site key dinámicamente
-      var tw = document.getElementById('turnstileWidget');
-      if (tw && cfg.turnstileSiteKey) tw.setAttribute('data-sitekey', cfg.turnstileSiteKey);
+      // Renderizar Turnstile manualmente con la sitekey de Vercel
+      if (cfg.turnstileSiteKey) {
+        var tw = document.getElementById('turnstileWidget');
+        if (tw) {
+          if (window.turnstile) {
+            window.turnstile.render('#turnstileWidget', {
+              sitekey: cfg.turnstileSiteKey,
+              theme: 'auto'
+            });
+          } else {
+            tw.setAttribute('data-sitekey', cfg.turnstileSiteKey);
+          }
+        }
+      }
       _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
         auth: { detectSessionInUrl: true, persistSession: true }
       });
