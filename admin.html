@@ -507,14 +507,12 @@ select.fld{cursor:pointer}
     .then(function(cfg) {
       SUPA_URL = cfg.supabaseUrl;
       SUPA_KEY = cfg.supabaseKey;
-      // Guardar sitekey y renderizar Turnstile en admin (visible desde el inicio)
+      // Renderizar Turnstile en admin con sitekey directa
       if (cfg.turnstileSiteKey) {
-        window._turnstileSiteKey = cfg.turnstileSiteKey;
         var tw = document.getElementById('adminTurnstile');
-        if (tw && window.turnstile) {
-          tw.innerHTML = '';
+        if (tw && tw.children.length === 0 && window.turnstile) {
           window.turnstile.render(tw, {
-            sitekey: cfg.turnstileSiteKey,
+            sitekey: '0x4AAAAAAAAFuLYxob1DYuf72y',
             theme: 'dark',
             callback: function(token) { 
               if (window.onTurnstileSuccess) window.onTurnstileSuccess(token); 

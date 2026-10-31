@@ -416,7 +416,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       <input class="fld" id="fPass" type="password" placeholder="Contraseña" aria-label="Contraseña" autocomplete="current-password">
       <button type="button" class="link" id="authForgot">¿Olvidaste tu contraseña?</button>
       <div class="auth-msg" id="authMsg" role="status"></div>
-      <!-- Cloudflare Turnstile - se renderiza cuando se abre el modal -->
+      <!-- Cloudflare Turnstile -->
       <div id="turnstileWidget" style="margin:12px 0"></div>
       <button type="submit" class="btn accent block" id="authSubmit" style="margin-top:8px">Entrar</button>
     </form>
@@ -453,8 +453,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       // Guardar sitekey para usar cuando se abra el modal
       if (cfg.turnstileSiteKey) {
         window._turnstileSiteKey = cfg.turnstileSiteKey;
-      }
-      _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+      }      _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
         auth: { detectSessionInUrl: true, persistSession: true }
       });
       initApp();
@@ -575,16 +574,13 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   function openSheet(el) { 
     el.hidden = false;
     // Renderizar Turnstile cuando se abre el modal de login
-    if (el.id === 'ovLogin' && window._turnstileSiteKey) {
+    if (el.id === 'ovLogin') {
       var tw = document.getElementById('turnstileWidget');
-      if (tw) {
-        tw.innerHTML = ''; // limpiar render anterior
-        if (window.turnstile) {
-          window.turnstile.render(tw, {
-            sitekey: window._turnstileSiteKey,
-            theme: 'auto'
-          });
-        }
+      if (tw && tw.children.length === 0 && window.turnstile) {
+        window.turnstile.render(tw, {
+          sitekey: '0x4AAAAAAAAFuLYxob1DYuf72y',
+          theme: 'auto'
+        });
       }
     }
   }
