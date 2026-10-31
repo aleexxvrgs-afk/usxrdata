@@ -591,7 +591,9 @@ select.fld{cursor:pointer}
   function closeModal() { $('modalOverlay').hidden = true; }
   $('btnCloseModal').addEventListener('click', closeModal);
   $('btnCancelModal').addEventListener('click', closeModal);
-  $('modalOverlay').addEventListener('click', function (e) { if (e.target === $('modalOverlay')) closeModal(); });
+  $('modalOverlay').addEventListener('click', function (e) { 
+    if (e.target === $('modalOverlay') && $('confirmOverlay').hidden) closeModal(); 
+  });
 
   function clearForm() {
     ['fName','fDesc','fEmoji','fColor','fImgUrl'].forEach(function (id) { $(id).value = ''; });
@@ -755,16 +757,22 @@ select.fld{cursor:pointer}
     pendingDeleteId = id;
     var p = products.find(function (x) { return x.id === id; });
     $('confirmMsg').textContent = '¿Eliminar "' + (p ? p.name : id) + '"? Esta acción no se puede deshacer.';
+    $('modalOverlay').style.pointerEvents = 'none';
     $('confirmOverlay').hidden = false;
   }
-  $('btnCancelDel').addEventListener('click', function () { $('confirmOverlay').hidden = true; pendingDeleteId = null; });
+  $('btnCancelDel').addEventListener('click', function () { 
+    $('confirmOverlay').hidden = true; 
+    $('modalOverlay').style.pointerEvents = '';
+    pendingDeleteId = null; 
+  });
   $('btnConfirmDel').addEventListener('click', function () {
     if (!pendingDeleteId) return;
+    $('confirmOverlay').hidden = true;
+    $('modalOverlay').style.pointerEvents = '';
     closeModal();
     sbFetch('products?id=eq.' + encodeURIComponent(pendingDeleteId), { method: 'DELETE' })
       .then(function () { toast('🗑 Producto eliminado'); loadProducts(); })
       .catch(function () { toast('Error al eliminar', true); });
-    $('confirmOverlay').hidden = true;
     pendingDeleteId = null;
   });
 
