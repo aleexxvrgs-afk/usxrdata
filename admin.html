@@ -114,6 +114,8 @@ button{cursor:pointer}
 textarea.fld{height:auto;padding:10px 14px;resize:vertical;line-height:1.5}
 select.fld{cursor:pointer}
 .color-row{display:flex;align-items:center;gap:10px}
+.color-preset{width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;transition:transform .1s,border-color .1s;padding:0}
+.color-preset:hover{transform:scale(1.15);border-color:var(--ink)}
 .color-preview{width:42px;height:42px;border-radius:10px;border:1px solid var(--border);flex:none}
 .img-preview{width:80px;height:80px;border-radius:12px;border:2px solid var(--border);display:grid;place-items:center;overflow:hidden;background:var(--surface2);margin-bottom:8px}
 .img-preview img{width:100%;height:100%;object-fit:cover}
@@ -426,7 +428,21 @@ select.fld{cursor:pointer}
           <label>Color de fondo</label>
           <div class="color-row">
             <input class="fld" id="fColor" placeholder="#FFD6D1" style="flex:1">
-            <div class="color-preview" id="colorPreview"></div>
+            <input type="color" id="fColorPicker" style="width:42px;height:42px;border-radius:10px;border:1px solid var(--border);cursor:pointer;padding:2px;background:var(--surface2)">
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+            <button type="button" class="color-preset" style="background:#E1E8FF" data-color="#E1E8FF"></button>
+            <button type="button" class="color-preset" style="background:#D6F5E8" data-color="#D6F5E8"></button>
+            <button type="button" class="color-preset" style="background:#FFD6D1" data-color="#FFD6D1"></button>
+            <button type="button" class="color-preset" style="background:#D3F4F2" data-color="#D3F4F2"></button>
+            <button type="button" class="color-preset" style="background:#E3D4FF" data-color="#E3D4FF"></button>
+            <button type="button" class="color-preset" style="background:#CFE3FF" data-color="#CFE3FF"></button>
+            <button type="button" class="color-preset" style="background:#D2F5D9" data-color="#D2F5D9"></button>
+            <button type="button" class="color-preset" style="background:#FFD9D9" data-color="#FFD9D9"></button>
+            <button type="button" class="color-preset" style="background:#FFE3B8" data-color="#FFE3B8"></button>
+            <button type="button" class="color-preset" style="background:#D9DCFF" data-color="#D9DCFF"></button>
+            <button type="button" class="color-preset" style="background:#E6D6FF" data-color="#E6D6FF"></button>
+            <button type="button" class="color-preset" style="background:#E5E5EE" data-color="#E5E5EE"></button>
           </div>
         </div>
         <div class="field form-full">
@@ -833,11 +849,11 @@ select.fld{cursor:pointer}
 
   function clearForm() {
     ['fName','fDesc','fEmoji','fColor','fImgUrl'].forEach(function (id) { $(id).value = ''; });
+    $('fColorPicker').value = '#E5E5EE';
     $('fCat').value = 'stream';
     $('fStock').value = '10';
     $('fHot').checked = false;
     $('imgPreview').innerHTML = '<span style="color:var(--muted);font-size:24px">🖼</span>';
-    $('colorPreview').style.background = '';
     $('plansList').innerHTML = '';
     plans = [];
   }
@@ -848,10 +864,11 @@ select.fld{cursor:pointer}
     $('fStock').value = p.stock || 0;
     $('fEmoji').value = p.emoji || '';
     $('fColor').value = p.color || '';
+    $('fColorPicker').value = p.color || '#E5E5EE';
     $('fDesc').value = p.description || '';
     $('fHot').checked = !!p.is_hot;
     $('fImgUrl').value = p.image_url || '';
-    $('colorPreview').style.background = p.color || '';
+    if (p.color) $('fColorPicker').value = p.color;
     if (p.image_url) {
       $('imgPreview').innerHTML = '<img src="' + esc(p.image_url) + '" alt="">';
     }
@@ -861,7 +878,17 @@ select.fld{cursor:pointer}
   }
 
   $('fColor').addEventListener('input', function () {
-    $('colorPreview').style.background = this.value;
+    $('fColorPicker').value = this.value;
+  });
+  $('fColorPicker').addEventListener('input', function() {
+    $('fColor').value = this.value;
+  });
+  document.querySelectorAll('.color-preset').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var c = this.dataset.color;
+      $('fColor').value = c;
+      $('fColorPicker').value = c;
+    });
   });
 
   // Image upload
