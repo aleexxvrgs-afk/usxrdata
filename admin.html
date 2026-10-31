@@ -593,10 +593,10 @@ select.fld{cursor:pointer}
   }
 
   function closeModal() { $('modalOverlay').hidden = true; }
-  $('btnCloseModal').addEventListener('click', closeModal);
-  $('btnCancelModal').addEventListener('click', closeModal);
+  $('btnCloseModal').onclick = closeModal;
+  $('btnCancelModal').onclick = closeModal;
   $('modalOverlay').addEventListener('click', function (e) { 
-    if (e.target === $('modalOverlay') && $('confirmOverlay').hidden) closeModal(); 
+    if (e.target === $('modalOverlay')) closeModal(); 
   });
 
   function clearForm() {
