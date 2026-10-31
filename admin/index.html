@@ -199,6 +199,10 @@ select.fld{cursor:pointer}
     <button class="nav-item" data-view="flash">
       <span class="ic">⚡</span> Flash Sale
     </button>
+    <button class="nav-item" data-view="categories">
+      <span class="ic">🏷️</span> Categorías
+      <span class="badge" id="navCatsCount">4</span>
+    </button>
     <span class="nav-section">Tienda</span>
     <button class="nav-item" data-view="settings">
       <span class="ic">⚙️</span> Configuración
@@ -299,6 +303,28 @@ select.fld{cursor:pointer}
               <input class="fld" type="datetime-local" id="flashEnd">
             </div>
             <button class="btn btn-primary" id="btnSaveFlash">Guardar flash sale</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA: CATEGORÍAS -->
+      <div id="viewCategories" hidden>
+        <div style="max-width:720px">
+          <p style="color:var(--muted);margin-bottom:24px">Administra las categorías de productos de la tienda.</p>
+          
+          <div class="toolbar">
+            <button class="btn btn-primary" id="btnNewCategory">+ Nueva categoría</button>
+          </div>
+
+          <div class="table-wrap">
+            <div style="display:grid;grid-template-columns:48px 2fr 1fr 1fr 120px;padding:10px 16px;border-bottom:1px solid var(--border);font:700 11px/1 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;gap:12px;align-items:center">
+              <div></div>
+              <div>Nombre</div>
+              <div>Emoji/Icono</div>
+              <div>Productos</div>
+              <div>Acciones</div>
+            </div>
+            <div id="categoriesTable"></div>
           </div>
         </div>
       </div>
@@ -429,6 +455,44 @@ select.fld{cursor:pointer}
   </div>
 </div>
 
+<!-- MODAL CATEGORÍA -->
+<div class="modal-overlay" id="modalCategoryOverlay" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modalCategoryTitle">Nueva categoría</h2>
+      <button class="close-btn" id="btnCloseCategoryModal" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field form-full">
+          <label>ID de la categoría (único, sin espacios)</label>
+          <input class="fld" id="fCatId" placeholder="streaming" pattern="[a-z0-9_-]+" maxlength="30">
+          <small style="color:var(--muted);font-size:11px;margin-top:4px">Solo letras minúsculas, números, guiones y guiones bajos</small>
+        </div>
+        <div class="field form-full">
+          <label>Nombre de la categoría</label>
+          <input class="fld" id="fCatName" placeholder="Streaming" maxlength="50">
+        </div>
+        <div class="field">
+          <label>Emoji / Icono</label>
+          <input class="fld" id="fCatEmoji" placeholder="📺" maxlength="4">
+        </div>
+        <div class="field">
+          <label>Color</label>
+          <div class="color-row">
+            <input class="fld" id="fCatColor" placeholder="#22c55e" style="flex:1">
+            <div class="color-preview" id="colorPreviewCat"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="btnCancelCategoryModal">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveCategory"><span id="saveCatBtnText">Guardar categoría</span></button>
+    </div>
+  </div>
+</div>
+
 
 <script>
 (function () {
@@ -439,7 +503,9 @@ select.fld{cursor:pointer}
 
   var $ = function (s) { return document.getElementById(s); };
   var products = [];
+  var categories = [];
   var editingId = null;
+  var editingCatId = null;
   var pendingDeleteId = null;
 
   // --- AUTH ---
@@ -493,6 +559,7 @@ select.fld{cursor:pointer}
     $('userAvatar').textContent = name.charAt(0).toUpperCase();
     $('userName').textContent = name;
     loadProducts();
+    loadCategories();
     loadSettings();
   }
 
@@ -504,9 +571,11 @@ select.fld{cursor:pointer}
       var view = btn.dataset.view;
       $('viewProducts').hidden = view !== 'products';
       $('viewFlash').hidden = view !== 'flash';
+      $('viewCategories').hidden = view !== 'categories';
       $('viewSettings').hidden = view !== 'settings';
-      $('viewTitle').textContent = { products: 'Productos', flash: 'Flash Sale', settings: 'Configuración' }[view];
+      $('viewTitle').textContent = { products: 'Productos', flash: 'Flash Sale', categories: 'Categorías', settings: 'Configuración' }[view];
       if (view === 'flash') loadFlashSelects();
+      if (view === 'categories') loadCategories();
     });
   });
 
@@ -893,6 +962,181 @@ select.fld{cursor:pointer}
   function esc(s) {
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
   }
+
+  // --- CATEGORÍAS ---
+  function loadCategories() {
+    sbFetch('settings?key=eq.categories&select=value')
+      .then(function (rows) {
+        if (rows && rows[0]) {
+          categories = JSON.parse(rows[0].value);
+        } else {
+          // Categorías por defecto
+          categories = [
+            { id: 'ai', name: 'Inteligencia Artificial', emoji: '🤖', color: '#a78bfa' },
+            { id: 'stream', name: 'Streaming', emoji: '📺', color: '#4ade80' },
+            { id: 'game', name: 'Juegos', emoji: '🎮', color: '#f87171' },
+            { id: 'multi', name: 'Multiservicios', emoji: '⭐', color: '#fbbf24' }
+          ];
+        }
+        renderCategories();
+        updateCategorySelects();
+        $('navCatsCount').textContent = categories.length;
+      })
+      .catch(function () { toast('Error al cargar categorías', true); });
+  }
+
+  function renderCategories() {
+    var el = $('categoriesTable');
+    if (!categories.length) {
+      el.innerHTML = '<div class="empty"><div class="ei">🏷️</div><p>No hay categorías.</p></div>';
+      return;
+    }
+    el.innerHTML = categories.map(function (cat) {
+      var prodCount = products.filter(function (p) { return p.cat === cat.id; }).length;
+      return '<div style="display:grid;grid-template-columns:48px 2fr 1fr 1fr 120px;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px;align-items:center;transition:background .12s" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'transparent\'">' +
+        '<div style="width:36px;height:36px;border-radius:10px;background:' + esc(cat.color || '#333') + ';display:grid;place-items:center;font-size:18px">' + esc(cat.emoji || '📦') + '</div>' +
+        '<div style="font-weight:600">' + esc(cat.name) + '<div style="font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono)">ID: ' + esc(cat.id) + '</div></div>' +
+        '<div style="font-size:20px">' + esc(cat.emoji || '—') + '</div>' +
+        '<div style="color:var(--muted);font-size:13px">' + prodCount + ' producto' + (prodCount !== 1 ? 's' : '') + '</div>' +
+        '<div style="display:flex;gap:6px">' +
+        '<button class="btn btn-ghost btn-sm" data-edit-cat="' + esc(cat.id) + '">✏️ Editar</button>' +
+        (prodCount === 0 ? '<button class="btn btn-sm" style="background:rgba(232,64,47,.15);color:#f87171;border:1px solid rgba(232,64,47,.3)" data-del-cat="' + esc(cat.id) + '">🗑</button>' : '') +
+        '</div></div>';
+    }).join('');
+  }
+
+  $('categoriesTable').addEventListener('click', function (e) {
+    var editBtn = e.target.closest('[data-edit-cat]');
+    var delBtn = e.target.closest('[data-del-cat]');
+    if (editBtn) openCategoryModal(editBtn.dataset.editCat);
+    if (delBtn) {
+      var cat = categories.find(function (c) { return c.id === delBtn.dataset.delCat; });
+      if (window.confirm('¿Eliminar categoría "' + (cat ? cat.name : '') + '"?\nEsta acción no se puede deshacer.')) {
+        deleteCategory(delBtn.dataset.delCat);
+      }
+    }
+  });
+
+  function deleteCategory(id) {
+    categories = categories.filter(function (c) { return c.id !== id; });
+    saveCategories();
+  }
+
+  function saveCategories() {
+    sbFetch('settings', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ key: 'categories', value: JSON.stringify(categories) })
+    }).then(function () {
+      toast('✅ Categorías guardadas');
+      loadCategories();
+    }).catch(function () { toast('Error al guardar categorías', true); });
+  }
+
+  function updateCategorySelects() {
+    var sel = $('fCat');
+    if (sel) {
+      sel.innerHTML = categories.map(function (cat) {
+        return '<option value="' + esc(cat.id) + '">' + esc(cat.name) + '</option>';
+      }).join('');
+    }
+    var filterSel = $('filterCat');
+    if (filterSel) {
+      filterSel.innerHTML = '<option value="">Todas las categorías</option>' +
+        categories.map(function (cat) {
+          return '<option value="' + esc(cat.id) + '">' + esc(cat.name) + '</option>';
+        }).join('');
+    }
+  }
+
+  // Modal categoría
+  $('btnNewCategory').addEventListener('click', function () { openCategoryModal(null); });
+
+  function openCategoryModal(id) {
+    editingCatId = id || null;
+    $('modalCategoryTitle').textContent = id ? 'Editar categoría' : 'Nueva categoría';
+    $('saveCatBtnText').textContent = id ? 'Guardar cambios' : 'Crear categoría';
+    
+    if (id) {
+      var cat = categories.find(function (c) { return c.id === id; });
+      if (cat) {
+        $('fCatId').value = cat.id;
+        $('fCatId').disabled = true;
+        $('fCatName').value = cat.name;
+        $('fCatEmoji').value = cat.emoji || '';
+        $('fCatColor').value = cat.color || '';
+        $('colorPreviewCat').style.background = cat.color || '';
+      }
+    } else {
+      $('fCatId').value = '';
+      $('fCatId').disabled = false;
+      $('fCatName').value = '';
+      $('fCatEmoji').value = '';
+      $('fCatColor').value = '';
+      $('colorPreviewCat').style.background = '';
+    }
+    
+    var overlay = $('modalCategoryOverlay');
+    overlay.hidden = false;
+    overlay.classList.remove('hidden');
+    overlay.style.display = 'flex';
+  }
+
+  function closeCategoryModal() {
+    var overlay = $('modalCategoryOverlay');
+    overlay.hidden = true;
+    overlay.classList.add('hidden');
+    overlay.style.display = 'none';
+    editingCatId = null;
+  }
+
+  $('btnCloseCategoryModal').addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeCategoryModal();
+  });
+
+  $('btnCancelCategoryModal').addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeCategoryModal();
+  });
+
+  $('modalCategoryOverlay').addEventListener('click', function (e) {
+    if (e.target === $('modalCategoryOverlay')) {
+      e.preventDefault();
+      closeCategoryModal();
+    }
+  });
+
+  $('fCatColor').addEventListener('input', function () {
+    $('colorPreviewCat').style.background = this.value;
+  });
+
+  $('btnSaveCategory').addEventListener('click', function () {
+    var id = $('fCatId').value.trim().toLowerCase();
+    var name = $('fCatName').value.trim();
+    var emoji = $('fCatEmoji').value.trim();
+    var color = $('fCatColor').value.trim();
+
+    if (!id || !name) return toast('ID y nombre son obligatorios', true);
+    if (!/^[a-z0-9_-]+$/.test(id)) return toast('ID solo puede contener letras, números, guiones', true);
+
+    if (editingCatId) {
+      var idx = categories.findIndex(function (c) { return c.id === editingCatId; });
+      if (idx !== -1) {
+        categories[idx] = { id: editingCatId, name: name, emoji: emoji, color: color };
+      }
+    } else {
+      if (categories.find(function (c) { return c.id === id; })) {
+        return toast('Ya existe una categoría con ese ID', true);
+      }
+      categories.push({ id: id, name: name, emoji: emoji, color: color });
+    }
+
+    saveCategories();
+    closeCategoryModal();
+  });
 
   // Check session on load
   _supa.auth.getSession();
