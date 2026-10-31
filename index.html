@@ -2,6 +2,7 @@
 <title>USXR Store</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Bricolage+Grotesque:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 /* Layout: storefront neo-brutalista en una columna fluida: cabecera fija, oferta relámpago, catálogo en tarjetas con sombra dura. */
 :root {
@@ -769,6 +770,25 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     $('#authSw').innerHTML = reg ? '¿Ya tienes cuenta? <button type="button" class="link" data-mode="login">Entrar</button>' : '¿No tienes cuenta? <button type="button" class="link" data-mode="register">Crear cuenta</button>';
     authMsg('');
   }
+
+  // --- SUPABASE AUTH ---
+  var supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+  supabase.auth.onAuthStateChange(function (event, session) {
+    if (session && session.user) {
+      var u = session.user;
+      setUser({
+        name: (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || u.email.split('@')[0],
+        mail: u.email
+      });
+    } else {
+      setUser(null);
+    }
+  });
+
+  function logOut() {
+    supabase.auth.signOut().then(function () { setUser(null); toast('Sesión cerrada'); });
+  }
   // Pon aquí el número de WhatsApp de la tienda con código de país y sin signos (ej. '51999999999').
   var WA_NUMBER = '51922055086';
   // Usuario de Telegram de la tienda, sin @ (ej. 'usxrdata').
@@ -896,7 +916,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   document.addEventListener('click', function (e) {
     if (!e.target.closest('.acct')) $('#userMenu').hidden = true;
     var t = e.target.closest('button, a, .overlay'); if (!t) return;
-    if (t.dataset.um === 'logout') { setUser(null); toast('Sesión cerrada'); return; }
+    if (t.dataset.um === 'logout') { logOut(); return; }
     if (t.dataset.um === 'admin') { $('#userMenu').hidden = true; openAdmin(); return; }
     if (t.dataset.bp) { e.preventDefault(); openPay(t.dataset.bp, +t.dataset.bi); }
     else if (t.dataset.sp) { openPay(t.dataset.sp, +t.dataset.sj); }
@@ -928,7 +948,9 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     else if (t.dataset.delpl !== undefined) admPl(+t.dataset.i, 'del', +t.dataset.delpl);
     else if (t.dataset.delp !== undefined) admDel(t);
     else if (t.dataset.mode) setMode(t.dataset.mode);
-    else if (t.id === 'btnGoogle') authMsg('El acceso con Google estará disponible muy pronto.');
+    else if (t.id === 'btnGoogle') {
+      supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
+    }
     else if (t.id === 'authForgot') authMsg('Para recuperar tu contraseña, escríbenos por Soporte.');
     else if (t.id === 'btnLogin') { e.preventDefault(); if (auth.user) { toggleUserMenu(); } else { setMode('login'); $('#btnAdmin').hidden = !admin.on; openSheet($('#ovLogin')); } }
   });
@@ -936,12 +958,27 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   $('#q').addEventListener('input', function (e) { state.q = e.target.value; renderGrid(); });
   $('#authForm').addEventListener('submit', function (e) {
     e.preventDefault();
-    var reg = auth.mode === 'register', name = $('#fName').value.trim(), mail = $('#fMail').value.trim(), pass = $('#fPass').value;
+    var reg = auth.mode === 'register';
+    var name = $('#fName').value.trim();
+    var mail = $('#fMail').value.trim();
+    var pass = $('#fPass').value;
     if (reg && !name) return authMsg('Escribe tu nombre.', true);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return authMsg('Escribe un correo válido.', true);
     if (pass.length < 6) return authMsg('La contraseña debe tener al menos 6 caracteres.', true);
-    setUser({ name: reg ? name : mail.split('@')[0], mail: mail });
-    $('#authForm').reset(); closeAll(); toast('¡Hola, ' + auth.user.name + '!');
+    authMsg('');
+    if (reg) {
+      supabase.auth.signUp({ email: mail, password: pass, options: { data: { full_name: name } } })
+        .then(function (res) {
+          if (res.error) return authMsg(res.error.message, true);
+          authMsg('✅ Revisa tu correo para confirmar tu cuenta.');
+        });
+    } else {
+      supabase.auth.signInWithPassword({ email: mail, password: pass })
+        .then(function (res) {
+          if (res.error) return authMsg('Correo o contraseña incorrectos.', true);
+          closeAll(); toast('¡Hola, ' + (res.data.user.email.split('@')[0]) + '!');
+        });
+    }
   });
 
   // --- SUPABASE ---
