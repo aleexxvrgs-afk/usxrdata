@@ -942,7 +942,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     return '<div class="cond"><b>Antes de comprar</b><ul>' + L.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div>';
   };
   /* DATOS DE YAPE (de ejemplo: cámbialos por los tuyos). qr: imagen del QR como data:image/png;base64,... (los enlaces externos a imágenes no cargan en esta página). */
-  var YAPE = { number: '922055086', name: 'USXR STORE', qr: '' };
+  var YAPE = { number: '', name: '', qr: '' };
   function copyTxt(txt) {
     var ok = function () { toast('Copiado'); };
     var fb = function () { var a = document.createElement('textarea'); a.value = txt; a.style.position = 'fixed'; a.style.opacity = '0'; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); ok(); } catch (e) { toast('Copia el número manualmente'); } document.body.removeChild(a); };
