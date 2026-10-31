@@ -917,7 +917,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     else if (t.id === 'btnMenu') { renderMenu(); openSheet($('#ovMenu')); }
     else if (t.id === 'btnAdmin') { closeAll(); openAdmin(); }
     else if (t.id === 'admAdd') admAdd();
-    else if (t.id === 'admSave') admSave();
+    else if (t.id === 'admSave') admSaveWithSupa();
     else if (t.id === 'gGo') admGate();
     else if (t.id === 'admGen') admGen(t);
     else if (t.dataset.pick !== undefined) $('#admList input[data-imgfile="' + t.dataset.pick + '"]').click();
@@ -944,7 +944,94 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     $('#authForm').reset(); closeAll(); toast('¡Hola, ' + auth.user.name + '!');
   });
 
+  // --- SUPABASE ---
+  var SUPA_URL = 'https://epubjmcysdfncoiegqlc.supabase.co';
+  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdWJqbWN5c2RmbmNvaWVncWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0MjE1NDAsImV4cCI6MjEwODk5NzU0MH0.vlEDtKlejngfYaSbgAEDYkqCEEQKM1EUZlYxG9tGA5g';
+
+  function supaFetch(path, opts) {
+    return fetch(SUPA_URL + '/rest/v1/' + path, Object.assign({
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      }
+    }, opts || {})).then(function (r) { return r.ok ? r.json() : r.json().then(function (e) { throw e; }); });
+  }
+
+  // Carga los productos desde Supabase; si no hay ninguno usa los de PRODUCTS por defecto
+  function loadFromSupabase() {
+    supaFetch('products?select=*&order=created_at.asc')
+      .then(function (rows) {
+        if (!rows || !rows.length) return; // usa los productos por defecto
+        PRODUCTS = rows.map(function (r) {
+          return {
+            id: r.id,
+            name: r.name,
+            cat: r.cat || 'multi',
+            tile: r.color || '#E5E5EE',
+            glyph: r.emoji || r.name.slice(0, 2),
+            stock: r.stock != null ? Number(r.stock) : 10,
+            plans: Array.isArray(r.plans) ? r.plans : JSON.parse(r.plans || '[]'),
+            hot: !!r.is_hot,
+            desc: r.description || '',
+            img: r.image_url || ''
+          };
+        });
+        renderChips(); renderGrid(); renderFlash();
+      })
+      .catch(function () { /* sin conexión: usa los productos locales */ });
+  }
+
+  // Guarda todos los productos del draft en Supabase (upsert)
+  function saveToSupabase(products, onDone) {
+    var rows = products.map(function (p, i) {
+      return {
+        id: p.id,
+        name: p.name,
+        cat: p.cat,
+        emoji: p.glyph,
+        color: p.tile,
+        plans: p.plans,
+        description: p.desc || '',
+        image_url: p.img || '',
+        is_hot: !!p.hot,
+        stock: String(p.stock != null ? p.stock : 10),
+        since: p.since || '',
+        created_at: new Date(Date.now() + i).toISOString()
+      };
+    });
+    supaFetch('products', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=representation'
+      },
+      body: JSON.stringify(rows)
+    })
+    .then(function () { onDone(true); })
+    .catch(function () { onDone(false); });
+  }
+
+  // Extiende admSave para que también guarde en Supabase
+  var _origSave = document.getElementById('admSave');
+  function admSaveWithSupa() {
+    admSync();
+    var out = admin.draft.map(function (p) {
+      var q = JSON.parse(JSON.stringify(p)); q.name = q.name.trim() || 'Producto'; q.desc = (q.desc || '').trim();
+      if (q._new) q.glyph = q.name.slice(0, 2);
+      delete q._new; delete q._o; return q;
+    });
+    PRODUCTS = out; renderGrid(); closeAll();
+    saveToSupabase(out, function (ok) {
+      toast(ok ? '✅ Cambios guardados en Supabase' : '⚠️ Guardado local ok, pero Supabase falló');
+    });
+  }
+
   renderChips(); renderGrid(); initAdmin();
+  loadFromSupabase();
   setInterval(tick, 1000);
 })();
 </script>
