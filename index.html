@@ -452,6 +452,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       SUPA_KEY = cfg.supabaseKey;
       // Renderizar Turnstile manualmente con la sitekey de Vercel
       if (cfg.turnstileSiteKey) {
+        window._turnstileSiteKey = cfg.turnstileSiteKey; // guardar para usar al abrir modal
         var tw = document.getElementById('turnstileWidget');
         if (tw) {
           if (window.turnstile) {
@@ -582,7 +583,19 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     var l = document.querySelectorAll('.left');
     for (var i = 0; i < l.length; i++) l[i].textContent = (d ? d + ' d ' : '') + h + ' h ' + pad(m) + ' min';
   }
-  function openSheet(el) { el.hidden = false; }
+  function openSheet(el) { 
+    el.hidden = false;
+    // Renderizar Turnstile cuando se abre el modal de login
+    if (el.id === 'ovLogin' && window._turnstileSiteKey && window.turnstile) {
+      var tw = document.getElementById('turnstileWidget');
+      if (tw && !tw.querySelector('iframe')) {
+        window.turnstile.render('#turnstileWidget', {
+          sitekey: window._turnstileSiteKey,
+          theme: 'auto'
+        });
+      }
+    }
+  }
   var MENU = [
     ['GENERAL', [['🏠', 'Inicio', 'top'], ['⚡', 'Oferta relámpago', 'flash']]],
     ['CATÁLOGO', [['🤖', 'Inteligencia Artificial', 'cat:ai'], ['📺', 'Streaming', 'cat:stream'], ['🎮', 'Juegos', 'cat:game'], ['🧰', 'Multiservicios', 'cat:multi'], ['🛒', 'Todo el catálogo', 'cat:all']]],
