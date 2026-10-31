@@ -956,6 +956,32 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
   $('#q').addEventListener('input', function (e) { state.q = e.target.value; renderGrid(); });
+
+  // --- SUPABASE ---
+  var SUPA_URL = 'https://epubjmcysdfncoiegqlc.supabase.co';
+  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdWJqbWN5c2RmbmNvaWVncWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0MjE1NDAsImV4cCI6MjEwODk5NzU0MH0.vlEDtKlejngfYaSbgAEDYkqCEEQKM1EUZlYxG9tGA5g';
+
+  // Cliente Supabase para Auth
+  var _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+  // Escucha cambios de sesión
+  _supa.auth.onAuthStateChange(function (event, session) {
+    if (session && session.user) {
+      var u = session.user;
+      setUser({
+        name: (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || u.email.split('@')[0],
+        mail: u.email
+      });
+    } else {
+      setUser(null);
+    }
+  });
+
+  function logOut() {
+    _supa.auth.signOut().then(function () { setUser(null); toast('Sesión cerrada'); });
+  }
+
+  // Formulario de login/registro con correo
   $('#authForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var reg = auth.mode === 'register';
@@ -967,23 +993,19 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     if (pass.length < 6) return authMsg('La contraseña debe tener al menos 6 caracteres.', true);
     authMsg('');
     if (reg) {
-      supabase.auth.signUp({ email: mail, password: pass, options: { data: { full_name: name } } })
+      _supa.auth.signUp({ email: mail, password: pass, options: { data: { full_name: name } } })
         .then(function (res) {
           if (res.error) return authMsg(res.error.message, true);
           authMsg('✅ Revisa tu correo para confirmar tu cuenta.');
         });
     } else {
-      supabase.auth.signInWithPassword({ email: mail, password: pass })
+      _supa.auth.signInWithPassword({ email: mail, password: pass })
         .then(function (res) {
           if (res.error) return authMsg('Correo o contraseña incorrectos.', true);
           closeAll(); toast('¡Hola, ' + (res.data.user.email.split('@')[0]) + '!');
         });
     }
   });
-
-  // --- SUPABASE ---
-  var SUPA_URL = 'https://epubjmcysdfncoiegqlc.supabase.co';
-  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdWJqbWN5c2RmbmNvaWVncWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0MjE1NDAsImV4cCI6MjEwODk5NzU0MH0.vlEDtKlejngfYaSbgAEDYkqCEEQKM1EUZlYxG9tGA5g';
 
   function supaFetch(path, opts) {
     return fetch(SUPA_URL + '/rest/v1/' + path, Object.assign({
@@ -996,11 +1018,10 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     }, opts || {})).then(function (r) { return r.ok ? r.json() : r.json().then(function (e) { throw e; }); });
   }
 
-  // Carga los productos desde Supabase; si no hay ninguno usa los de PRODUCTS por defecto
   function loadFromSupabase() {
     supaFetch('products?select=*&order=created_at.asc')
       .then(function (rows) {
-        if (!rows || !rows.length) return; // usa los productos por defecto
+        if (!rows || !rows.length) return;
         PRODUCTS = rows.map(function (r) {
           return {
             id: r.id,
@@ -1017,43 +1038,29 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         });
         renderChips(); renderGrid(); renderFlash();
       })
-      .catch(function () { /* sin conexión: usa los productos locales */ });
+      .catch(function () {});
   }
 
-  // Guarda todos los productos del draft en Supabase (upsert)
   function saveToSupabase(products, onDone) {
     var rows = products.map(function (p, i) {
       return {
-        id: p.id,
-        name: p.name,
-        cat: p.cat,
-        emoji: p.glyph,
-        color: p.tile,
-        plans: p.plans,
-        description: p.desc || '',
-        image_url: p.img || '',
-        is_hot: !!p.hot,
-        stock: String(p.stock != null ? p.stock : 10),
-        since: p.since || '',
-        created_at: new Date(Date.now() + i).toISOString()
+        id: p.id, name: p.name, cat: p.cat, emoji: p.glyph, color: p.tile,
+        plans: p.plans, description: p.desc || '', image_url: p.img || '',
+        is_hot: !!p.hot, stock: String(p.stock != null ? p.stock : 10),
+        since: p.since || '', created_at: new Date(Date.now() + i).toISOString()
       };
     });
     supaFetch('products', {
       method: 'POST',
       headers: {
-        'apikey': SUPA_KEY,
-        'Authorization': 'Bearer ' + SUPA_KEY,
+        'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY,
         'Content-Type': 'application/json',
         'Prefer': 'resolution=merge-duplicates,return=representation'
       },
       body: JSON.stringify(rows)
-    })
-    .then(function () { onDone(true); })
-    .catch(function () { onDone(false); });
+    }).then(function () { onDone(true); }).catch(function () { onDone(false); });
   }
 
-  // Extiende admSave para que también guarde en Supabase
-  var _origSave = document.getElementById('admSave');
   function admSaveWithSupa() {
     admSync();
     var out = admin.draft.map(function (p) {
