@@ -1016,10 +1016,12 @@ select.fld{cursor:pointer}
         }
         if (cfg.price) $('flashPrice').value = cfg.price;
         if (cfg.regular) $('flashRegular').value = cfg.regular;
-        if (cfg.end) {
+        if (cfg.end && cfg.end > 0 && !isNaN(cfg.end)) {
           var d = new Date(cfg.end);
-          var pad = function(n) { return String(n).padStart(2,'0'); };
-          $('flashEnd').value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+          if (d.getFullYear() > 2020) { // ignorar fechas inválidas
+            var pad = function(n) { return String(n).padStart(2,'0'); };
+            $('flashEnd').value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+          }
         }
       } catch(e) {}
     }).catch(function() {});
