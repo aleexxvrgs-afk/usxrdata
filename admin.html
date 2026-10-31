@@ -509,12 +509,13 @@ select.fld{cursor:pointer}
       SUPA_KEY = cfg.supabaseKey;
       // Renderizar Turnstile en admin esperando a que el script esté listo
       if (cfg.turnstileSiteKey) {
+        var _adminSiteKey = cfg.turnstileSiteKey;
         var renderAdmin = function() {
           var tw = document.getElementById('adminTurnstile');
           if (tw && tw.children.length === 0) {
             if (window.turnstile) {
               window.turnstile.render(tw, {
-                sitekey: '0x4AAAAAAFuQJamtmwL4EPnb',
+                sitekey: _adminSiteKey,
                 theme: 'dark',
                 callback: function(token) { 
                   if (window.onTurnstileSuccess) window.onTurnstileSuccess(token); 
@@ -934,7 +935,7 @@ select.fld{cursor:pointer}
     var data = {
       name: name,
       cat: $('fCat').value,
-      stock: String(Math.max(0, parseInt($('fStock').value) || 0)),
+      stock: Math.max(0, parseInt($('fStock').value) || 0),
       emoji: $('fEmoji').value.trim() || name.slice(0, 2),
       color: $('fColor').value.trim() || '#E5E5EE',
       description: $('fDesc').value.trim(),
@@ -981,6 +982,27 @@ select.fld{cursor:pointer}
       return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>';
     }).join('');
     updateFlashPlans();
+    // Pre-cargar valores guardados del flash sale
+    sbFetch('settings?key=eq.flash&select=value').then(function(rows) {
+      if (!rows || !rows[0]) return;
+      try {
+        var cfg = JSON.parse(rows[0].value);
+        if (cfg.productId) {
+          $('flashProd').value = cfg.productId;
+          updateFlashPlans();
+          setTimeout(function() {
+            if (cfg.plan) $('flashPlan').value = cfg.plan;
+          }, 100);
+        }
+        if (cfg.price) $('flashPrice').value = cfg.price;
+        if (cfg.regular) $('flashRegular').value = cfg.regular;
+        if (cfg.end) {
+          var d = new Date(cfg.end);
+          var pad = function(n) { return String(n).padStart(2,'0'); };
+          $('flashEnd').value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        }
+      } catch(e) {}
+    }).catch(function() {});
   }
 
   function updateFlashPlans() {
@@ -995,12 +1017,13 @@ select.fld{cursor:pointer}
   $('flashProd').addEventListener('change', updateFlashPlans);
 
   $('btnSaveFlash').addEventListener('click', function () {
+    if (!$('flashEnd').value) return toast('Ingresa la fecha de fin del flash sale', true);
     var config = {
       productId: $('flashProd').value,
       plan: $('flashPlan').value,
       price: parseFloat($('flashPrice').value) || 0,
       regular: parseFloat($('flashRegular').value) || 0,
-      end: new Date($('flashEnd').value + ':00').getTime()
+      end: new Date($('flashEnd').value).getTime()
     };
     sbFetch('settings', {
       method: 'POST',
@@ -1268,27 +1291,6 @@ select.fld{cursor:pointer}
     });
   });
   
-  _supa.auth.getSession().then(function(res) {
-    if (res.data && res.data.session) {
-      var email = res.data.session.user.email;
-      sbFetch('admins?email=eq.' + encodeURIComponent(email) + '&select=email')
-        .then(function(rows) {
-          if (!rows || rows.length === 0) {
-            var blocked = registerFailedAttempt();
-            _supa.auth.signOut();
-            showLogin();
-            if (blocked) {
-              $('loginErr').textContent = '🚫 Demasiados intentos. IP bloqueada por 1 hora.';
-            } else {
-              var data = getBlockData();
-              var remaining = MAX_ATTEMPTS - data.attempts;
-              $('loginErr').textContent = '❌ Acceso denegado. Te queda ' + remaining + ' intento' + (remaining !== 1 ? 's' : '') + '.';
-            }
-          }
-        });
-    }
-  });
-
   } // fin initAdmin
 })();
 </script>
