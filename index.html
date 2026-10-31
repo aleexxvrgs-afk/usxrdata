@@ -442,12 +442,25 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
 
 <script>
 (function () {
-  // --- SUPABASE ---
-  var SUPA_URL = 'https://epubjmcysdfncoiegqlc.supabase.co';
-  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdWJqbWN5c2RmbmNvaWVncWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0MjE1NDAsImV4cCI6MjEwODk5NzU0MH0.vlEDtKlejngfYaSbgAEDYkqCEEQKM1EUZlYxG9tGA5g';
-  var _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
-    auth: { detectSessionInUrl: true, persistSession: true }
-  });
+  // Credenciales cargadas desde /api/config (variables de entorno de Vercel)
+  var SUPA_URL, SUPA_KEY, _supa;
+
+  fetch('/api/config')
+    .then(function(r) { return r.json(); })
+    .then(function(cfg) {
+      SUPA_URL = cfg.supabaseUrl;
+      SUPA_KEY = cfg.supabaseKey;
+      // Inyectar Turnstile site key dinámicamente
+      var tw = document.getElementById('turnstileWidget');
+      if (tw && cfg.turnstileSiteKey) tw.setAttribute('data-sitekey', cfg.turnstileSiteKey);
+      _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+        auth: { detectSessionInUrl: true, persistSession: true }
+      });
+      initApp();
+    })
+    .catch(function() { console.error('Error cargando configuración'); });
+
+  function initApp() {
 
   _supa.auth.onAuthStateChange(function (event, session) {
     console.log('🔄 Auth event:', event);
@@ -1145,6 +1158,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     }
   });
   setInterval(tick, 1000);
+  } // fin initApp
 })();
 </script>
 
