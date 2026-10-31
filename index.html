@@ -446,6 +446,18 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     auth: { detectSessionInUrl: true, persistSession: true }
   });
 
+  _supa.auth.onAuthStateChange(function (event, session) {
+    if (session && session.user) {
+      var u = session.user;
+      setUser({
+        name: (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || u.email.split('@')[0],
+        mail: u.email
+      });
+    } else {
+      setUser(null);
+    }
+  });
+
   var P = function (id, name, cat, tile, glyph, stock, plans, hot) { return { id: id, name: name, cat: cat, tile: tile, glyph: glyph, stock: stock, plans: plans, hot: !!hot }; };
   var PRODUCTS = [
     P('gemini', 'Gemini', 'ai', '#E1E8FF', 'G', 63, [['Pro 1 mes', 1.20, '30 días'], ['Pro 12 meses', 6.00, '365 días'], ['Pro 18 meses', 5.90, '545 días']], true),
@@ -1015,6 +1027,16 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
 
   renderChips(); renderGrid(); initAdmin();
   loadFromSupabase();
+  // Verificar sesión activa al cargar
+  _supa.auth.getSession().then(function(res) {
+    if (res.data && res.data.session && res.data.session.user) {
+      var u = res.data.session.user;
+      setUser({
+        name: (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || u.email.split('@')[0],
+        mail: u.email
+      });
+    }
+  });
   setInterval(tick, 1000);
 })();
 </script>
