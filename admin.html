@@ -92,6 +92,7 @@ button{cursor:pointer}
 
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-overlay[hidden],.modal-overlay.hidden{display:none!important;visibility:hidden!important}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.6);position:relative;z-index:51;pointer-events:auto}
 .modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);gap:12px}
 .modal-head h2{font-size:18px;font-weight:700;flex:1;pointer-events:none}
@@ -591,7 +592,11 @@ select.fld{cursor:pointer}
     } else {
       addPlanRow(['', 1, '30 días', '']);
     }
-    $('modalOverlay').hidden = false;
+    
+    var overlay = $('modalOverlay');
+    overlay.hidden = false;
+    overlay.classList.remove('hidden');
+    overlay.style.display = 'flex';
     
     // Verificar que el botón existe
     var closeBtn = $('btnCloseModal');
@@ -601,9 +606,12 @@ select.fld{cursor:pointer}
 
   function closeModal() { 
     console.log('📦 Ejecutando closeModal - ocultando overlay');
-    $('modalOverlay').hidden = true; 
+    var overlay = $('modalOverlay');
+    overlay.hidden = true;
+    overlay.classList.add('hidden');
+    overlay.style.display = 'none';
     editingId = null;
-    console.log('✅ Modal cerrado - overlay.hidden =', $('modalOverlay').hidden);
+    console.log('✅ Modal cerrado - overlay.hidden =', overlay.hidden, ', display =', overlay.style.display);
   }
   
   // Close modal handlers - with explicit event stopping
