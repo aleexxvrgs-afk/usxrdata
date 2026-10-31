@@ -616,29 +616,8 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     admin.draft = JSON.parse(JSON.stringify(PRODUCTS)); renderAdmin();
   }
   function openAdmin() {
-    openSheet($('#ovAdmin'));
-    // Si ya está desbloqueado o no hay DB, entra directo
-    if (admin.unlocked) { admReady(); return; }
-    // Verificar si el usuario logueado es admin
-    if (auth.user && auth.user.mail) {
-      supaFetch('admins?email=eq.' + encodeURIComponent(auth.user.mail) + '&select=email')
-        .then(function (rows) {
-          if (rows && rows.length > 0) {
-            admin.unlocked = true; admReady();
-          } else {
-            $('#admMain').hidden = true; $('#admGate').hidden = false;
-            $('#gUser').value = ''; $('#gPass').value = ''; $('#gMsg').textContent = '';
-            $('#gNote').textContent = 'No tienes acceso al panel de administración.';
-            $('#gGo').hidden = true;
-          }
-        })
-        .catch(function () { admReady(); });
-      return;
-    }
-    $('#admMain').hidden = true; $('#admGate').hidden = false;
-    $('#gUser').value = ''; $('#gPass').value = ''; $('#gMsg').textContent = '';
-    $('#gNote').textContent = 'Debes iniciar sesión con tu cuenta de administrador.';
-    $('#gGo').hidden = true;
+    // Redirigir directamente al panel admin en /admin
+    window.location.href = '/admin';
   }
   function gErr(t) { $('#gMsg').textContent = t; $('#gMsg').className = 'auth-msg err'; }
   function admGate() {
