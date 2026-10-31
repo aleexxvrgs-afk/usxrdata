@@ -453,7 +453,8 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       // Guardar sitekey para usar cuando se abra el modal
       if (cfg.turnstileSiteKey) {
         window._turnstileSiteKey = cfg.turnstileSiteKey;
-      }      _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+      }
+      _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
         auth: { detectSessionInUrl: true, persistSession: true }
       });
       initApp();
@@ -463,19 +464,13 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   function initApp() {
 
   _supa.auth.onAuthStateChange(function (event, session) {
-    console.log('🔄 Auth event:', event);
-    console.log('📧 Session:', session ? session.user.email : 'null');
-    
     if (session && session.user) {
       var u = session.user;
-      console.log('✅ Usuario autenticado:', u.email);
       setUser({
         name: (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || u.email.split('@')[0],
         mail: u.email
       });
-      toast('✅ Sesión iniciada como ' + u.email);
     } else {
-      console.log('❌ Sin sesión');
       setUser(null);
     }
   });
