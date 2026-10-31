@@ -979,7 +979,7 @@ select.fld{cursor:pointer}
     if (k === 1 || k === 3) {
       // Convertir Soles a USDT para guardar
       var soles = parseFloat(t.value) || 0;
-      var usdt = Math.round(soles / TC_PLANS * 100) / 100;
+      var usdt = Math.round(soles / TC_PLANS * 10000) / 10000;
       plans[i][k] = usdt;
       // Mostrar el equivalente en USDT
       var span = t.nextElementSibling;
@@ -1150,8 +1150,8 @@ select.fld{cursor:pointer}
     var config = {
       productId: $('flashProd').value,
       plan: $('flashPlan').value,
-      price: Math.round((parseFloat($('flashPriceSoles').value) || 0) / TC_FLASH * 100) / 100,
-      regular: Math.round((parseFloat($('flashRegularSoles').value) || 0) / TC_FLASH * 100) / 100,
+      price: Math.round((parseFloat($('flashPriceSoles').value) || 0) / TC_FLASH * 10000) / 10000,
+      regular: Math.round((parseFloat($('flashRegularSoles').value) || 0) / TC_FLASH * 10000) / 10000,
       end: new Date($('flashEnd').value).getTime()
     };
     sbFetch('settings', {
