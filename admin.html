@@ -130,6 +130,8 @@ select.fld{cursor:pointer}
 
 /* Login screen */
 .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.login-screen[hidden]{display:none!important;visibility:hidden!important}
+.layout[hidden]{display:none!important;visibility:hidden!important}
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:360px;text-align:center}
 .login-logo{width:56px;height:56px;background:var(--accent);border-radius:16px;display:grid;place-items:center;font-weight:800;font-size:22px;margin:0 auto 20px}
 .login-card h1{font-size:22px;font-weight:800;margin-bottom:6px}
@@ -480,14 +482,32 @@ select.fld{cursor:pointer}
 
   function showLogin() {
     console.log('🔓 Mostrando pantalla de login');
-    $('loginScreen').hidden = false;
-    $('adminPanel').hidden = true;
+    var loginScreen = $('loginScreen');
+    var adminPanel = $('adminPanel');
+    loginScreen.hidden = false;
+    loginScreen.style.display = 'flex';
+    adminPanel.hidden = true;
+    adminPanel.style.display = 'none';
   }
 
   function showPanel(user) {
     console.log('✅ Mostrando panel admin para:', user.email);
-    $('loginScreen').hidden = true;
-    $('adminPanel').hidden = false;
+    var loginScreen = $('loginScreen');
+    var adminPanel = $('adminPanel');
+    loginScreen.hidden = true;
+    loginScreen.style.display = 'none';
+    adminPanel.hidden = false;
+    adminPanel.style.display = 'grid';
+    
+    // Verificar que se aplicó
+    setTimeout(function() {
+      console.log('🔍 Estado visual después de showPanel:');
+      console.log('  - loginScreen.hidden:', loginScreen.hidden, ', display:', loginScreen.style.display);
+      console.log('  - adminPanel.hidden:', adminPanel.hidden, ', display:', adminPanel.style.display);
+      console.log('  - loginScreen computed display:', window.getComputedStyle(loginScreen).display);
+      console.log('  - adminPanel computed display:', window.getComputedStyle(adminPanel).display);
+    }, 100);
+    
     var name = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email.split('@')[0];
     $('userAvatar').textContent = name.charAt(0).toUpperCase();
     $('userName').textContent = name;
