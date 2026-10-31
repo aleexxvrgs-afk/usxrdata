@@ -1,0 +1,952 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>USXR Store</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Bricolage+Grotesque:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: storefront neo-brutalista en una columna fluida: cabecera fija, oferta relámpago, catálogo en tarjetas con sombra dura. */
+:root {
+  --bg: #F3F0FA;
+  --surface: #FFFFFF;
+  --ink: #16132B;
+  --muted: #5E5A78;
+  --accent: #5B3CF5;
+  --accent-ink: #FFFFFF;
+  --hot: #E8402F;
+  --gold: #FFD23F;
+  --gold-ink: #16132B;
+  --ok-bg: #D9F7E6;
+  --ok-fg: #0E6B3A;
+  --shadow: #16132B;
+  --gridline: rgba(22, 19, 43, 0.06);
+  --font-display: "Pixelify Sans", "Courier New", monospace;
+  --font-body: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14121F; --surface: #1E1A30; --ink: #ECE8FF; --muted: #A39FC0;
+    --accent: #8F78FF; --accent-ink: #14121F; --hot: #FF7A69;
+    --ok-bg: #14382A; --ok-fg: #7CE3AB; --shadow: #6C57D9;
+    --gridline: rgba(236, 232, 255, 0.06); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14121F; --surface: #1E1A30; --ink: #ECE8FF; --muted: #A39FC0;
+  --accent: #8F78FF; --accent-ink: #14121F; --hot: #FF7A69;
+  --ok-bg: #14382A; --ok-fg: #7CE3AB; --shadow: #6C57D9;
+  --gridline: rgba(236, 232, 255, 0.06); color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 40px;
+  background-image:
+    linear-gradient(var(--gridline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--gridline) 1px, transparent 1px);
+  background-size: 28px 28px;
+  overflow-x: hidden;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 30; background: var(--bg);
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1080px; margin: 0 auto; position: relative; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Cabecera */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--bg); padding-block: 12px;
+  border-bottom: 2.5px solid var(--ink);
+  display: flex; align-items: center; gap: 10px;
+}
+.top .spacer { flex: 1; }
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 14px; border: 2.5px solid var(--ink);
+  background: var(--surface); display: grid; place-items: center; position: relative;
+}
+.icon-btn svg { width: 22px; height: 22px; stroke: var(--ink); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn.cart { box-shadow: 3px 3px 0 var(--shadow); }
+.badge-n {
+  position: absolute; top: -9px; right: -9px; min-width: 22px; height: 22px; padding: 0 5px;
+  border-radius: 11px; background: var(--hot); color: #fff; border: 2px solid var(--ink);
+  font: 700 12px/18px var(--font-mono); text-align: center;
+}
+.logo { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: 0.02em; text-decoration: none; color: var(--ink); }
+.logo i { width: 26px; height: 26px; background: var(--accent); border: 2.5px solid var(--ink); display: block; box-shadow: 3px 3px 0 var(--shadow); }
+.btn {
+  border: 2.5px solid var(--ink); border-radius: 14px; background: var(--ink); color: var(--bg);
+  font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 0 18px; height: 44px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
+  box-shadow: 3px 3px 0 var(--shadow); transition: transform .08s, box-shadow .08s;
+}
+.btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--shadow); }
+.btn.accent { background: var(--accent); color: var(--accent-ink); }
+.btn.hot { background: var(--hot); color: #fff; }
+.btn.light { background: var(--surface); color: var(--ink); }
+.btn.block { width: 100%; }
+
+/* Intro */
+.intro { padding-top: 22px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between; }
+.intro p { margin: 0; color: var(--muted); max-width: 46ch; }
+.sample { font: 500 11px/1 var(--font-mono); background: var(--gold); color: var(--gold-ink); border: 2px solid var(--ink); padding: 6px 8px; letter-spacing: .04em; text-transform: uppercase; }
+
+/* Flash sale */
+.flash {
+  margin-top: 18px; background: var(--surface); border: 3px solid var(--ink); border-radius: 22px;
+  box-shadow: 7px 7px 0 var(--shadow); padding: 18px; position: relative;
+  display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: center;
+}
+.flash .tile-sm { width: 64px; height: 64px; border-radius: 16px; border: 2.5px solid var(--ink); display: grid; place-items: center; font: 700 30px var(--font-display); color: #16132B; }
+.flash h2 { margin: 0; font-size: 20px; font-weight: 800; line-height: 1.15; text-wrap: balance; }
+.flash .before { color: var(--muted); font-size: 14px; }
+.flash .before s { text-decoration-thickness: 2px; }
+.flash-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 10px; }
+.chip-flash { display: inline-flex; align-items: center; gap: 6px; background: var(--hot); color: #fff; border: 2.5px solid var(--ink); border-radius: 999px; padding: 3px 12px; font: 700 13px var(--font-mono); letter-spacing: .12em; }
+.clock { font: 700 34px/1.1 var(--font-mono); letter-spacing: .04em; margin-top: 6px; }
+.sticker {
+  background: var(--gold); color: var(--gold-ink); border: 3px solid var(--ink); border-radius: 12px;
+  padding: 8px 16px 10px; transform: rotate(-3deg); box-shadow: 4px 4px 0 var(--shadow); text-align: center;
+}
+.sticker small { display: block; font: 700 12px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.sticker b { font: 700 38px/1 var(--font-mono); }
+.flash .btn { grid-column: 1 / -1; height: 52px; font-size: 17px; margin-top: 8px; }
+
+/* Catálogo */
+.cat-title { font-family: var(--font-display); font-weight: 700; font-size: clamp(44px, 12vw, 76px); line-height: 1; letter-spacing: .04em; margin: 38px 0 8px; text-transform: uppercase; }
+.cat-sub { color: var(--muted); margin: 0 0 18px; max-width: 52ch; }
+.tools { display: flex; gap: 12px; align-items: stretch; }
+.search { flex: 1; min-width: 0; height: 52px; border: 2.5px solid var(--ink); border-radius: 16px; background: var(--surface); padding: 0 16px; font-size: 16px; }
+.search::placeholder { color: var(--muted); }
+.seg { display: flex; border: 2.5px solid var(--ink); border-radius: 16px; background: var(--surface); padding: 5px; gap: 4px; }
+.seg button { width: 42px; border: 0; border-radius: 11px; background: transparent; display: grid; place-items: center; }
+.seg button svg { width: 22px; height: 22px; stroke: var(--ink); fill: none; stroke-width: 2.2; stroke-linecap: round; }
+.seg button[aria-pressed="true"] { background: var(--ink); }
+.seg button[aria-pressed="true"] svg { stroke: var(--bg); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; }
+.chip { border: 2.5px solid var(--ink); border-radius: 999px; background: var(--surface); padding: 6px 14px; font-weight: 600; font-size: 14px; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: 3px 3px 0 var(--shadow); }
+.count { color: var(--muted); margin: 12px 0 28px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 30px 14px; }
+@media (min-width: 640px) { .grid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 34px 20px; } }
+.card {
+  background: var(--surface); border: 3px solid var(--ink); border-radius: 22px; box-shadow: 5px 5px 0 var(--shadow);
+  position: relative; display: flex; flex-direction: column; min-width: 0; margin-top: 12px;
+}
+.card.is-hot { box-shadow: 5px 5px 0 var(--hot); }
+.hot-tag {
+  position: absolute; top: -17px; left: 50%; transform: translateX(-50%); z-index: 2;
+  background: var(--hot); color: #fff; border: 2.5px solid var(--ink); border-radius: 12px;
+  padding: 3px 16px; font: 700 14px var(--font-mono); letter-spacing: .12em; white-space: nowrap;
+}
+.stock { position: absolute; top: 10px; right: 10px; z-index: 1; background: var(--ok-bg); color: var(--ok-fg); border-radius: 999px; padding: 3px 10px; font: 700 11px var(--font-mono); letter-spacing: .06em; }
+.art {
+  aspect-ratio: 5 / 4; max-width: 100%; border-radius: 18px 18px 0 0; border-bottom: 2.5px solid var(--ink);
+  display: grid; place-items: center; overflow: hidden;
+  background-image: repeating-linear-gradient(135deg, rgba(22,19,43,.06) 0 10px, transparent 10px 20px);
+}
+.art b { font: 700 clamp(44px, 14vw, 64px) var(--font-display); color: #16132B; text-shadow: 3px 3px 0 rgba(255,255,255,.7); letter-spacing: .02em; }
+.body { padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.body h3 { margin: 0; font-size: 20px; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
+.plans { color: var(--muted); font-size: 14px; }
+.offer { color: var(--hot); font: 700 13px var(--font-mono); min-height: 18px; }
+.foot { margin-top: auto; padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.since { color: var(--muted); font: 500 11px var(--font-mono); letter-spacing: .1em; }
+.price { font: 700 26px/1 var(--font-mono); }
+.usdt { color: var(--muted); font: 500 12px var(--font-mono); margin-top: 4px; display: block; }
+.card .btn { height: 42px; font-size: 13px; width: 100%; padding: 0 10px; }
+
+.grid.list { grid-template-columns: 1fr; gap: 24px; }
+.grid.list .card { flex-direction: row; align-items: stretch; }
+.grid.list .art { aspect-ratio: auto; width: 96px; flex: none; border-bottom: 0; border-right: 2.5px solid var(--ink); border-radius: 18px 0 0 18px; }
+.grid.list .art b { font-size: 36px; }
+.grid.list .body { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 12px; }
+.grid.list .stock { top: 8px; }
+.grid.list .foot { margin: 0; padding: 0; grid-column: 2; grid-row: 1 / span 3; align-items: flex-end; }
+.grid.list .card .btn { width: auto; padding: 0 14px; }
+.grid.list .body h3, .grid.list .plans, .grid.list .offer { grid-column: 1; }
+.grid.list .since { display: none; }
+.empty { grid-column: 1 / -1; border: 3px dashed var(--ink); border-radius: 18px; padding: 28px 18px; text-align: center; color: var(--muted); }
+
+/* Confianza */
+.trust { margin-top: 56px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+.stat { background: var(--surface); border: 2.5px solid var(--ink); border-radius: 18px; padding: 14px; box-shadow: 4px 4px 0 var(--shadow); }
+.stat b { display: block; font: 700 30px/1.1 var(--font-mono); }
+.stat span { color: var(--muted); font-size: 14px; }
+.guarantee { margin-top: 22px; background: var(--accent); color: var(--accent-ink); border: 3px solid var(--ink); border-radius: 22px; box-shadow: 6px 6px 0 var(--shadow); padding: 20px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; }
+.guarantee h2 { margin: 0 0 4px; font: 700 28px/1.1 var(--font-display); letter-spacing: .03em; text-transform: uppercase; }
+.guarantee p { margin: 0; max-width: 48ch; }
+footer { margin-top: 40px; color: var(--muted); font-size: 13px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+
+/* Hoja de planes y carrito */
+.overlay { position: fixed; inset: 0; z-index: 40; background: rgba(10, 8, 24, .55); display: flex; align-items: flex-end; justify-content: center; padding-inline: max(0px, env(safe-area-inset-left, 0px)); }
+.sheet {
+  width: 100%; max-width: 560px; max-height: 88%; overflow-y: auto; background: var(--bg);
+  border: 3px solid var(--ink); border-bottom: 0; border-radius: 24px 24px 0 0; padding: 20px max(16px, env(safe-area-inset-left, 0px)) calc(20px + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 640px) { .overlay { align-items: center; } .sheet { border-bottom: 3px solid var(--ink); border-radius: 24px; box-shadow: 8px 8px 0 var(--shadow); } }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.sheet-head h2 { margin: 0; font: 700 28px/1.1 var(--font-display); letter-spacing: .03em; text-transform: uppercase; overflow-wrap: anywhere; }
+.row { background: var(--surface); border: 2.5px solid var(--ink); border-radius: 16px; padding: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 12px; }
+.row .info { flex: 1; min-width: 0; }
+.row .info b { display: block; overflow-wrap: anywhere; }
+.row .info span { color: var(--muted); font-size: 13px; }
+.row .p { font: 700 18px var(--font-mono); white-space: nowrap; }
+.row .btn { height: 40px; font-size: 12px; padding: 0 12px; }
+.x { border: 2px solid var(--ink); background: var(--surface); width: 36px; height: 36px; border-radius: 10px; font-weight: 800; flex: none; }
+.total { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 2px 14px; font-weight: 800; }
+.total .mono { font-size: 28px; }
+.note { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+.row .info span { display: block; }
+.cond { background: var(--ok-bg); color: var(--ok-fg); border: 2.5px solid var(--ink); border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; font-size: 14px; }
+.cond b { display: block; margin-bottom: 4px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; font-size: 12px; }
+.cond ul { margin: 0; padding-left: 18px; }
+.cond li { margin: 3px 0; }
+.pay-sum { background: var(--surface); border: 2.5px solid var(--ink); border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; box-shadow: 4px 4px 0 var(--shadow); }
+.pay-sum b { display: block; font-size: 17px; overflow-wrap: anywhere; }
+.pay-sum span { color: var(--muted); font-size: 13px; }
+.pay-pr { font: 700 26px/1.2 var(--font-mono); margin-top: 6px; }
+.pay-pr small { font-size: 13px; color: var(--muted); }
+.plan-sel { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.plan-opt { flex: 1 1 auto; border: 2.5px solid var(--ink); border-radius: 14px; background: var(--surface); color: var(--ink); padding: 8px 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; font-weight: 600; }
+.plan-opt b { font: 700 15px var(--font-mono); }
+.plan-opt.on { background: var(--accent); color: var(--accent-ink); box-shadow: 3px 3px 0 var(--shadow); }
+.qr-box { width: 210px; height: 210px; max-width: 100%; margin: 0 auto 14px; background: #fff; color: #16132B; border: 2.5px dashed var(--ink); border-radius: 16px; display: grid; place-items: center; text-align: center; padding: 8px; font-weight: 700; }
+.qr-box img { width: 100%; height: 100%; object-fit: contain; }
+.yape-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); border: 2.5px solid var(--ink); border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; }
+.yape-row small { display: block; color: var(--muted); font: 500 11px var(--font-mono); letter-spacing: .1em; }
+.yape-row b { font-size: 18px; overflow-wrap: anywhere; }
+.yape-row .btn { height: 38px; font-size: 12px; padding: 0 14px; }
+.yape-steps { padding-left: 20px; margin: 12px 0; }
+.acct { position: relative; display: inline-flex; }
+.avatar { width: 44px; height: 44px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--accent); color: var(--accent-ink); font: 700 18px var(--font-display); display: grid; place-items: center; box-shadow: 3px 3px 0 var(--shadow); text-decoration: none; }
+.pop { position: absolute; right: 0; top: calc(100% + 12px); min-width: 240px; background: var(--surface); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 16px; box-shadow: 5px 5px 0 var(--shadow); padding: 8px; z-index: 40; }
+.pop[hidden] { display: none; }
+.pop-head { padding: 8px 12px 10px; margin-bottom: 6px; border-bottom: 2px solid var(--ink); }
+.pop-head b { display: block; font-size: 16px; overflow-wrap: anywhere; }
+.pop-head span { display: block; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.pop button, .pop a { display: block; width: 100%; text-align: left; padding: 11px 12px; border-radius: 10px; background: none; border: 0; color: var(--ink); font-weight: 600; font-size: 14px; font-family: inherit; text-decoration: none; cursor: pointer; }
+.pop button:hover, .pop a:hover { background: var(--accent); color: var(--accent-ink); }
+.gdet { flex-basis: 100%; border-top: 2px solid currentColor; padding-top: 12px; }
+.gdet summary { cursor: pointer; font-weight: 800; }
+.gdet ol { margin: 10px 0 8px; padding-left: 20px; }
+.gdet p { margin: 6px 0 0; max-width: none; }
+textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px solid var(--ink); border-radius: 12px; background: var(--surface); padding: 10px; font: 500 13px/1.4 var(--font-mono); }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--ink); color: var(--bg); border-radius: 12px; padding: 10px 16px; font-weight: 600; max-width: calc(100% - 32px); text-align: center; }
+
+/* Sprites pixel */
+.sprite { position: absolute; width: 22px; height: 22px; pointer-events: none; opacity: .9; }
+.sprite rect { fill: var(--accent); }
+.sprite.b rect { fill: var(--gold); stroke: var(--ink); stroke-width: .25; }
+@media (prefers-reduced-motion: no-preference) {
+  .sprite { animation: bob 3.2s steps(4) infinite; }
+  .sprite.b { animation-delay: -1.4s; }
+  @keyframes bob { 50% { transform: translateY(-8px); } }
+}
+/* Menú lateral */
+.overlay.drawer-ov { align-items: stretch; justify-content: flex-start; padding: 0; }
+.drawer { width: min(86vw, 340px); height: 100%; overflow-y: auto; background: var(--bg); border-right: 3px solid var(--ink); padding: calc(16px + env(safe-area-inset-top, 0px)) 14px calc(20px + env(safe-area-inset-bottom, 0px)); }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; }
+.menu-h { font: 700 12px var(--font-mono); letter-spacing: .14em; color: var(--muted); margin: 20px 4px 8px; }
+.menu-group { background: var(--surface); border: 2.5px solid var(--ink); border-radius: 16px; overflow: hidden; }
+.menu-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 11px 12px; border: 0; border-bottom: 1.5px solid var(--bg); background: transparent; text-align: left; }
+.menu-item:last-child { border-bottom: 0; }
+.menu-item .ic { width: 30px; height: 30px; border-radius: 9px; border: 2px solid var(--ink); display: grid; place-items: center; font-size: 15px; background: var(--bg); flex: none; }
+.menu-item .lb { flex: 1; font-weight: 600; }
+.menu-item .n { font: 700 11px var(--font-mono); background: var(--bg); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 8px; }
+.menu-item .ch { color: var(--muted); font-size: 20px; transition: transform .15s; }
+.menu-item[aria-expanded="true"] .ch { transform: rotate(90deg); }
+.sub { display: flex; flex-direction: column; gap: 10px; padding: 6px 12px 14px; border-bottom: 1.5px solid var(--bg); }
+.sub a { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 2.5px solid var(--ink); border-radius: 12px; background: var(--bg); color: var(--ink); font-weight: 700; text-decoration: none; box-shadow: 3px 3px 0 var(--shadow); }
+.sub a i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); flex: none; }
+.flash, .cat-title, .guarantee { scroll-margin-top: 84px; }
+/* Acceso */
+.fld { width: 100%; height: 50px; margin-top: 10px; border: 2.5px solid var(--ink); border-radius: 14px; background: var(--surface); padding: 0 14px; font-size: 16px; }
+.fld::placeholder { color: var(--muted); }
+.or { display: flex; align-items: center; gap: 10px; color: var(--muted); font: 700 12px var(--font-mono); margin: 16px 0 6px; }
+.or::before, .or::after { content: ""; flex: 1; height: 2px; background: var(--ink); opacity: .2; }
+.auth-msg { min-height: 20px; margin: 10px 2px 0; font-weight: 600; font-size: 14px; }
+.auth-msg.err { color: var(--hot); }
+.link { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 800; text-decoration: underline; }
+.auth-sw { text-align: center; margin-top: 16px; color: var(--muted); }
+#authForgot { display: block; margin: 12px 2px 0; }
+/* Admin */
+.adm { background: var(--surface); border: 2.5px solid var(--ink); border-radius: 14px; margin-bottom: 10px; }
+.adm summary { display: flex; justify-content: space-between; gap: 10px; padding: 12px; cursor: pointer; list-style: none; }
+.adm summary::-webkit-details-marker { display: none; }
+.adm-b { padding: 0 12px 14px; border-top: 2px solid var(--bg); }
+.adm-b label { display: block; font: 700 12px var(--font-mono); color: var(--muted); margin-top: 10px; }
+.adm-b .fld { margin-top: 4px; height: 44px; font-size: 14px; }
+.adm-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.adm-pl { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 6px; margin-top: 8px; align-items: end; }
+.adm-pl .nm { grid-column: 1 / -1; }
+.adm-b label.adm-ck { display: flex; align-items: center; gap: 8px; }
+.adm-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.adm-acts .btn { height: 40px; font-size: 12px; }
+.adm-foot { position: sticky; bottom: 0; background: var(--bg); padding-top: 10px; display: flex; gap: 10px; }
+.art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card .desc { font-size: 13px; color: var(--muted); margin: 4px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.adm-th { width: 72px; height: 72px; border-radius: 12px; border: 2px solid var(--ink); object-fit: cover; margin-top: 10px; display: block; }
+.adm-b textarea.fld { height: auto; padding: 10px 14px; resize: vertical; font-family: inherit; }
+.adm-ai { border: 2.5px dashed var(--ink); border-radius: 14px; padding: 12px; margin-bottom: 14px; }
+.adm-ai .fld { height: auto; padding: 10px 14px; font-family: inherit; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <button class="icon-btn" aria-label="Menú" id="btnMenu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <a class="logo" href="#" aria-label="USXR DATA">USXR DATA</a>
+    <span class="spacer"></span>
+    <button class="icon-btn" aria-label="Notificaciones"><svg viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15zM10 21h4"/></svg></button>
+    <span class="acct"><a class="btn" href="#" id="btnLogin">Entrar</a><div class="pop" id="userMenu" hidden></div></span>
+  </header>
+
+
+  <section class="intro">
+    <p>Cuentas premium de streaming, recargas de juegos y multiservicios. Entrega automática apenas se confirma el pago.</p>
+    <a class="btn light" id="waGroup" href="https://chat.whatsapp.com/" target="_blank" rel="noopener">Grupo de WhatsApp</a>
+  </section>
+
+  <section class="flash" aria-label="Oferta relámpago">
+    <div class="tile-sm" style="background:#E1E8FF">G</div>
+    <div>
+      <h2 id="flashName">Gemini Pro 12 meses</h2>
+      <div class="before">Precio normal <s class="mono" id="flashOld">S/ 20.40 (6.00 USDT)</s></div>
+    </div>
+    <div class="flash-row">
+      <div>
+        <span class="chip-flash">⚡ FLASH SALE</span>
+        <div class="clock" id="clock" aria-live="off">--:--:--</div>
+        <div class="before" id="flashEnd" style="margin-top:4px"></div>
+      </div>
+      <div class="sticker"><small>¡Oferta limitada!</small><b id="flashNew">S/ 14.28</b><small id="flashUsdt" style="letter-spacing:.04em;margin-top:4px">4.20 USDT</small></div>
+    </div>
+    <button type="button" class="btn hot block" id="flashBuy">Comprar</button>
+  </section>
+
+  <h1 class="cat-title">Catálogo</h1>
+  <p class="cat-sub">Suscripciones, recargas y licencias digitales. Elige un plan y pide por WhatsApp.</p>
+
+  <div class="tools">
+    <input class="search" id="q" type="search" placeholder="Buscar producto…" aria-label="Buscar producto" autocomplete="off">
+    <div class="seg" role="group" aria-label="Vista">
+      <button id="vGrid" aria-pressed="true" aria-label="Vista en cuadrícula"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg></button>
+      <button id="vList" aria-pressed="false" aria-label="Vista en lista"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
+    </div>
+  </div>
+  <div class="chips" id="chips" role="group" aria-label="Categorías"></div>
+  <div class="count" id="count"></div>
+  <div class="grid" id="grid"></div>
+
+  <section class="trust" aria-label="Confianza">
+    <div class="stat"><b>800+</b><span>clientes</span></div>
+    <div class="stat"><b>30+</b><span>servicios</span></div>
+    <div class="stat"><b>99%</b><span>satisfacción</span></div>
+    <div class="stat"><b>24/7</b><span>soporte</span></div>
+  </section>
+  <section class="guarantee">
+    <div>
+      <h2>Garantía de 30 días</h2>
+      <p>Si tu cuenta falla dentro de los 30 días desde la entrega, te la reponemos o te devolvemos el pago.</p>
+    </div>
+    <a class="btn light" id="waSupport" href="https://chat.whatsapp.com/" target="_blank" rel="noopener">Hablar con soporte</a>
+    <details class="gdet"><summary>¿Cómo funciona la garantía?</summary>
+      <ol><li>Escríbenos por WhatsApp con tu pedido (producto y plan) y una captura del problema.</li><li>Revisamos tu caso.</li><li>Si corresponde, te damos una cuenta de reemplazo por el tiempo que te faltaba o te devolvemos el pago.</li></ol>
+      <p><b>Cubre:</b> la cuenta deja de funcionar, pierdes el acceso o lo entregado no es lo que compraste.</p>
+      <p><b>No cubre:</b> cambios de correo, contraseña o PIN hechos por ti, compartir el acceso, ni problemas que aparezcan después de los 30 días desde la entrega.</p>
+    </details>
+  </section>
+  <footer>
+    <span>© 2026 USXR Store · usxrdata.store</span>
+    <span>Precios en soles (S/) y USDT. Referencia: 1 USDT = S/ 3.40. Precios y stock de esta página son datos de ejemplo.</span>
+  </footer>
+</div>
+
+<div class="overlay drawer-ov" id="ovMenu" hidden>
+  <nav class="drawer" role="dialog" aria-modal="true" aria-label="Menú">
+    <div class="drawer-head"><span class="logo">USXR DATA</span><button class="x" data-close aria-label="Cerrar">✕</button></div>
+    <div id="menuList"></div>
+  </nav>
+</div>
+
+<div class="overlay" id="ovAdmin" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="Panel de administrador">
+    <div class="sheet-head"><h2>Admin</h2><button class="x" data-close aria-label="Cerrar">✕</button></div>
+    <div id="admGate" hidden>
+      <p class="note" id="gNote" style="margin:0 0 4px"></p>
+      <input class="fld" id="gUser" placeholder="Usuario" aria-label="Usuario" autocomplete="username">
+      <input class="fld" id="gPass" type="password" placeholder="Contraseña" aria-label="Contraseña" autocomplete="current-password">
+      <input class="fld" id="gPass2" type="password" placeholder="Repite la contraseña" aria-label="Repite la contraseña" autocomplete="new-password" hidden>
+      <div class="auth-msg" id="gMsg" role="status"></div>
+      <button type="button" class="btn accent block" id="gGo">Entrar al panel</button>
+    </div>
+    <div id="admMain" hidden>
+      <div class="adm-ai" id="admAI" hidden>
+        <b>✨ Crear producto con IA</b>
+        <textarea class="fld" id="admPrompt" rows="2" placeholder="Ej: Disney+ plan 1 mes a $4 y 3 meses a $10, entrega inmediata"></textarea>
+        <button type="button" class="btn accent block" id="admGen" style="margin-top:10px">Generar ficha</button>
+      </div>
+      <div id="admList"></div>
+      <div class="adm-foot"><button type="button" class="btn light" id="admAdd">+ Producto</button><button type="button" class="btn accent" id="admSave" style="flex:1">Guardar cambios</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ovLogin" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="sheet-head"><h2 id="authTitle">Entrar</h2><button class="x" data-close aria-label="Cerrar">✕</button></div>
+    <button type="button" class="btn light block" id="btnGoogle"><span style="font:800 20px var(--font-body);color:#4285F4">G</span> Continuar con Google</button>
+    <div class="or">O CON TU CORREO</div>
+    <form id="authForm" novalidate>
+      <input class="fld" id="fName" type="text" placeholder="Tu nombre" aria-label="Nombre" autocomplete="name" hidden>
+      <input class="fld" id="fMail" type="email" placeholder="Correo electrónico" aria-label="Correo electrónico" autocomplete="email">
+      <input class="fld" id="fPass" type="password" placeholder="Contraseña" aria-label="Contraseña" autocomplete="current-password">
+      <button type="button" class="link" id="authForgot">¿Olvidaste tu contraseña?</button>
+      <div class="auth-msg" id="authMsg" role="status"></div>
+      <button type="submit" class="btn accent block" id="authSubmit" style="margin-top:8px">Entrar</button>
+    </form>
+    <div class="auth-sw" id="authSw"></div>
+    <button type="button" class="btn light block" id="btnAdmin" style="margin-top:14px" hidden>⚙️ Panel de administrador</button>
+  </div>
+</div>
+
+<div class="overlay" id="ovPlans" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="plansTitle">
+    <div class="sheet-head"><h2 id="plansTitle"></h2><button class="x" data-close aria-label="Cerrar">✕</button></div>
+    <div id="plansList"></div>
+  </div>
+</div>
+
+<div class="overlay" id="ovPay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+    <div class="sheet-head"><h2 id="payTitle"></h2><button class="x" data-close aria-label="Cerrar">✕</button></div>
+    <div id="payBody"></div>
+  </div>
+</div>
+
+
+<script>
+(function () {
+  var P = function (id, name, cat, tile, glyph, stock, plans, hot) { return { id: id, name: name, cat: cat, tile: tile, glyph: glyph, stock: stock, plans: plans, hot: !!hot }; };
+  var PRODUCTS = [
+    P('gemini', 'Gemini', 'ai', '#E1E8FF', 'G', 63, [['Pro 1 mes', 1.20, '30 días'], ['Pro 12 meses', 6.00, '365 días'], ['Pro 18 meses', 5.90, '545 días']], true),
+    P('chatgpt', 'ChatGPT', 'ai', '#D6F5E8', 'C', 232, [['Plus 1 mes', 4.05, '30 días'], ['Plus 3 meses', 11.50, '90 días'], ['Team 1 mes', 6.50, '30 días']]),
+    P('perplexity', 'Perplexity Pro', 'ai', '#D3F4F2', 'Px', 41, [['Pro 1 mes', 3.20, '30 días'], ['Pro 12 meses', 18.00, '365 días']]),
+    P('midjourney', 'Midjourney', 'ai', '#E5E5EE', 'Mj', 17, [['Basic 1 mes', 6.50, '30 días'], ['Standard 1 mes', 14.00, '30 días']]),
+    P('netflix', 'Netflix', 'stream', '#FFD6D1', 'N', 48, [['Perfil 1 mes', 3.50, '30 días'], ['Pantalla completa 1 mes', 5.90, '30 días'], ['Cuenta completa 1 mes', 9.90, '30 días']]),
+    P('disney', 'Disney+', 'stream', '#CFE3FF', 'D+', 31, [['Perfil 1 mes', 2.80, '30 días'], ['Perfil 3 meses', 7.50, '90 días']]),
+    P('max', 'Max', 'stream', '#E3D4FF', 'M', 22, [['Perfil 1 mes', 2.50, '30 días'], ['Perfil 3 meses', 6.90, '90 días']]),
+    P('prime', 'Prime Video', 'stream', '#CDEFF7', 'P', 40, [['Perfil 1 mes', 2.20, '30 días'], ['Perfil 6 meses', 10.50, '180 días']]),
+    P('spotify', 'Spotify', 'stream', '#D2F5D9', 'S', 57, [['Individual 1 mes', 2.90, '30 días'], ['Individual 3 meses', 7.90, '90 días'], ['Individual 12 meses', 24.00, '365 días']]),
+    P('youtube', 'YouTube Premium', 'stream', '#FFD9D9', 'Y', 36, [['Individual 1 mes', 2.60, '30 días'], ['Individual 6 meses', 13.00, '180 días']]),
+    P('freefire', 'Free Fire', 'game', '#FFE3B8', 'FF', 120, [['110 diamantes', 1.20, 'Recarga por ID'], ['341 diamantes', 3.40, 'Recarga por ID'], ['1080 diamantes', 10.50, 'Recarga por ID']]),
+    P('roblox', 'Roblox', 'game', '#D9DCFF', 'R', 95, [['400 Robux', 5.10, 'Código digital'], ['800 Robux', 9.90, 'Código digital'], ['1700 Robux', 19.50, 'Código digital']]),
+    P('fortnite', 'Fortnite', 'game', '#E6D6FF', 'F', 64, [['1000 V-Bucks', 8.20, 'Código digital'], ['2800 V-Bucks', 22.00, 'Código digital']]),
+    P('mlbb', 'Mobile Legends', 'game', '#D6F0FF', 'ML', 88, [['86 diamantes', 1.80, 'Recarga por ID'], ['172 diamantes', 3.50, 'Recarga por ID']]),
+    P('canva', 'Canva Pro', 'multi', '#D3F4F2', 'Cv', 74, [['1 mes', 1.50, '30 días'], ['12 meses', 8.90, '365 días']]),
+    P('adobe', 'Adobe Creative Cloud', 'multi', '#FFD9CF', 'Ad', 19, [['1 mes', 6.90, '30 días'], ['12 meses', 49.00, '365 días']]),
+    P('capcut', 'CapCut Pro', 'multi', '#E5E5EE', 'Cc', 52, [['1 mes', 2.70, '30 días'], ['3 meses', 7.20, '90 días']])
+  ];
+  var CATS = [['all', 'Todo'], ['ai', 'Inteligencia Artificial'], ['stream', 'Streaming'], ['game', 'Juegos'], ['multi', 'Multiservicios']];
+  var state = { cat: 'all', q: '', list: false };
+  var $ = function (s) { return document.querySelector(s); };
+  var TC = 3.40; /* soles por 1 USDT (1 USDT = 1 USD). Cambia este valor para actualizar todos los precios. */
+  var fmt = function (n) { return 'S/ ' + (n * TC).toFixed(2); };
+  var fmtU = function (n) { return n.toFixed(2) + ' USDT'; };
+  var byId = function (id) { return PRODUCTS.filter(function (p) { return p.id === id; })[0]; };
+  /* OFERTA RELÁMPAGO REAL: fecha de cierre fija, igual para todos y sin reinicio al recargar. Al vencer, la sección desaparece y el plan vuelve a su precio normal. Para una oferta nueva, cambia estos datos. */
+  var FLASH = { productId: 'gemini', plan: 'Pro 12 meses', price: 4.20, regular: 6.00, end: Date.UTC(2026, 10, 2, 4, 59, 59) }; /* dom 1 nov 2026, 11:59 pm hora de Lima (UTC-5) */
+  var flashOn = function () { return Date.now() < FLASH.end; };
+  var eff = function (p) {
+    if (p.id !== FLASH.productId) return p.plans;
+    return p.plans.map(function (pl) {
+      if (pl[0] !== FLASH.plan) return pl;
+      return flashOn() ? [pl[0], FLASH.price, pl[2], FLASH.regular] : [pl[0], FLASH.regular, pl[2]];
+    });
+  };
+
+  function renderChips() {
+    $('#chips').innerHTML = CATS.map(function (c) {
+      return '<button class="chip" data-cat="' + c[0] + '" aria-pressed="' + (state.cat === c[0]) + '">' + c[1] + '</button>';
+    }).join('');
+  }
+  function renderGrid() {
+    var q = state.q.trim().toLowerCase();
+    var items = PRODUCTS.filter(function (p) {
+      return (state.cat === 'all' || p.cat === state.cat) && (!q || p.name.toLowerCase().indexOf(q) > -1);
+    });
+    $('#count').textContent = items.length + (items.length === 1 ? ' producto disponible' : ' productos disponibles');
+    $('#grid').className = 'grid' + (state.list ? ' list' : '');
+    if (!items.length) { $('#grid').innerHTML = '<div class="empty">No hay productos con ese nombre. Prueba con otra búsqueda.</div>'; return; }
+    $('#grid').innerHTML = items.map(function (p) {
+      var pls = eff(p);
+      var min = Math.min.apply(null, pls.map(function (x) { return x[1]; }));
+      var flash = flashOn() && p.id === FLASH.productId;
+      return '<article class="card' + (p.hot ? ' is-hot' : '') + '">' +
+        (p.hot ? '<span class="hot-tag">🔥 HOT!</span>' : '') +
+        '<span class="stock">' + p.stock + ' DISP.</span>' +
+        '<div class="art" style="background-color:' + p.tile + '">' + (/^data:image\//.test(p.img || '') ? '<img src="' + p.img + '" alt="" loading="lazy">' : '<b>' + p.glyph + '</b>') + '</div>' +
+        '<div class="body"><h3>' + p.name + '</h3>' + (p.desc ? '<p class="desc">' + esc(p.desc) + '</p>' : '') +
+        '<div class="plans">' + p.plans.length + ' planes disponibles</div>' +
+        '<div class="offer">' + (flash ? '⏰ Oferta: <span class="left"></span>' : '') + '</div>' +
+        '<div class="foot"><div><div class="since">DESDE</div><div class="price">' + fmt(min) + '</div><div class="usdt">' + fmtU(min) + '</div></div>' +
+        '<button type="button" class="btn accent" data-plans="' + esc(p.id) + '">Comprar</button></div></div></article>';
+    }).join('');
+    tick();
+  }
+  function renderFlash() {
+    var sec = $('.flash'), p = byId(FLASH.productId);
+    var on = flashOn() && !!p && p.plans.some(function (pl) { return pl[0] === FLASH.plan; });
+    sec.hidden = !on;
+    if (!on) return;
+    $('#flashName').textContent = p.name + ' ' + FLASH.plan;
+    $('#flashOld').textContent = fmt(FLASH.regular) + ' (' + fmtU(FLASH.regular) + ')';
+    $('#flashNew').textContent = fmt(FLASH.price);
+    $('#flashUsdt').textContent = fmtU(FLASH.price);
+    var fin = '';
+    try { fin = new Date(FLASH.end).toLocaleString('es-PE', { timeZone: 'America/Lima', weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }); } catch (e) {}
+    $('#flashEnd').textContent = fin ? 'Termina el ' + fin + ' (hora de Lima). Después vuelve a ' + fmt(FLASH.regular) + '.' : '';
+    var fi = eff(p).map(function (x) { return x[0]; }).indexOf(FLASH.plan);
+    $('#flashBuy').dataset.bp = p.id; $('#flashBuy').dataset.bi = String(fi);
+  }
+  function tick() {
+    var ms = Math.max(0, FLASH.end - Date.now());
+    if (ms === 0) { if (!$('.flash').hidden) { renderFlash(); renderGrid(); } return; }
+    var s = Math.floor(ms / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    $('#clock').textContent = (d ? d + 'd ' : '') + pad(h) + ':' + pad(m) + ':' + pad(sec);
+    var l = document.querySelectorAll('.left');
+    for (var i = 0; i < l.length; i++) l[i].textContent = (d ? d + ' d ' : '') + h + ' h ' + pad(m) + ' min';
+  }
+  function openSheet(el) { el.hidden = false; }
+  var MENU = [
+    ['GENERAL', [['🏠', 'Inicio', 'top'], ['⚡', 'Oferta relámpago', 'flash']]],
+    ['CATÁLOGO', [['🤖', 'Inteligencia Artificial', 'cat:ai'], ['📺', 'Streaming', 'cat:stream'], ['🎮', 'Juegos', 'cat:game'], ['🧰', 'Multiservicios', 'cat:multi'], ['🛒', 'Todo el catálogo', 'cat:all']]],
+    ['AYUDA', [['💬', 'Soporte', 'support'], ['🛡️', 'Garantía de 30 días', 'guarantee']]]
+  ];
+  function renderMenu() {
+    var cnt = function (a) { if (a.indexOf('cat:') !== 0) return ''; var c = a.slice(4); return PRODUCTS.filter(function (p) { return c === 'all' || p.cat === c; }).length; };
+    $('#menuList').innerHTML = MENU.map(function (g) {
+      return '<div class="menu-h">' + g[0] + '</div><div class="menu-group">' + g[1].map(function (i) {
+        var n = cnt(i[2]);
+        return '<button class="menu-item" data-go="' + i[2] + '"><span class="ic">' + i[0] + '</span><span class="lb">' + i[1] + '</span>' + (n !== '' ? '<span class="n">' + n + '</span>' : '') + '<span class="ch">›</span></button>' + (i[2] === 'support' ? '<div class="sub" id="supportSub" hidden><a href="' + waLink('Hola USXR DATA, necesito soporte.') + '" target="_blank" rel="noopener"><i style="background:#25D366"></i>WhatsApp</a><a href="https://t.me/' + TG_USER + '" target="_blank" rel="noopener"><i style="background:#2AABEE"></i>Telegram</a></div>' : '');
+      }).join('') + '</div>';
+    }).join('');
+  }
+  function goTo(a) {
+    if (a === 'support') { var s = $('#supportSub'); s.hidden = !s.hidden; document.querySelector('[data-go="support"]').setAttribute('aria-expanded', String(!s.hidden)); return; }
+    if (a === 'admin') { closeAll(); openAdmin(); return; }
+    closeAll();
+    var el = null;
+    if (a === 'top') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    if (a === 'flash') el = flashOn() ? $('.flash') : $('.cat-title');
+    else if (a === 'guarantee') el = $('.guarantee');
+    else if (a.indexOf('cat:') === 0) { state.cat = a.slice(4); state.q = ''; $('#q').value = ''; renderChips(); renderGrid(); el = $('.cat-title'); }
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function closeAll() { $('#ovPlans').hidden = true; $('#ovPay').hidden = true; $('#ovMenu').hidden = true; $('#ovLogin').hidden = true; $('#ovAdmin').hidden = true; }
+  var admin = { on: false, unlocked: false, tries: 0, cred: null, draft: null, db: null, sample: null, ids: [] };
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+  function sha(s) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)).then(function (b) {
+      return Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+    });
+  }
+  function admSync() { var ds = document.querySelectorAll('#admList details'); for (var i = 0; i < ds.length && admin.draft; i++) if (admin.draft[i]) admin.draft[i]._o = ds[i].open; }
+  function newId() { return 'p' + Date.now().toString(36) + Math.floor(Math.random() * 99); }
+  function admEnd() { var s = $('#ovAdmin .sheet'); s.scrollTop = s.scrollHeight; }
+  function renderAdmin() {
+    var opts = function (sel) { return CATS.slice(1).map(function (c) { return '<option value="' + c[0] + '"' + (sel === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join(''); };
+    $('#admList').innerHTML = admin.draft.map(function (p, i) {
+      var th = /^data:image\//.test(p.img || '') ? '<img class="adm-th" src="' + p.img + '" alt="">' : '';
+      return '<details class="adm"' + (p._o ? ' open' : '') + '><summary><b>' + esc(p.name) + '</b><span class="mono">' + p.stock + ' disp.</span></summary><div class="adm-b">' +
+        '<label>Nombre<input class="fld" data-i="' + i + '" data-f="name" value="' + esc(p.name) + '"></label>' +
+        '<label>Descripción<textarea class="fld" rows="2" maxlength="200" data-i="' + i + '" data-f="desc" placeholder="Qué incluye, cómo se entrega…">' + esc(p.desc || '') + '</textarea></label>' + th +
+        '<div class="adm-acts"><input type="file" accept="image/*" data-imgfile="' + i + '" hidden>' +
+        '<button type="button" class="btn light" data-pick="' + i + '">📷 Subir imagen</button>' +
+        (admin.sample ? '<button type="button" class="btn light" data-aiimg="' + i + '">✨ Imagen IA</button><button type="button" class="btn light" data-aidesc="' + i + '">✨ Descripción IA</button>' : '') +
+        (th ? '<button type="button" class="btn light" data-rmimg="' + i + '">Quitar imagen</button>' : '') + '</div>' +
+        '<div class="adm-2"><label>Stock<input class="fld" type="number" min="0" data-i="' + i + '" data-f="stock" value="' + p.stock + '"></label>' +
+        '<label>Categoría<select class="fld" data-i="' + i + '" data-f="cat">' + opts(p.cat) + '</select></label></div>' +
+        '<label class="adm-ck"><input type="checkbox" data-i="' + i + '" data-f="hot"' + (p.hot ? ' checked' : '') + '> Destacado 🔥</label>' +
+        '<div class="menu-h">PLANES</div>' + p.plans.map(function (pl, j) {
+          var a = 'data-i="' + i + '" data-j="' + j + '"';
+          return '<div class="adm-pl"><input class="fld nm" ' + a + ' data-k="0" placeholder="Nombre del plan" value="' + esc(pl[0]) + '">' +
+            '<input class="fld" type="number" step="0.01" min="0" ' + a + ' data-k="1" placeholder="Precio" value="' + pl[1] + '">' +
+            '<input class="fld" type="number" step="0.01" min="0" ' + a + ' data-k="3" placeholder="Antes" value="' + (pl[3] || '') + '">' +
+            '<input class="fld" ' + a + ' data-k="2" placeholder="Duración" value="' + esc(pl[2]) + '">' +
+            '<button type="button" class="x" data-i="' + i + '" data-delpl="' + j + '" aria-label="Quitar plan">✕</button></div>';
+        }).join('') +
+        '<div class="adm-acts"><button type="button" class="btn light" data-addpl="' + i + '">+ Plan</button><button type="button" class="btn hot" data-delp="' + i + '">Eliminar producto</button></div></div></details>';
+    }).join('');
+  }
+  function admReady() {
+    admin.unlocked = true; $('#admGate').hidden = true; $('#admMain').hidden = false; $('#admAI').hidden = !admin.sample;
+    admin.draft = JSON.parse(JSON.stringify(PRODUCTS)); renderAdmin();
+  }
+  function openAdmin() {
+    openSheet($('#ovAdmin'));
+    if (admin.unlocked || !admin.db) { admReady(); return; }
+    $('#admMain').hidden = true; $('#admGate').hidden = false;
+    $('#gUser').value = ''; $('#gPass').value = ''; $('#gPass2').value = ''; $('#gMsg').textContent = '';
+    $('#gNote').textContent = 'Comprobando…'; $('#gGo').disabled = true;
+    admin.db.doc('adminauth/cred').get().then(function (s) {
+      admin.cred = s.exists ? s.data() : null;
+      $('#gNote').textContent = admin.cred ? 'Ingresa tus credenciales de administrador.' : 'Primer acceso: crea tu usuario y contraseña de administrador.';
+      $('#gPass2').hidden = !!admin.cred; $('#gPass').autocomplete = admin.cred ? 'current-password' : 'new-password';
+      $('#gGo').textContent = admin.cred ? 'Entrar al panel' : 'Crear acceso'; $('#gGo').disabled = false;
+    }).catch(function () { $('#gNote').textContent = 'No se pudo comprobar el acceso. Cierra e intenta de nuevo.'; });
+  }
+  function gErr(t) { $('#gMsg').textContent = t; $('#gMsg').className = 'auth-msg err'; }
+  function admGate() {
+    var u = $('#gUser').value.trim().toLowerCase(), p = $('#gPass').value, c = admin.cred;
+    if (admin.tries >= 5) return gErr('Demasiados intentos. Recarga la página.');
+    if (!c) {
+      if (u.length < 3) return gErr('El usuario debe tener al menos 3 caracteres.');
+      if (p.length < 8) return gErr('La contraseña debe tener al menos 8 caracteres.');
+      if (p !== $('#gPass2').value) return gErr('Las contraseñas no coinciden.');
+      var salt = Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(16)), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+      sha(salt + ':' + u + ':' + p).then(function (h) { return admin.db.doc('adminauth/cred').set({ user: u, salt: salt, hash: h }); })
+        .then(function () { admin.unlocked = true; toast('Acceso de administrador creado'); admReady(); })
+        .catch(function () { gErr('No se pudo guardar el acceso.'); });
+      return;
+    }
+    sha(c.salt + ':' + u + ':' + p).then(function (h) {
+      if (u === c.user && h === c.hash) admReady(); else { admin.tries++; gErr('Usuario o contraseña incorrectos.'); }
+    });
+  }
+  function admInput(e) {
+    var t = e.target, d = t.dataset; if (!admin.draft || d.i === undefined) return;
+    var p = admin.draft[+d.i]; if (!p) return;
+    if (d.f) {
+      p[d.f] = d.f === 'hot' ? t.checked : d.f === 'stock' ? Math.max(0, parseInt(t.value, 10) || 0) : t.value;
+      if (d.f === 'name') t.closest('details').querySelector('summary b').textContent = t.value;
+      if (d.f === 'stock') t.closest('details').querySelector('summary span').textContent = p.stock + ' disp.';
+    } else if (d.k !== undefined) {
+      var pl = p.plans[+d.j], k = +d.k;
+      if (k === 1) pl[1] = parseFloat(t.value) || 0;
+      else if (k === 3) { var v = parseFloat(t.value); if (v > 0) pl[3] = v; else pl.length = Math.min(pl.length, 3); }
+      else pl[k] = t.value;
+    }
+  }
+  function admPl(i, op, j) {
+    admSync(); var p = admin.draft[i];
+    if (op === 'add') p.plans.push(['Nuevo plan', 1, '30 días']);
+    else if (p.plans.length > 1) p.plans.splice(j, 1);
+    p._o = true; renderAdmin();
+  }
+  function admDel(t) {
+    if (!t.dataset.sure) { t.dataset.sure = '1'; t.textContent = '¿Seguro? Toca otra vez'; return; }
+    admSync(); admin.draft.splice(+t.dataset.delp, 1); renderAdmin();
+  }
+  function admImg(t) {
+    var f = t.files && t.files[0], i = +t.dataset.imgfile; if (!f) return;
+    var fr = new FileReader();
+    fr.onload = function () {
+      var im = new Image();
+      im.onload = function () {
+        var s = 300, c = document.createElement('canvas'), k = Math.max(s / im.width, s / im.height); c.width = c.height = s;
+        c.getContext('2d').drawImage(im, (s - im.width * k) / 2, (s - im.height * k) / 2, im.width * k, im.height * k);
+        admSync(); admin.draft[i].img = c.toDataURL('image/jpeg', 0.78); admin.draft[i]._o = true; renderAdmin();
+      };
+      im.onerror = function () { toast('No se pudo leer la imagen'); };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(f);
+  }
+  function busy(t, on) { t.disabled = on; if (on) { t.dataset.l = t.textContent; t.textContent = '✨ Pensando…'; } else if (t.dataset.l) t.textContent = t.dataset.l; }
+  function admAIdesc(t) {
+    var p = admin.draft[+t.dataset.aidesc]; if (!admin.sample) return toast('La IA no está disponible aquí');
+    busy(t, true);
+    admin.sample.json('Eres redactor de una tienda online de cuentas y recargas digitales. Escribe en español una descripción de venta de 1 o 2 frases (máximo 140 caracteres), clara y sin exagerar, para el producto "' + p.name + '" con estos planes: ' + p.plans.map(function (x) { return x[0]; }).join(', ') + '. Responde solo JSON con esta forma: {"desc":"..."}')
+      .then(function (r) { admSync(); p.desc = String(r.desc || '').slice(0, 200); p._o = true; renderAdmin(); })
+      .catch(function () { toast('La IA no pudo responder'); })
+      .then(function () { busy(t, false); });
+  }
+  function admAIimg(t) {
+    var p = admin.draft[+t.dataset.aiimg]; if (!admin.sample) return toast('La IA no está disponible aquí');
+    busy(t, true);
+    admin.sample('Diseña una ilustración cuadrada en SVG, simple, plana y colorida, que represente "' + p.name + '". Reglas: viewBox="0 0 120 120", sin texto, sin scripts, sin imágenes externas, máximo 3000 caracteres. Responde solo con el código SVG.')
+      .then(function (r) {
+        var m = /<svg[\s\S]*<\/svg>/i.exec(r.text); if (!m) throw new Error('sin svg');
+        var svg = m[0].replace(/<script[\s\S]*?<\/script>/gi, '').replace(/\son\w+="[^"]*"/gi, '').replace(/<image[^>]*>/gi, '');
+        if (svg.length > 20000) throw new Error('grande');
+        if (!/xmlns=/.test(svg)) svg = svg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+        admSync(); p.img = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); p._o = true; renderAdmin();
+      })
+      .catch(function () { toast('La IA no pudo crear la imagen'); })
+      .then(function () { busy(t, false); });
+  }
+  function admGen(t) {
+    var txt = $('#admPrompt').value.trim(); if (!txt) return toast('Describe el producto primero');
+    if (!admin.sample) return toast('La IA no está disponible aquí');
+    busy(t, true);
+    admin.sample.json('Eres asistente de una tienda online de cuentas y recargas digitales (precios en USD). A partir de esta descripción crea la ficha de un producto: "' + txt + '". Responde solo JSON con esta forma: {"name":"","cat":"ai|stream|game|multi","desc":"1 o 2 frases, máx 140 caracteres","stock":10,"hot":false,"plans":[["nombre del plan",precio,"duración"]]}. Usa de 1 a 4 planes.')
+      .then(function (r) {
+        var plans = (Array.isArray(r.plans) ? r.plans : []).slice(0, 6).map(function (x) { return [String(x[0] || 'Plan'), parseFloat(x[1]) || 1, String(x[2] || '30 días')]; });
+        if (!plans.length) plans = [['Plan 1 mes', 1, '30 días']];
+        admSync();
+        admin.draft.push({ id: newId(), name: String(r.name || 'Nuevo producto').slice(0, 60), cat: ['ai', 'stream', 'game', 'multi'].indexOf(r.cat) > -1 ? r.cat : 'multi', tile: '#E5E5EE', glyph: 'N', desc: String(r.desc || '').slice(0, 200), stock: Math.max(0, parseInt(r.stock, 10) || 10), hot: !!r.hot, plans: plans, _o: true, _new: true });
+        $('#admPrompt').value = ''; renderAdmin(); admEnd(); toast('Ficha creada. Revísala y guarda.');
+      })
+      .catch(function () { toast('La IA no pudo crear la ficha'); })
+      .then(function () { busy(t, false); });
+  }
+  function admAdd() {
+    admSync();
+    admin.draft.push({ id: newId(), name: 'Nuevo producto', cat: 'multi', tile: '#E5E5EE', glyph: 'N', desc: '', stock: 10, plans: [['Plan 1 mes', 1, '30 días']], hot: false, _o: true, _new: true });
+    renderAdmin(); admEnd();
+  }
+  function admSave() {
+    admSync();
+    var out = admin.draft.map(function (p) {
+      var q = JSON.parse(JSON.stringify(p)); q.name = q.name.trim() || 'Producto'; q.desc = (q.desc || '').trim();
+      if (q._new) q.glyph = q.name.slice(0, 2);
+      delete q._new; delete q._o; return q;
+    });
+    PRODUCTS = out; renderGrid(); closeAll();
+    if (!admin.db) { toast('Aplicado solo en esta vista (sin base de datos)'); return; }
+    var col = admin.db.collection('items'), keep = {};
+    var ops = out.map(function (p, i) { keep[p.id] = 1; return col.doc(p.id).set({ json: JSON.stringify(p), order: i }); });
+    admin.ids.forEach(function (id) { if (!keep[id]) ops.push(col.doc(id).delete()); });
+    Promise.all(ops).then(function () { admin.ids = out.map(function (p) { return p.id; }); toast('Cambios guardados'); }).catch(function () { toast('No se pudo guardar'); });
+  }
+  function initAdmin() {
+    $('#admList').addEventListener('input', admInput);
+    $('#admList').addEventListener('change', function (e) { var t = e.target; if (t.type === 'file' && t.dataset.imgfile !== undefined) admImg(t); });
+    $('#admGate').addEventListener('keydown', function (e) { if (e.key === 'Enter') admGate(); });
+    if (!window.claude || !window.claude.use) return;
+    window.claude.use('db').then(function (db) {
+      if (!db) return; admin.db = db;
+      db.collection('items').onSnapshot(function (snap) {
+        var rows = [];
+        snap.docs.forEach(function (d) { var x = d.data(); if (x && x.json) { try { rows.push([x.order || 0, JSON.parse(x.json)]); } catch (e) {} } });
+        admin.ids = snap.docs.map(function (d) { return d.id; });
+        if (!rows.length) return;
+        rows.sort(function (a, b) { return a[0] - b[0]; });
+        PRODUCTS = rows.map(function (r) { return r[1]; }); renderGrid();
+      }, function () {});
+    }).catch(function () {});
+    window.claude.use('user').then(function (u) { return u && u.isOwner(); }).then(function (o) { admin.on = !!o; }).catch(function () {});
+    window.claude.use('sample').then(function (s) { admin.sample = s || null; }).catch(function () {});
+  }
+  var auth = { mode: 'login', user: null };
+  function authMsg(t, err) { var m = $('#authMsg'); m.textContent = t; m.className = 'auth-msg' + (err ? ' err' : ''); }
+  function toast(t) { var d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 2600); }
+  function setUser(u) {
+    auth.user = u;
+    var b = $('#btnLogin'); $('#userMenu').hidden = true;
+    if (u) { b.className = 'avatar'; b.textContent = String(u.name || u.mail || 'U').charAt(0).toUpperCase(); b.setAttribute('aria-label', 'Mi perfil'); }
+    else { b.className = 'btn'; b.textContent = 'Entrar'; b.removeAttribute('aria-label'); }
+  }
+  function toggleUserMenu() {
+    var m = $('#userMenu');
+    if (!m.hidden) { m.hidden = true; return; }
+    var u = auth.user;
+    m.innerHTML = '<div class="pop-head"><b>' + esc(u.name) + '</b><span>' + esc(u.mail) + '</span></div>' +
+      '<a href="' + waLink('Hola USXR Store, necesito ayuda.') + '" target="_blank" rel="noopener">💬 Soporte por WhatsApp</a>' +
+      '<button type="button" data-um="logout">🚪 Cerrar sesión</button>';
+    m.hidden = false;
+  }
+  function setMode(m) {
+    auth.mode = m; var reg = m === 'register';
+    $('#authTitle').textContent = reg ? 'Crear cuenta' : 'Entrar';
+    $('#fName').hidden = !reg;
+    $('#fPass').autocomplete = reg ? 'new-password' : 'current-password';
+    $('#authSubmit').textContent = reg ? 'Crear cuenta' : 'Entrar';
+    $('#authForgot').hidden = reg;
+    $('#authSw').innerHTML = reg ? '¿Ya tienes cuenta? <button type="button" class="link" data-mode="login">Entrar</button>' : '¿No tienes cuenta? <button type="button" class="link" data-mode="register">Crear cuenta</button>';
+    authMsg('');
+  }
+  // Pon aquí el número de WhatsApp de la tienda con código de país y sin signos (ej. '51999999999').
+  var WA_NUMBER = '51922055086';
+  // Usuario de Telegram de la tienda, sin @ (ej. 'usxrdata').
+  var TG_USER = '';
+  function waLink(text) { return 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(text); }
+  var dur = function (pl) { return /^\d+ días$/.test(pl[2]) ? 'Dura ' + pl[2] + ' desde la entrega' : pl[2]; };
+  var kind = function (p, pl) {
+    var n = pl[0];
+    if (/cuenta completa/i.test(n)) return 'Cuenta completa: acceso a todos los perfiles, solo para ti';
+    if (/pantalla completa/i.test(n)) return 'Pantalla completa: 1 pantalla de la cuenta';
+    if (/perfil/i.test(n)) return 'Perfil: 1 perfil dentro de una cuenta compartida';
+    if (/individual/i.test(n)) return 'Individual: 1 usuario';
+    if (p.cat === 'game') return /diamantes/i.test(n) ? 'Recarga directa a tu ID de jugador' : 'Código digital que te enviamos por WhatsApp';
+    return '';
+  };
+  var condBox = function (p) {
+    var L = [];
+    if (p.cat === 'game') {
+      L.push('No es una suscripción: no tiene vencimiento.');
+      L.push('En recargas por ID, escribe bien tu ID de jugador: una recarga a un ID equivocado no se puede revertir.');
+      L.push('Garantía: si la recarga o el código no llega o no funciona, lo reponemos o te devolvemos el pago.');
+    } else {
+      if (p.cat === 'stream') {
+        L.push('Entrega por WhatsApp apenas se confirma el pago: correo, contraseña y tu perfil.');
+        if (p.plans.some(function (pl) { return /perfil|pantalla|cuenta completa/i.test(pl[0]); })) L.push('Perfil = 1 perfil dentro de una cuenta compartida. Cuenta completa = toda la cuenta para ti.');
+      } else {
+        L.push('Antes de que pagues te confirmamos por WhatsApp si se activa en tu correo o si te entregamos un acceso.');
+      }
+      L.push('La duración cuenta desde el día de la entrega.');
+      L.push('No cambies el correo, la contraseña ni el PIN del acceso que recibes.');
+      L.push('Garantía de 30 días desde la entrega: si falla, la reponemos o te devolvemos el pago.');
+    }
+    return '<div class="cond"><b>Antes de comprar</b><ul>' + L.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div>';
+  };
+  /* DATOS DE YAPE (de ejemplo: cámbialos por los tuyos). qr: imagen del QR como data:image/png;base64,... (los enlaces externos a imágenes no cargan en esta página). */
+  var YAPE = { number: '922055086', name: 'USXR STORE', qr: '' };
+  function copyTxt(txt) {
+    var ok = function () { toast('Copiado'); };
+    var fb = function () { var a = document.createElement('textarea'); a.value = txt; a.style.position = 'fixed'; a.style.opacity = '0'; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); ok(); } catch (e) { toast('Copia el número manualmente'); } document.body.removeChild(a); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, fb); else fb();
+  }
+  function openYape(pid, bi) {
+    var p = byId(pid); if (!p) return;
+    var pl = eff(p)[bi]; if (!pl) return;
+    var isFlash = flashOn() && p.id === FLASH.productId && pl[0] === FLASH.plan;
+    var timed = /^\d+ días$/.test(pl[2]);
+    var k = kind(p, pl);
+    var msg = 'Hola USXR Store 👋\nYa realicé mi pago por Yape:\n\n🛒 Producto: ' + p.name + '\n📦 Plan: ' + pl[0] + (k ? '\n🔎 Tipo: ' + k : '') +
+      (timed ? '\n⏳ Duración: ' + pl[2] + ' desde la entrega' : '\n📌 Entrega: ' + pl[2]) +
+      (isFlash ? '\n⚡ Oferta relámpago (precio normal ' + fmt(pl[3]) + ')' : '') +
+      '\n💳 Método de pago: Yape\n💰 Total pagado: ' + fmt(pl[1]) + '\n\nTe envío la captura del pago. ¡Gracias!';
+    var qr = /^data:image\//.test(YAPE.qr) ? '<img src="' + YAPE.qr + '" alt="QR de Yape">' : '<span>Aquí va tu QR de Yape</span>';
+    $('#payTitle').textContent = 'Pagar con Yape';
+    $('#payBody').innerHTML =
+      '<div class="pay-sum"><b>' + esc(p.name) + ' · ' + esc(pl[0]) + '</b><span>' + (timed ? 'Duración: ' + esc(pl[2]) + ' desde la entrega' : esc(pl[2])) + '</span><div class="pay-pr">' + fmt(pl[1]) + '</div></div>' +
+      '<div class="qr-box">' + qr + '</div>' +
+      '<div class="yape-row"><div><small>NÚMERO</small><b class="mono">' + esc(YAPE.number) + '</b></div><button type="button" class="btn light" data-copy="' + esc(YAPE.number) + '">Copiar</button></div>' +
+      '<div class="yape-row"><div><small>A NOMBRE DE</small><b>' + esc(YAPE.name) + '</b></div></div>' +
+      '<ol class="note yape-steps"><li>Escanea el QR o yapea al número.</li><li>Paga exactamente <b>' + fmt(pl[1]) + '</b>.</li><li>Toca el botón de abajo y envía tu captura por WhatsApp.</li></ol>' +
+      '<a class="btn accent block" data-pay target="_blank" rel="noopener" href="' + waLink(msg) + '">Ya pagué, enviar comprobante</a>' +
+      '<button type="button" class="btn light block" style="margin-top:10px" data-bp="' + esc(p.id) + '" data-bi="' + bi + '">← Cambiar plan o método</button>';
+    closeAll(); openSheet($('#ovPay'));
+  }
+  /* DATOS DE BINANCE (de ejemplo: cámbialos por los tuyos). qr: imagen del QR como data:image/png;base64,... */
+  var BINANCE = { id: '123456789', name: 'USXR STORE', qr: '' };
+  function openBinance(pid, bi) {
+    var p = byId(pid); if (!p) return;
+    var pl = eff(p)[bi]; if (!pl) return;
+    var isFlash = flashOn() && p.id === FLASH.productId && pl[0] === FLASH.plan;
+    var timed = /^\d+ días$/.test(pl[2]);
+    var k = kind(p, pl);
+    var msg = 'Hola USXR Store 👋\nYa realicé mi pago por Binance:\n\n🛒 Producto: ' + p.name + '\n📦 Plan: ' + pl[0] + (k ? '\n🔎 Tipo: ' + k : '') +
+      (timed ? '\n⏳ Duración: ' + pl[2] + ' desde la entrega' : '\n📌 Entrega: ' + pl[2]) +
+      (isFlash ? '\n⚡ Oferta relámpago (precio normal ' + fmtU(pl[3]) + ')' : '') +
+      '\n💳 Método de pago: Binance (USDT)\n💰 Total pagado: ' + fmtU(pl[1]) + '\n\nTe envío la captura del pago. ¡Gracias!';
+    var qr = /^data:image\//.test(BINANCE.qr) ? '<img src="' + BINANCE.qr + '" alt="QR de Binance">' : '<span>Aquí va tu QR de Binance</span>';
+    $('#payTitle').textContent = 'Pagar con Binance';
+    $('#payBody').innerHTML =
+      '<div class="pay-sum"><b>' + esc(p.name) + ' · ' + esc(pl[0]) + '</b><span>' + (timed ? 'Duración: ' + esc(pl[2]) + ' desde la entrega' : esc(pl[2])) + '</span><div class="pay-pr">' + fmtU(pl[1]) + '</div></div>' +
+      '<div class="qr-box">' + qr + '</div>' +
+      '<div class="yape-row"><div><small>ID DE BINANCE PAY</small><b class="mono">' + esc(BINANCE.id) + '</b></div><button type="button" class="btn light" data-copy="' + esc(BINANCE.id) + '">Copiar</button></div>' +
+      '<div class="yape-row"><div><small>A NOMBRE DE</small><b>' + esc(BINANCE.name) + '</b></div></div>' +
+      '<ol class="note yape-steps"><li>Escanea el QR o envía por Binance Pay al ID.</li><li>Paga exactamente <b>' + fmtU(pl[1]) + '</b>.</li><li>Toca el botón de abajo y envía tu captura por WhatsApp.</li></ol>' +
+      '<a class="btn accent block" data-pay target="_blank" rel="noopener" href="' + waLink(msg) + '">Ya pagué, enviar comprobante</a>' +
+      '<button type="button" class="btn light block" style="margin-top:10px" data-bp="' + esc(p.id) + '" data-bi="' + bi + '">← Cambiar plan o método</button>';
+    closeAll(); openSheet($('#ovPay'));
+  }
+  function openPay(pid, bi) {
+    var p = byId(pid); if (!p) return;
+    var pl = eff(p)[bi]; if (!pl) return;
+    var isFlash = flashOn() && p.id === FLASH.productId && pl[0] === FLASH.plan;
+    var k = kind(p, pl);
+    var timed = /^\d+ días$/.test(pl[2]);
+    var msg = function (m) {
+      var y = m === 'Yape';
+      return 'Hola USXR Store 👋\nQuiero comprar:\n\n🛒 Producto: ' + p.name + '\n📦 Plan: ' + pl[0] + (k ? '\n🔎 Tipo: ' + k : '') +
+        (timed ? '\n⏳ Duración: ' + pl[2] + ' desde la entrega' : '\n📌 Entrega: ' + pl[2]) +
+        (isFlash ? '\n⚡ Oferta relámpago (precio normal ' + (y ? fmt(pl[3]) : fmtU(pl[3])) + ')' : '') +
+        '\n💳 Método de pago: ' + m + '\n💰 Total a pagar: ' + (y ? fmt(pl[1]) : fmtU(pl[1])) +
+        '\n\nQuedo atento a los datos para pagar. ¡Gracias!';
+    };
+    var plansAll = eff(p);
+    var sel = plansAll.length > 1 ? '<div class="plan-sel">' + plansAll.map(function (x, j) { return '<button type="button" class="plan-opt' + (j === bi ? ' on' : '') + '" data-sp="' + esc(p.id) + '" data-sj="' + j + '"><span>' + esc(x[0]) + '</span><b>' + fmt(x[1]) + '</b></button>'; }).join('') + '</div>' : '';
+    $('#payTitle').textContent = p.name;
+    $('#payBody').innerHTML = sel + '<div class="pay-sum"><b>' + esc(p.name) + ' · ' + esc(pl[0]) + '</b><div class="pay-pr">' + fmt(pl[1]) + ' <small>(' + fmtU(pl[1]) + ')</small></div></div>' +
+      '<div class="note" style="margin:0 0 10px">¿Con qué vas a pagar?</div>' +
+      '<button type="button" class="btn accent block" data-yp="' + esc(p.id) + '" data-yi="' + bi + '">📱 Yape · ' + fmt(pl[1]) + '</button>' +
+      '<button type="button" class="btn light block" style="margin-top:10px" data-bn="' + esc(p.id) + '" data-bj="' + bi + '">🟡 Binance · ' + fmtU(pl[1]) + '</button>' +
+      '<p class="note">Al elegir, se abre WhatsApp con tu pedido ya escrito y ahí te enviamos los datos para pagar.</p>';
+    closeAll(); openSheet($('#ovPay'));
+  }
+  function showPlans(id) {
+    var p = byId(id);
+    if (eff(p).length) { openPay(id, 0); return; }
+    $('#plansTitle').textContent = p.name;
+    $('#plansList').innerHTML = eff(p).map(function (pl, i) {
+      return '<div class="row"><div class="info"><b>' + pl[0] + '</b>' + (pl[3] ? '<span>antes ' + fmt(pl[3]) + ' (' + fmtU(pl[3]) + ')</span>' : '') + '</div>' +
+        '<div class="p">' + fmt(pl[1]) + '<small class="usdt">' + fmtU(pl[1]) + '</small></div><button type="button" class="btn accent" data-bp="' + esc(p.id) + '" data-bi="' + i + '">Comprar</button></div>';
+    }).join('');
+    openSheet($('#ovPlans'));
+  }
+  renderFlash();
+  $('#waSupport').href = waLink('Hola USXR Store, necesito soporte.');
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.acct')) $('#userMenu').hidden = true;
+    var t = e.target.closest('button, a, .overlay'); if (!t) return;
+    if (t.dataset.um === 'logout') { setUser(null); toast('Sesión cerrada'); return; }
+    if (t.dataset.um === 'admin') { $('#userMenu').hidden = true; openAdmin(); return; }
+    if (t.dataset.bp) { e.preventDefault(); openPay(t.dataset.bp, +t.dataset.bi); }
+    else if (t.dataset.sp) { openPay(t.dataset.sp, +t.dataset.sj); }
+    else if (t.dataset.yp) { openYape(t.dataset.yp, +t.dataset.yi); }
+    else if (t.dataset.bn) { openBinance(t.dataset.bn, +t.dataset.bj); }
+    else if (t.dataset.copy !== undefined) { copyTxt(t.dataset.copy); }
+    else if (t.dataset.pay !== undefined) { setTimeout(closeAll, 400); }
+    else if (t.dataset.cat) { state.cat = t.dataset.cat; renderChips(); renderGrid(); }
+    else if (t.dataset.plans) showPlans(t.dataset.plans);
+    else if (t.hasAttribute('data-close')) closeAll();
+    else if (t.classList.contains('overlay') && e.target === t) closeAll();
+    else if (t.id === 'vGrid' || t.id === 'vList') {
+      state.list = t.id === 'vList';
+      $('#vGrid').setAttribute('aria-pressed', !state.list); $('#vList').setAttribute('aria-pressed', state.list);
+      renderGrid();
+    }
+    else if (t.dataset.go) goTo(t.dataset.go);
+    else if (t.id === 'btnMenu') { renderMenu(); openSheet($('#ovMenu')); }
+    else if (t.id === 'btnAdmin') { closeAll(); openAdmin(); }
+    else if (t.id === 'admAdd') admAdd();
+    else if (t.id === 'admSave') admSave();
+    else if (t.id === 'gGo') admGate();
+    else if (t.id === 'admGen') admGen(t);
+    else if (t.dataset.pick !== undefined) $('#admList input[data-imgfile="' + t.dataset.pick + '"]').click();
+    else if (t.dataset.aidesc !== undefined) admAIdesc(t);
+    else if (t.dataset.aiimg !== undefined) admAIimg(t);
+    else if (t.dataset.rmimg !== undefined) { admSync(); delete admin.draft[+t.dataset.rmimg].img; renderAdmin(); }
+    else if (t.dataset.addpl !== undefined) admPl(+t.dataset.addpl, 'add');
+    else if (t.dataset.delpl !== undefined) admPl(+t.dataset.i, 'del', +t.dataset.delpl);
+    else if (t.dataset.delp !== undefined) admDel(t);
+    else if (t.dataset.mode) setMode(t.dataset.mode);
+    else if (t.id === 'btnGoogle') authMsg('El acceso con Google estará disponible muy pronto.');
+    else if (t.id === 'authForgot') authMsg('Para recuperar tu contraseña, escríbenos por Soporte.');
+    else if (t.id === 'btnLogin') { e.preventDefault(); if (auth.user) { toggleUserMenu(); } else { setMode('login'); $('#btnAdmin').hidden = !admin.on; openSheet($('#ovLogin')); } }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
+  $('#q').addEventListener('input', function (e) { state.q = e.target.value; renderGrid(); });
+  $('#authForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var reg = auth.mode === 'register', name = $('#fName').value.trim(), mail = $('#fMail').value.trim(), pass = $('#fPass').value;
+    if (reg && !name) return authMsg('Escribe tu nombre.', true);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return authMsg('Escribe un correo válido.', true);
+    if (pass.length < 6) return authMsg('La contraseña debe tener al menos 6 caracteres.', true);
+    setUser({ name: reg ? name : mail.split('@')[0], mail: mail });
+    $('#authForm').reset(); closeAll(); toast('¡Hola, ' + auth.user.name + '!');
+  });
+
+  renderChips(); renderGrid(); initAdmin();
+  setInterval(tick, 1000);
+})();
+</script>
+
+</body></html>
