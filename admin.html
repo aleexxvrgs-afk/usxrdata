@@ -579,6 +579,7 @@ select.fld{cursor:pointer}
   var plans = [];
 
   function openModal(id) {
+    console.log('🚀 Abriendo modal, id:', id);
     editingId = id || null;
     plans = [];
     $('modalTitle').textContent = id ? 'Editar producto' : 'Nuevo producto';
@@ -591,24 +592,35 @@ select.fld{cursor:pointer}
       addPlanRow(['', 1, '30 días', '']);
     }
     $('modalOverlay').hidden = false;
+    
+    // Verificar que el botón existe
+    var closeBtn = $('btnCloseModal');
+    console.log('🔍 Botón close existe:', !!closeBtn);
+    console.log('🔍 Botón close HTML:', closeBtn ? closeBtn.outerHTML : 'NO ENCONTRADO');
   }
 
   function closeModal() { 
+    console.log('📦 Ejecutando closeModal - ocultando overlay');
     $('modalOverlay').hidden = true; 
     editingId = null;
+    console.log('✅ Modal cerrado - overlay.hidden =', $('modalOverlay').hidden);
   }
   
   // Close modal handlers - with explicit event stopping
   $('btnCloseModal').addEventListener('click', function(e) { 
+    console.log('🔴 CLICK EN BOTÓN X DETECTADO');
     e.preventDefault();
     e.stopPropagation();
     closeModal(); 
+    console.log('✅ closeModal() ejecutado');
   });
   
   $('btnCancelModal').addEventListener('click', function(e) { 
+    console.log('🔴 CLICK EN BOTÓN CANCELAR DETECTADO');
     e.preventDefault();
     e.stopPropagation();
     closeModal(); 
+    console.log('✅ closeModal() ejecutado');
   });
   
   // Overlay click - only if clicking outside modal
