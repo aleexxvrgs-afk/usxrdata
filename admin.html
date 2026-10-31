@@ -602,15 +602,24 @@ select.fld{cursor:pointer}
         return;
       }
       
-      // Verificar si el email está en la tabla admins
-      sbFetch('admins?email=eq.' + encodeURIComponent(email) + '&select=email')
-        .then(function(rows) {
-          if (rows && rows.length > 0) {
-            // ✅ Es admin: resetear intentos y permitir acceso
+      // Verificar si el email está en la tabla admins usando el cliente Supabase
+      _supa.from('admins').select('email').eq('email', email)
+        .then(function(result) {
+          if (result.error) {
+            // Error de conexión - permitir acceso si es INITIAL_SESSION (ya autenticado antes)
+            if (event === 'INITIAL_SESSION') {
+              showPanel(session.user);
+            } else {
+              _supa.auth.signOut();
+              showLogin();
+              $('loginErr').textContent = '❌ Error al verificar permisos: ' + result.error.message;
+            }
+            return;
+          }
+          if (result.data && result.data.length > 0) {
             resetAttempts();
             showPanel(session.user);
           } else {
-            // ❌ No es admin: registrar intento fallido
             var blocked = registerFailedAttempt();
             var data = getBlockData();
             _supa.auth.signOut();
@@ -622,11 +631,6 @@ select.fld{cursor:pointer}
               $('loginErr').textContent = '❌ Acceso denegado. Te queda ' + remaining + ' intento' + (remaining !== 1 ? 's' : '') + ' antes del bloqueo.';
             }
           }
-        })
-        .catch(function() {
-          _supa.auth.signOut();
-          showLogin();
-          $('loginErr').textContent = '❌ Error al verificar permisos.';
         });
     } else {
       showLogin();
