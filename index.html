@@ -442,7 +442,9 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   // --- SUPABASE ---
   var SUPA_URL = 'https://epubjmcysdfncoiegqlc.supabase.co';
   var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwdWJqbWN5c2RmbmNvaWVncWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0MjE1NDAsImV4cCI6MjEwODk5NzU0MH0.vlEDtKlejngfYaSbgAEDYkqCEEQKM1EUZlYxG9tGA5g';
-  var _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+  var _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+    auth: { detectSessionInUrl: true, persistSession: true }
+  });
 
   var P = function (id, name, cat, tile, glyph, stock, plans, hot) { return { id: id, name: name, cat: cat, tile: tile, glyph: glyph, stock: stock, plans: plans, hot: !!hot }; };
   var PRODUCTS = [
