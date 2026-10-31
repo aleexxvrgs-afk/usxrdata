@@ -506,46 +506,96 @@ select.fld{cursor:pointer}
   var editingId = null;
   var editingCatId = null;
   var pendingDeleteId = null;
+  
+  // Sistema de bloqueo por intentos fallidos
+  var BLOCK_KEY = 'admin_block';
+  var MAX_ATTEMPTS = 2;
+  var BLOCK_DURATION = 60 * 60 * 1000; // 1 hora en milisegundos
+  
+  function getBlockData() {
+    try {
+      var data = localStorage.getItem(BLOCK_KEY);
+      return data ? JSON.parse(data) : { attempts: 0, blockedUntil: 0 };
+    } catch(e) {
+      return { attempts: 0, blockedUntil: 0 };
+    }
+  }
+  
+  function setBlockData(data) {
+    localStorage.setItem(BLOCK_KEY, JSON.stringify(data));
+  }
+  
+  function isBlocked() {
+    var data = getBlockData();
+    if (data.blockedUntil > Date.now()) {
+      var remaining = Math.ceil((data.blockedUntil - Date.now()) / 1000 / 60);
+      return remaining;
+    }
+    return false;
+  }
+  
+  function registerFailedAttempt() {
+    var data = getBlockData();
+    data.attempts += 1;
+    
+    if (data.attempts >= MAX_ATTEMPTS) {
+      data.blockedUntil = Date.now() + BLOCK_DURATION;
+      data.attempts = 0;
+      setBlockData(data);
+      return true; // Bloqueado
+    }
+    
+    setBlockData(data);
+    return false;
+  }
+  
+  function resetAttempts() {
+    setBlockData({ attempts: 0, blockedUntil: 0 });
+  }
 
   // --- AUTH ---
   _supa.auth.onAuthStateChange(function (event, session) {
     if (session && session.user) {
       var email = session.user.email;
       
-      // Verificar si el email está en la tabla admins de Supabase
+      // Verificar si está bloqueado
+      var minsLeft = isBlocked();
+      if (minsLeft) {
+        _supa.auth.signOut();
+        showLogin();
+        $('loginErr').textContent = '🚫 IP bloqueada. Intenta en ' + minsLeft + ' minuto' + (minsLeft !== 1 ? 's' : '') + '.';
+        return;
+      }
+      
+      // Verificar si el email está en la tabla admins
       sbFetch('admins?email=eq.' + encodeURIComponent(email) + '&select=email')
         .then(function(rows) {
           if (rows && rows.length > 0) {
-            // Es admin, permitir acceso
+            // ✅ Es admin: resetear intentos y permitir acceso
+            resetAttempts();
             showPanel(session.user);
           } else {
-            // No es admin, rechazar
+            // ❌ No es admin: registrar intento fallido
+            var blocked = registerFailedAttempt();
+            var data = getBlockData();
             _supa.auth.signOut();
             showLogin();
-            $('loginErr').textContent = '❌ Acceso denegado. Tu correo no está autorizado.';
+            if (blocked) {
+              $('loginErr').textContent = '🚫 Demasiados intentos. IP bloqueada por 1 hora.';
+            } else {
+              var remaining = MAX_ATTEMPTS - data.attempts;
+              $('loginErr').textContent = '❌ Acceso denegado. Te queda ' + remaining + ' intento' + (remaining !== 1 ? 's' : '') + ' antes del bloqueo.';
+            }
           }
         })
         .catch(function() {
-          // Error al consultar, rechazar por seguridad
           _supa.auth.signOut();
           showLogin();
           $('loginErr').textContent = '❌ Error al verificar permisos.';
         });
     } else {
-      // No hay sesión, mostrar login
       showLogin();
     }
-  });
-
-  $('btnGoogleLogin').addEventListener('click', function () {
-    $('loginErr').textContent = '';
-    _supa.auth.signInWithOAuth({ 
-      provider: 'google', 
-      options: { 
-        redirectTo: window.location.href,
-        skipBrowserRedirect: false
-      } 
-    });
   });
 
   $('btnLogout').addEventListener('click', function () {
@@ -1152,18 +1202,43 @@ select.fld{cursor:pointer}
     closeCategoryModal();
   });
 
-  // Check session on load - Verificar contra la tabla admins
+  // Check session on load
+  var minsBlockedOnLoad = isBlocked();
+  if (minsBlockedOnLoad) {
+    showLogin();
+    $('loginErr').textContent = '🚫 IP bloqueada. Intenta en ' + minsBlockedOnLoad + ' minuto' + (minsBlockedOnLoad !== 1 ? 's' : '') + '.';
+  }
+  
+  // También bloquear el botón de Google si está bloqueado
+  $('btnGoogleLogin').addEventListener('click', function() {
+    var mins = isBlocked();
+    if (mins) {
+      $('loginErr').textContent = '🚫 IP bloqueada. Intenta en ' + mins + ' minuto' + (mins !== 1 ? 's' : '') + '.';
+      return;
+    }
+    $('loginErr').textContent = '';
+    _supa.auth.signInWithOAuth({ 
+      provider: 'google', 
+      options: { redirectTo: window.location.href }
+    });
+  });
+  
   _supa.auth.getSession().then(function(res) {
     if (res.data && res.data.session) {
-      // Verificar si el email está en la tabla admins
       var email = res.data.session.user.email;
       sbFetch('admins?email=eq.' + encodeURIComponent(email) + '&select=email')
         .then(function(rows) {
           if (!rows || rows.length === 0) {
-            // No es admin, cerrar sesión
+            var blocked = registerFailedAttempt();
             _supa.auth.signOut();
             showLogin();
-            $('loginErr').textContent = '❌ Tu correo no está autorizado.';
+            if (blocked) {
+              $('loginErr').textContent = '🚫 Demasiados intentos. IP bloqueada por 1 hora.';
+            } else {
+              var data = getBlockData();
+              var remaining = MAX_ATTEMPTS - data.attempts;
+              $('loginErr').textContent = '❌ Acceso denegado. Te queda ' + remaining + ' intento' + (remaining !== 1 ? 's' : '') + '.';
+            }
           }
         });
     }
