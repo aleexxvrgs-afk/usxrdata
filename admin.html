@@ -441,23 +441,37 @@ select.fld{cursor:pointer}
   var pendingDeleteId = null;
 
   // --- AUTH ---
+  console.log('🔐 Iniciando auth check...');
+  
   _supa.auth.onAuthStateChange(function (event, session) {
+    console.log('🔄 Auth state change:', event, session ? 'con sesión' : 'sin sesión');
     if (session && session.user) {
       var email = session.user.email;
+      console.log('👤 Usuario detectado:', email);
       if (email !== ADMIN_EMAIL) {
+        console.log('❌ Email no autorizado');
         _supa.auth.signOut();
         $('loginErr').textContent = 'Acceso denegado. Solo el administrador puede entrar.';
         return;
       }
+      console.log('✅ Email autorizado, mostrando panel');
       showPanel(session.user);
     } else {
+      console.log('🔓 Sin sesión, mostrando login');
       showLogin();
     }
   });
 
   $('btnGoogleLogin').addEventListener('click', function () {
+    console.log('🚀 Iniciando login con Google...');
     $('loginErr').textContent = '';
-    _supa.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/admin.html' } });
+    _supa.auth.signInWithOAuth({ 
+      provider: 'google', 
+      options: { 
+        redirectTo: window.location.href,
+        skipBrowserRedirect: false
+      } 
+    });
   });
 
   $('btnLogout').addEventListener('click', function () {
@@ -465,11 +479,13 @@ select.fld{cursor:pointer}
   });
 
   function showLogin() {
+    console.log('🔓 Mostrando pantalla de login');
     $('loginScreen').hidden = false;
     $('adminPanel').hidden = true;
   }
 
   function showPanel(user) {
+    console.log('✅ Mostrando panel admin para:', user.email);
     $('loginScreen').hidden = true;
     $('adminPanel').hidden = false;
     var name = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email.split('@')[0];
@@ -890,8 +906,19 @@ select.fld{cursor:pointer}
   }
 
   // Check session on load
+  console.log('📍 URL actual:', window.location.href);
+  console.log('📍 Hash:', window.location.hash);
+  
   _supa.auth.getSession().then(function (res) {
-    if (!res.data || !res.data.session) showLogin();
+    console.log('🔍 getSession resultado:', res);
+    if (!res.data || !res.data.session) {
+      console.log('⚠️ No hay sesión guardada');
+      // No forzar showLogin aquí, dejar que onAuthStateChange lo maneje
+    } else {
+      console.log('✅ Sesión encontrada:', res.data.session.user.email);
+    }
+  }).catch(function(err) {
+    console.error('❌ Error en getSession:', err);
   });
 
 })();
