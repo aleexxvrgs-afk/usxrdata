@@ -958,9 +958,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         var s = map.store || {};
         if (s.whatsapp) WA_NUMBER = s.whatsapp;
         if (s.telegram) TG_USER = s.telegram;
-        if (s.tc) TC = parseFloat(s.tc) || TC;
-        // Recalcular precios con nuevo TC
-        renderGrid(); renderFlash();
+        if (s.tc) { TC = parseFloat(s.tc) || TC; }
         if (s.yape_number) YAPE.number = s.yape_number;
         if (s.yape_name) YAPE.name = s.yape_name;
         if (s.yape_qr) YAPE.qr = s.yape_qr;
