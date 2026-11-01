@@ -602,9 +602,21 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   }
   var MENU = [
     ['GENERAL', [['🏠', 'Inicio', 'top'], ['⚡', 'Oferta relámpago', 'flash']]],
-    ['CATÁLOGO', [['🤖', 'Inteligencia Artificial', 'cat:ai'], ['📺', 'Streaming', 'cat:stream'], ['🎮', 'Juegos', 'cat:game'], ['🧰', 'Multiservicios', 'cat:multi'], ['🛒', 'Todo el catálogo', 'cat:all']]],
+    ['CATÁLOGO', [['🛒', 'Todo el catálogo', 'cat:all']]],
     ['AYUDA', [['💬', 'Soporte', 'support'], ['🛡️', 'Garantía de 30 días', 'guarantee']]]
   ];
+
+  function updateMenuCats() {
+    // Reconstruir la sección CATÁLOGO con las categorías dinámicas de Supabase
+    var catItems = CATS.filter(function(c) { return c[0] !== 'all'; }).map(function(c) {
+      // Buscar emoji de la categoría si está disponible
+      var catData = (window._catsData || []).find(function(x) { return x.id === c[0]; });
+      var emoji = catData ? (catData.emoji || '📦') : '📦';
+      return [emoji, c[1], 'cat:' + c[0]];
+    });
+    catItems.push(['🛒', 'Todo el catálogo', 'cat:all']);
+    MENU[1] = ['CATÁLOGO', catItems];
+  }
   function renderMenu() {
     var cnt = function (a) { if (a.indexOf('cat:') !== 0) return ''; var c = a.slice(4); return PRODUCTS.filter(function (p) { return c === 'all' || p.cat === c; }).length; };
     $('#menuList').innerHTML = MENU.map(function (g) {
@@ -949,7 +961,9 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         // Cargar categorías dinámicas desde Supabase
         var cats = map.categories;
         if (cats && Array.isArray(cats) && cats.length > 0) {
+          window._catsData = cats;
           CATS = [['all', 'Todo']].concat(cats.map(function(c) { return [c.id, c.name]; }));
+          updateMenuCats();
           renderChips();
         }
         
