@@ -1,9 +1,22 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>USXR Store - Tienda Online</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Bricolage+Grotesque:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!doctype html><html lang="es"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>USXR Store - Cuentas Premium de Streaming, Juegos e IA</title>
+<meta name="description" content="Compra cuentas premium de Netflix, Spotify, ChatGPT, Gemini, juegos y más. Entrega inmediata, precios en soles, pago por Yape o Binance. Garantía de 30 días.">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="USXR Store - Cuentas Premium">
+<meta property="og:description" content="Streaming, IA, juegos y multiservicios. Entrega inmediata. Paga por Yape o Binance.">
+<meta property="og:url" content="https://usxrdata.vercel.app/">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://epubjmcysdfncoiegqlc.supabase.co">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Bricolage+Grotesque:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Bricolage+Grotesque:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap"></noscript>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
+</head>
+<body>
 <style>
 /* Layout: storefront neo-brutalista en una columna fluida: cabecera fija, oferta relámpago, catálogo en tarjetas con sombra dura. */
 :root {
@@ -143,7 +156,7 @@ button { cursor: pointer; }
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: 3px 3px 0 var(--shadow); }
 .count { color: var(--muted); margin: 12px 0 28px; }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 30px 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 30px 14px; min-height: 200px; }
 @media (min-width: 640px) { .grid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 34px 20px; } }
 .card {
   background: var(--surface); border: 3px solid var(--ink); border-radius: 22px; box-shadow: 5px 5px 0 var(--shadow);
@@ -164,9 +177,9 @@ button { cursor: pointer; }
 }
 .art b { font: 700 clamp(44px, 14vw, 64px) var(--font-display); color: #16132B; text-shadow: 3px 3px 0 rgba(255,255,255,.7); letter-spacing: .02em; }
 .body { padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
-.body h3 { margin: 0; font-size: 20px; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
+.body h2 { margin: 0; font-size: 20px; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
 .plans { color: var(--muted); font-size: 14px; }
-.offer { color: var(--hot); font: 700 13px var(--font-mono); min-height: 18px; }
+.offer { color: #c0392b; font: 700 13px var(--font-mono); min-height: 18px; }
 .foot { margin-top: auto; padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
 .since { color: var(--muted); font: 500 11px var(--font-mono); letter-spacing: .1em; }
 .price { font: 700 26px/1 var(--font-mono); }
@@ -181,12 +194,12 @@ button { cursor: pointer; }
 .grid.list .stock { top: 8px; }
 .grid.list .foot { margin: 0; padding: 0; grid-column: 2; grid-row: 1 / span 3; align-items: flex-end; }
 .grid.list .card .btn { width: auto; padding: 0 14px; }
-.grid.list .body h3, .grid.list .plans, .grid.list .offer { grid-column: 1; }
+.grid.list .body h2, .grid.list .plans, .grid.list .offer { grid-column: 1; }
 .grid.list .since { display: none; }
 .empty { grid-column: 1 / -1; border: 3px dashed var(--ink); border-radius: 18px; padding: 28px 18px; text-align: center; color: var(--muted); }
 
 /* Confianza */
-.trust { margin-top: 56px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+.trust { margin-top: 56px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; min-height: 100px; }
 .stat { background: var(--surface); border: 2.5px solid var(--ink); border-radius: 18px; padding: 14px; box-shadow: 4px 4px 0 var(--shadow); }
 .stat b { display: block; font: 700 30px/1.1 var(--font-mono); }
 .stat span { color: var(--muted); font-size: 14px; }
@@ -310,7 +323,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
 </style>
 
 <div class="wrap">
-  <header class="top">
+<header class="top">
     <button class="icon-btn" aria-label="Menú" id="btnMenu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <a class="logo" href="#" aria-label="USXR DATA">USXR DATA</a>
     <span class="spacer"></span>
@@ -323,6 +336,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     <p>Cuentas premium de streaming, recargas de juegos y multiservicios. Entrega automática apenas se confirma el pago.</p>
     <a class="btn light" id="waGroup" href="https://chat.whatsapp.com/" target="_blank" rel="noopener">Grupo de WhatsApp</a>
   </section>
+<main>
 
   <section class="flash" aria-label="Oferta relámpago">
     <div class="tile-sm" style="background:#E1E8FF">G</div>
@@ -373,6 +387,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       <p><b>No cubre:</b> cambios de correo, contraseña o PIN hechos por ti, compartir el acceso, ni problemas que aparezcan después de los 30 días desde la entrega.</p>
     </details>
   </section>
+  </main>
   <footer>
     <span>© 2026 USXR Store · usxrdata.vercel.app</span>
     <span>Precios en soles (S/) y USDT. Entrega inmediata tras confirmación de pago. Garantía de 30 días.</span>
@@ -537,7 +552,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
           ? '<span class="stock out">❌ Sin stock</span>'
           : '<span class="stock">' + p.stock + ' DISP.</span>') +
         '</div>' +
-        '<div class="body"><h3>' + p.name + '</h3>' + (p.desc ? '<p class="desc">' + esc(p.desc) + '</p>' : '') +
+        '<div class="body"><h2>' + p.name + '</h2>' + (p.desc ? '<p class="desc">' + esc(p.desc) + '</p>' : '') +
         '<div class="offer">' + (flash && !sinStock ? '⏰ Oferta: <span class="left"></span>' : '') + '</div>' +
         '<div class="foot"><div><div class="since">DESDE</div><div class="price">' + fmt(min) + '</div><div class="usdt">' + fmtU(min) + '</div></div>' +
         (sinStock
@@ -928,7 +943,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
 
   // Carga configuración desde Supabase settings
   function loadStoreSettings() {
-    supaFetch('settings?select=key,value')
+    supaFetch('settings?select=key,value&key=in.(store,flash,categories)')
       .then(function (rows) {
         if (!rows || !rows.length) return;
         var map = {};
@@ -1170,7 +1185,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   }
 
   function loadFromSupabase() {
-    supaFetch('products?select=*&order=sort_order.asc,created_at.asc')
+    supaFetch('products?select=id,name,cat,color,emoji,stock,plans,is_hot,description,image_url,sort_order&order=sort_order.asc,created_at.asc')
       .then(function (rows) {
         if (!rows || !rows.length) return;
         PRODUCTS = rows.map(function (r) {

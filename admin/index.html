@@ -801,7 +801,7 @@ select.fld{cursor:pointer}
 
   // --- LOAD PRODUCTS ---
   function loadProducts() {
-    sbFetch('products?select=*&order=sort_order.asc,created_at.asc')
+    sbFetch('products?select=id,name,cat,color,emoji,stock,plans,is_hot,description,image_url,sort_order&order=sort_order.asc,created_at.asc')
       .then(function (rows) {
         products = rows || [];
         renderStats();
