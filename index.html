@@ -960,20 +960,20 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         
         // Cargar flash sale desde Supabase
         var f = map.flash;
-        if (f && f.productId && f.end && f.end > 0 && !isNaN(f.end)) {
-          // Solo activar si la fecha NO ha vencido
-          if (f.end > Date.now()) {
+        if (f && f.productId && f.end && f.end > 0 && !isNaN(f.end) && f.active !== false) {
+          var now = Date.now();
+          var startOk = !f.start || f.start <= now;
+          var endOk = f.end > now;
+          if (startOk && endOk) {
             FLASH.productId = f.productId;
             FLASH.plan = f.plan || '';
             FLASH.price = parseFloat(f.price) || FLASH.price;
             FLASH.regular = parseFloat(f.regular) || FLASH.regular;
             FLASH.end = f.end;
           } else {
-            // Flash vencido — desactivar poniendo end en el pasado
             FLASH.end = 0;
           }
         } else {
-          // Sin flash en Supabase — desactivar
           FLASH.end = 0;
         }
         

@@ -284,8 +284,25 @@ select.fld{cursor:pointer}
 
       <!-- VISTA: FLASH SALE -->
       <div id="viewFlash" hidden>
-        <div style="max-width:520px">
-          <p style="color:var(--muted);margin-bottom:24px">Configura la oferta relámpago que aparece en la tienda.</p>
+        <div style="max-width:560px">
+          
+          <!-- Status card -->
+          <div id="flashStatusCard" style="border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);background:var(--surface)">
+            <div>
+              <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em">Estado actual</div>
+              <div id="flashStatusText" style="font-weight:700;font-size:16px;margin-top:4px">—</div>
+            </div>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <span style="font-size:13px;color:var(--muted)" id="flashToggleLabel">Activar</span>
+              <div style="position:relative;width:48px;height:26px">
+                <input type="checkbox" id="flashToggle" style="opacity:0;width:0;height:0;position:absolute">
+                <div id="flashToggleTrack" onclick="var cb=$('flashToggle');cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'))" style="position:absolute;inset:0;border-radius:13px;background:var(--border);cursor:pointer;transition:background .2s">
+                  <div id="flashToggleThumb" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s"></div>
+                </div>
+              </div>
+            </label>
+          </div>
+
           <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px">
             <div class="field">
               <label>Producto</label>
@@ -307,6 +324,20 @@ select.fld{cursor:pointer}
                 <small style="color:var(--muted);font-size:11px;margin-top:4px" id="flashRegularUSDT">= 0.00 USDT</small>
               </div>
             </div>
+
+            <!-- PROGRAMAR INICIO -->
+            <div class="field">
+              <label>⏰ Inicio programado (opcional)</label>
+              <input class="fld" type="datetime-local" id="flashStart">
+              <small style="color:var(--muted);font-size:11px;margin-top:4px">Déjalo vacío para que empiece ahora al guardar</small>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start="1">+1h</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start="6">+6h</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start="12">+12h</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start="24">+1 día</button>
+              </div>
+            </div>
+
             <div class="field">
               <label>Fecha y hora de fin (hora Lima)</label>
               <input class="fld" type="datetime-local" id="flashEnd">
@@ -319,7 +350,10 @@ select.fld{cursor:pointer}
                 <button type="button" class="btn btn-ghost btn-sm" data-add-hours="168">+7 días</button>
               </div>
             </div>
-            <button class="btn btn-primary" id="btnSaveFlash">Guardar flash sale</button>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-primary" id="btnSaveFlash" style="flex:1">💾 Guardar flash sale</button>
+              <button class="btn btn-ghost" id="btnClearFlash">🗑 Desactivar</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1165,6 +1199,60 @@ select.fld{cursor:pointer}
 
 
   // --- FLASH SALE ---
+  function updateFlashStatus(cfg) {
+    var now = Date.now();
+    var toggle = $('flashToggle');
+    var track = $('flashToggleTrack');
+    var thumb = $('flashToggleThumb');
+    var statusText = $('flashStatusText');
+    var label = $('flashToggleLabel');
+
+    if (!cfg || !cfg.end || cfg.active === false) {
+      toggle.checked = false;
+      track.style.background = 'var(--border)';
+      thumb.style.left = '3px';
+      statusText.textContent = '⭕ Desactivada';
+      statusText.style.color = 'var(--muted)';
+      label.textContent = 'Activar';
+    } else if (cfg.start && cfg.start > now) {
+      toggle.checked = true;
+      track.style.background = 'var(--warn)';
+      thumb.style.left = '25px';
+      var d = new Date(cfg.start);
+      statusText.textContent = '🕐 Programada — inicia ' + d.toLocaleString('es-PE', { timeZone: 'America/Lima', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      statusText.style.color = 'var(--warn)';
+      label.textContent = 'Programada';
+    } else if (cfg.end > now) {
+      toggle.checked = true;
+      track.style.background = 'var(--ok)';
+      thumb.style.left = '25px';
+      var remaining = Math.ceil((cfg.end - now) / 60000);
+      var hrs = Math.floor(remaining / 60), mins = remaining % 60;
+      statusText.textContent = '✅ Activa — termina en ' + (hrs > 0 ? hrs + 'h ' : '') + mins + 'min';
+      statusText.style.color = 'var(--ok)';
+      label.textContent = 'Activa';
+    } else {
+      toggle.checked = false;
+      track.style.background = 'var(--hot)';
+      thumb.style.left = '3px';
+      statusText.textContent = '⌛ Vencida — cambia la fecha para reactivar';
+      statusText.style.color = 'var(--hot)';
+      label.textContent = 'Vencida';
+    }
+  }
+
+  $('flashToggle').addEventListener('change', function() {
+    var track = $('flashToggleTrack');
+    var thumb = $('flashToggleThumb');
+    if (this.checked) {
+      track.style.background = 'var(--ok)';
+      thumb.style.left = '25px';
+    } else {
+      track.style.background = 'var(--border)';
+      thumb.style.left = '3px';
+    }
+  });
+
   function loadFlashSelects() {
     var sel = $('flashProd');
     sel.innerHTML = products.map(function (p) {
@@ -1181,7 +1269,7 @@ select.fld{cursor:pointer}
     
     // Pre-cargar valores guardados del flash sale
     sbFetch('settings?key=eq.flash&select=value').then(function(rows) {
-      if (!rows || !rows[0]) return;
+      if (!rows || !rows[0]) { updateFlashStatus(null); return; }
       try {
         var cfg = JSON.parse(rows[0].value);
         if (cfg.productId) {
@@ -1201,13 +1289,21 @@ select.fld{cursor:pointer}
         }
         if (cfg.end && cfg.end > 0 && !isNaN(cfg.end)) {
           var d = new Date(cfg.end);
-          if (d.getFullYear() > 2020) { // ignorar fechas inválidas
+          if (d.getFullYear() > 2020) {
             var pad = function(n) { return String(n).padStart(2,'0'); };
             $('flashEnd').value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
           }
         }
-      } catch(e) {}
-    }).catch(function() {});
+        if (cfg.start && cfg.start > 0 && !isNaN(cfg.start)) {
+          var ds = new Date(cfg.start);
+          if (ds.getFullYear() > 2020) {
+            var pad2 = function(n) { return String(n).padStart(2,'0'); };
+            $('flashStart').value = ds.getFullYear() + '-' + pad2(ds.getMonth()+1) + '-' + pad2(ds.getDate()) + 'T' + pad2(ds.getHours()) + ':' + pad2(ds.getMinutes());
+          }
+        }
+        updateFlashStatus(cfg);
+      } catch(e) { updateFlashStatus(null); }
+    }).catch(function() { updateFlashStatus(null); });
   }
 
   // Conversión automática Soles → USDT en tiempo real
@@ -1249,19 +1345,50 @@ select.fld{cursor:pointer}
   $('btnSaveFlash').addEventListener('click', function () {
     if (!$('flashEnd').value) return toast('Ingresa la fecha de fin del flash sale', true);
     var TC_FLASH = 3.95;
+    var startVal = $('flashStart').value;
     var config = {
+      active: $('flashToggle').checked,
       productId: $('flashProd').value,
       plan: $('flashPlan').value,
       price: Math.round((parseFloat($('flashPriceSoles').value) || 0) / TC_FLASH * 10000) / 10000,
       regular: Math.round((parseFloat($('flashRegularSoles').value) || 0) / TC_FLASH * 10000) / 10000,
+      start: startVal ? new Date(startVal).getTime() : Date.now(),
       end: new Date($('flashEnd').value).getTime()
     };
+    if (config.end <= config.start) return toast('La fecha de fin debe ser posterior al inicio', true);
     sbFetch('settings', {
       method: 'POST',
       headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
       body: JSON.stringify({ key: 'flash', value: JSON.stringify(config) })
-    }).then(function () { toast('✅ Flash sale guardado'); })
-      .catch(function () { toast('Error al guardar flash sale', true); });
+    }).then(function () {
+      toast('✅ Flash sale guardado');
+      updateFlashStatus(config);
+    }).catch(function () { toast('Error al guardar flash sale', true); });
+  });
+
+  $('btnClearFlash').addEventListener('click', function() {
+    if (!window.confirm('¿Desactivar el flash sale?')) return;
+    var config = { active: false, productId: '', plan: '', price: 0, regular: 0, start: 0, end: 0 };
+    sbFetch('settings', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ key: 'flash', value: JSON.stringify(config) })
+    }).then(function() {
+      toast('⭕ Flash sale desactivado');
+      updateFlashStatus(config);
+      $('flashStart').value = '';
+    }).catch(function() { toast('Error al desactivar', true); });
+  });
+
+  // Botones de inicio rápido
+  document.querySelectorAll('[data-add-hours-start]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var hours = parseInt(this.dataset.addHoursStart);
+      var base = $('flashStart').value ? new Date($('flashStart').value) : new Date();
+      var newDate = new Date(base.getTime() + hours * 3600000);
+      var pad = function(n) { return String(n).padStart(2,'0'); };
+      $('flashStart').value = newDate.getFullYear() + '-' + pad(newDate.getMonth()+1) + '-' + pad(newDate.getDate()) + 'T' + pad(newDate.getHours()) + ':' + pad(newDate.getMinutes());
+    });
   });
 
   // --- SETTINGS ---
