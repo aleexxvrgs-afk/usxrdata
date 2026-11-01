@@ -536,7 +536,6 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
           : '<span class="stock">' + p.stock + ' DISP.</span>') +
         '<div class="art" style="background-color:' + p.tile + '">' + (p.img ? '<img src="' + p.img + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '<b>' + p.glyph + '</b>') + '</div>' +
         '<div class="body"><h3>' + p.name + '</h3>' + (p.desc ? '<p class="desc">' + esc(p.desc) + '</p>' : '') +
-        '<div class="plans">' + p.plans.length + ' planes disponibles</div>' +
         '<div class="offer">' + (flash && !sinStock ? '⏰ Oferta: <span class="left"></span>' : '') + '</div>' +
         '<div class="foot"><div><div class="since">DESDE</div><div class="price">' + fmt(min) + '</div><div class="usdt">' + fmtU(min) + '</div></div>' +
         (sinStock
