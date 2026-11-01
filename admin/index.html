@@ -349,9 +349,12 @@ select.fld{cursor:pointer}
 
       <!-- VISTA: CONFIGURACIÓN -->
       <div id="viewSettings" hidden>
-        <div style="max-width:520px">
+        <div style="max-width:580px">
           <p style="color:var(--muted);margin-bottom:24px">Datos de la tienda y métodos de pago.</p>
           <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px">
+
+            <!-- Contacto -->
+            <div style="font:700 11px/1 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Contacto</div>
             <div class="field">
               <label>WhatsApp (con código de país)</label>
               <input class="fld" id="cfgWA" placeholder="Ej: 51999999999">
@@ -362,32 +365,73 @@ select.fld{cursor:pointer}
             </div>
             <div class="field">
               <label>Tipo de cambio USDT → Soles</label>
-              <input class="fld" type="number" step="0.01" id="cfgTC" placeholder="3.40">
+              <input class="fld" type="number" step="0.01" id="cfgTC" placeholder="3.95">
             </div>
-            <div class="field">
-              <label>Número Yape</label>
-              <input class="fld" id="cfgYapeNum" placeholder="Ej: 999999999">
+
+            <!-- Yape -->
+            <div style="border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-weight:700;font-size:15px">📱 Yape</span>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                  <span style="font-size:13px;color:var(--muted)">Activo</span>
+                  <input type="checkbox" id="cfgYapeActive" style="width:18px;height:18px;accent-color:var(--accent)" checked>
+                </label>
+              </div>
+              <div class="field">
+                <label>Número Yape</label>
+                <input class="fld" id="cfgYapeNum" placeholder="Ej: 999999999">
+              </div>
+              <div class="field">
+                <label>Nombre Yape</label>
+                <input class="fld" id="cfgYapeName" placeholder="USXR STORE">
+              </div>
+              <div class="field">
+                <label>QR Yape</label>
+                <div style="display:flex;gap:12px;align-items:flex-start">
+                  <div>
+                    <div id="yapeQrPreview" style="width:80px;height:80px;border-radius:10px;border:2px solid var(--border);background:var(--surface2);display:grid;place-items:center;overflow:hidden;margin-bottom:6px">
+                      <span style="font-size:24px">🖼</span>
+                    </div>
+                    <input type="file" accept="image/*" id="yapeQrFile" hidden>
+                    <button class="btn btn-ghost btn-sm" id="btnPickYapeQr">📷 Subir</button>
+                  </div>
+                  <textarea class="fld" rows="3" id="cfgYapeQr" placeholder="O pega URL / base64..." style="flex:1;font-size:12px"></textarea>
+                </div>
+              </div>
             </div>
-            <div class="field">
-              <label>Nombre Yape</label>
-              <input class="fld" id="cfgYapeName" placeholder="USXR STORE">
+
+            <!-- Binance -->
+            <div style="border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-weight:700;font-size:15px">🟡 Binance Pay</span>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                  <span style="font-size:13px;color:var(--muted)">Activo</span>
+                  <input type="checkbox" id="cfgBinanceActive" style="width:18px;height:18px;accent-color:var(--accent)" checked>
+                </label>
+              </div>
+              <div class="field">
+                <label>ID Binance Pay</label>
+                <input class="fld" id="cfgBinanceId" placeholder="123456789">
+              </div>
+              <div class="field">
+                <label>Nombre Binance</label>
+                <input class="fld" id="cfgBinanceName" placeholder="USXR STORE">
+              </div>
+              <div class="field">
+                <label>QR Binance</label>
+                <div style="display:flex;gap:12px;align-items:flex-start">
+                  <div>
+                    <div id="binanceQrPreview" style="width:80px;height:80px;border-radius:10px;border:2px solid var(--border);background:var(--surface2);display:grid;place-items:center;overflow:hidden;margin-bottom:6px">
+                      <span style="font-size:24px">🖼</span>
+                    </div>
+                    <input type="file" accept="image/*" id="binanceQrFile" hidden>
+                    <button class="btn btn-ghost btn-sm" id="btnPickBinanceQr">📷 Subir</button>
+                  </div>
+                  <textarea class="fld" rows="3" id="cfgBinanceQr" placeholder="O pega URL / base64..." style="flex:1;font-size:12px"></textarea>
+                </div>
+              </div>
             </div>
-            <div class="field">
-              <label>ID Binance Pay</label>
-              <input class="fld" id="cfgBinanceId" placeholder="123456789">
-            </div>
-            <div class="field">
-              <label>Nombre Binance</label>
-              <input class="fld" id="cfgBinanceName" placeholder="USXR STORE">
-            </div>
-            <div class="field form-full" style="grid-column:1/-1">
-              <label>QR Yape (imagen Base64 o URL)</label>
-              <textarea class="fld" rows="2" id="cfgYapeQr" placeholder="data:image/png;base64,..."></textarea>
-            </div>
-            <div class="field form-full" style="grid-column:1/-1">
-              <label>QR Binance (imagen Base64 o URL)</label>
-              <textarea class="fld" rows="2" id="cfgBinanceQr" placeholder="data:image/png;base64,..."></textarea>
-            </div>
+
             <button class="btn btn-primary" id="btnSaveSettings">Guardar configuración</button>
           </div>
         </div>
@@ -1233,19 +1277,54 @@ select.fld{cursor:pointer}
       $('cfgBinanceName').value = s.binance_name || '';
       $('cfgYapeQr').value = s.yape_qr || '';
       $('cfgBinanceQr').value = s.binance_qr || '';
+      $('cfgYapeActive').checked = s.yape_active !== false;
+      $('cfgBinanceActive').checked = s.binance_active !== false;
+      // Mostrar preview de QR si existe
+      if (s.yape_qr) $('yapeQrPreview').innerHTML = '<img src="' + s.yape_qr + '" style="width:100%;height:100%;object-fit:contain">';
+      if (s.binance_qr) $('binanceQrPreview').innerHTML = '<img src="' + s.binance_qr + '" style="width:100%;height:100%;object-fit:contain">';
     }).catch(function () {});
   }
+
+  // Upload QR helpers
+  function setupQrUpload(btnId, fileId, previewId, textareaId) {
+    $(btnId).addEventListener('click', function() { $(fileId).click(); });
+    $(fileId).addEventListener('change', function() {
+      var f = this.files[0]; if (!f) return;
+      var fr = new FileReader();
+      fr.onload = function() {
+        var img = new Image();
+        img.onload = function() {
+          var s = 300, c = document.createElement('canvas');
+          c.width = c.height = s;
+          c.getContext('2d').drawImage(img, 0, 0, s, s);
+          var data = c.toDataURL('image/png', 0.9);
+          $(textareaId).value = data;
+          $(previewId).innerHTML = '<img src="' + data + '" style="width:100%;height:100%;object-fit:contain">';
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(f);
+    });
+    $(textareaId).addEventListener('input', function() {
+      var v = this.value.trim();
+      if (v) $(previewId).innerHTML = '<img src="' + v + '" style="width:100%;height:100%;object-fit:contain" onerror="this.parentNode.innerHTML=\'<span style=font-size:24px>🖼</span>\'">';
+    });
+  }
+  setupQrUpload('btnPickYapeQr', 'yapeQrFile', 'yapeQrPreview', 'cfgYapeQr');
+  setupQrUpload('btnPickBinanceQr', 'binanceQrFile', 'binanceQrPreview', 'cfgBinanceQr');
 
   $('btnSaveSettings').addEventListener('click', function () {
     var config = {
       whatsapp: $('cfgWA').value.trim(),
       telegram: $('cfgTG').value.trim(),
-      tc: parseFloat($('cfgTC').value) || 3.40,
+      tc: parseFloat($('cfgTC').value) || 3.95,
+      yape_active: $('cfgYapeActive').checked,
       yape_number: $('cfgYapeNum').value.trim(),
       yape_name: $('cfgYapeName').value.trim(),
+      yape_qr: $('cfgYapeQr').value.trim(),
+      binance_active: $('cfgBinanceActive').checked,
       binance_id: $('cfgBinanceId').value.trim(),
       binance_name: $('cfgBinanceName').value.trim(),
-      yape_qr: $('cfgYapeQr').value.trim(),
       binance_qr: $('cfgBinanceQr').value.trim()
     };
     sbFetch('settings', {
