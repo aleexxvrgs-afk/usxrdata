@@ -490,25 +490,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   });
 
   var P = function (id, name, cat, tile, glyph, stock, plans, hot) { return { id: id, name: name, cat: cat, tile: tile, glyph: glyph, stock: stock, plans: plans, hot: !!hot }; };
-  var PRODUCTS = [
-    P('gemini', 'Gemini', 'ai', '#E1E8FF', 'G', 63, [['Pro 1 mes', 1.20, '30 días'], ['Pro 12 meses', 6.00, '365 días'], ['Pro 18 meses', 5.90, '545 días']], true),
-    P('chatgpt', 'ChatGPT', 'ai', '#D6F5E8', 'C', 232, [['Plus 1 mes', 4.05, '30 días'], ['Plus 3 meses', 11.50, '90 días'], ['Team 1 mes', 6.50, '30 días']]),
-    P('perplexity', 'Perplexity Pro', 'ai', '#D3F4F2', 'Px', 41, [['Pro 1 mes', 3.20, '30 días'], ['Pro 12 meses', 18.00, '365 días']]),
-    P('midjourney', 'Midjourney', 'ai', '#E5E5EE', 'Mj', 17, [['Basic 1 mes', 6.50, '30 días'], ['Standard 1 mes', 14.00, '30 días']]),
-    P('netflix', 'Netflix', 'stream', '#FFD6D1', 'N', 48, [['Perfil 1 mes', 3.50, '30 días'], ['Pantalla completa 1 mes', 5.90, '30 días'], ['Cuenta completa 1 mes', 9.90, '30 días']]),
-    P('disney', 'Disney+', 'stream', '#CFE3FF', 'D+', 31, [['Perfil 1 mes', 2.80, '30 días'], ['Perfil 3 meses', 7.50, '90 días']]),
-    P('max', 'Max', 'stream', '#E3D4FF', 'M', 22, [['Perfil 1 mes', 2.50, '30 días'], ['Perfil 3 meses', 6.90, '90 días']]),
-    P('prime', 'Prime Video', 'stream', '#CDEFF7', 'P', 40, [['Perfil 1 mes', 2.20, '30 días'], ['Perfil 6 meses', 10.50, '180 días']]),
-    P('spotify', 'Spotify', 'stream', '#D2F5D9', 'S', 57, [['Individual 1 mes', 2.90, '30 días'], ['Individual 3 meses', 7.90, '90 días'], ['Individual 12 meses', 24.00, '365 días']]),
-    P('youtube', 'YouTube Premium', 'stream', '#FFD9D9', 'Y', 36, [['Individual 1 mes', 2.60, '30 días'], ['Individual 6 meses', 13.00, '180 días']]),
-    P('freefire', 'Free Fire', 'game', '#FFE3B8', 'FF', 120, [['110 diamantes', 1.20, 'Recarga por ID'], ['341 diamantes', 3.40, 'Recarga por ID'], ['1080 diamantes', 10.50, 'Recarga por ID']]),
-    P('roblox', 'Roblox', 'game', '#D9DCFF', 'R', 95, [['400 Robux', 5.10, 'Código digital'], ['800 Robux', 9.90, 'Código digital'], ['1700 Robux', 19.50, 'Código digital']]),
-    P('fortnite', 'Fortnite', 'game', '#E6D6FF', 'F', 64, [['1000 V-Bucks', 8.20, 'Código digital'], ['2800 V-Bucks', 22.00, 'Código digital']]),
-    P('mlbb', 'Mobile Legends', 'game', '#D6F0FF', 'ML', 88, [['86 diamantes', 1.80, 'Recarga por ID'], ['172 diamantes', 3.50, 'Recarga por ID']]),
-    P('canva', 'Canva Pro', 'multi', '#D3F4F2', 'Cv', 74, [['1 mes', 1.50, '30 días'], ['12 meses', 8.90, '365 días']]),
-    P('adobe', 'Adobe Creative Cloud', 'multi', '#FFD9CF', 'Ad', 19, [['1 mes', 6.90, '30 días'], ['12 meses', 49.00, '365 días']]),
-    P('capcut', 'CapCut Pro', 'multi', '#E5E5EE', 'Cc', 52, [['1 mes', 2.70, '30 días'], ['3 meses', 7.20, '90 días']])
-  ];
+  var PRODUCTS = [];
   var CATS = [['all', 'Todo'], ['ai', 'Inteligencia Artificial'], ['stream', 'Streaming'], ['game', 'Juegos'], ['multi', 'Multiservicios']];
   var state = { cat: 'all', q: '', list: false };
   var $ = function (s) { return document.querySelector(s); };
@@ -1222,7 +1204,9 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     });
   }
 
-  renderChips(); renderGrid(); initAdmin();
+  renderChips(); initAdmin();
+  // Mostrar loading mientras carga Supabase
+  $('#grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px;margin-bottom:12px">⏳</div><div>Cargando productos...</div></div>';
   loadFromSupabase();
   loadStoreSettings();
   // Verificar sesión activa al cargar
