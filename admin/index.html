@@ -408,6 +408,10 @@ select.fld{cursor:pointer}
               <label>Tipo de cambio USDT → Soles</label>
               <input class="fld" type="number" step="0.01" id="cfgTC" placeholder="3.95">
             </div>
+            <div class="check-row">
+              <input type="checkbox" id="cfgShowUSDT" checked>
+              <span>Mostrar precios en USDT en la tienda</span>
+            </div>
 
             <!-- Yape -->
             <div style="border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px">
@@ -1405,6 +1409,7 @@ select.fld{cursor:pointer}
       $('cfgTC').value = s.tc || '';
       // Actualizar tipo de cambio global
       if (s.tc) TC_ADMIN = parseFloat(s.tc) || TC_ADMIN;
+      $('cfgShowUSDT').checked = s.show_usdt !== false;
       $('cfgYapeNum').value = s.yape_number || '';
       $('cfgYapeName').value = s.yape_name || '';
       $('cfgBinanceId').value = s.binance_id || '';
@@ -1460,6 +1465,7 @@ select.fld{cursor:pointer}
       whatsapp_group_name: $('cfgWAGroupName').value.trim(),
       telegram: $('cfgTG').value.trim(),
       tc: parseFloat($('cfgTC').value) || 3.95,
+      show_usdt: $('cfgShowUSDT').checked,
       yape_active: $('cfgYapeActive').checked,
       yape_number: $('cfgYapeNum').value.trim(),
       yape_name: $('cfgYapeName').value.trim(),

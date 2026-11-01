@@ -505,6 +505,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   var state = { cat: 'all', q: '', list: false };
   var $ = function (s) { return document.querySelector(s); };
   var TC = 3.95; /* soles por 1 USDT. Se actualiza desde Supabase settings */
+  var SHOW_USDT = true; /* mostrar precios en USDT. Se actualiza desde Supabase settings */
   var fmt = function (n) { return 'S/ ' + (n * TC).toFixed(2); };
   var fmtU = function (n) { return n.toFixed(2) + ' USDT'; };
   var byId = function (id) { return PRODUCTS.filter(function (p) { return p.id === id; })[0]; };
@@ -559,7 +560,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         '</div>' +
         '<div class="body"><h2>' + p.name + '</h2>' + (p.desc ? '<p class="desc">' + esc(p.desc) + '</p>' : '') +
         '<div class="offer">' + (flash && !sinStock ? '⏰ Oferta: <span class="left"></span>' : '') + '</div>' +
-        '<div class="foot"><div><div class="since">DESDE</div><div class="price">' + fmt(min) + '</div><div class="usdt">' + fmtU(min) + '</div></div>' +
+        '<div class="foot"><div><div class="since">DESDE</div><div class="price">' + fmt(min) + '</div>' + (SHOW_USDT ? '<div class="usdt">' + fmtU(min) + '</div>' : '') + '</div>' +
         (sinStock
           ? '<button type="button" class="btn" disabled style="background:var(--surface);color:var(--muted);border:2.5px solid var(--ink);opacity:.6;cursor:not-allowed">Sin stock</button>'
           : '<button type="button" class="btn accent" data-plans="' + esc(p.id) + '">Comprar</button>') +
@@ -585,7 +586,8 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     $('#flashName').textContent = p.name + ' ' + FLASH.plan;
     $('#flashOld').textContent = fmt(FLASH.regular) + ' (' + fmtU(FLASH.regular) + ')';
     $('#flashNew').textContent = fmt(FLASH.price);
-    $('#flashUsdt').textContent = fmtU(FLASH.price);
+    var flashUsdtEl = document.getElementById('flashUsdt');
+    if (flashUsdtEl) { flashUsdtEl.textContent = fmtU(FLASH.price); flashUsdtEl.style.display = SHOW_USDT ? '' : 'none'; }
     var fin = '';
     try { fin = new Date(FLASH.end).toLocaleString('es-PE', { timeZone: 'America/Lima', weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }); } catch (e) {}
     $('#flashEnd').textContent = fin ? 'Termina el ' + fin + ' (hora de Lima). Después vuelve a ' + fmt(FLASH.regular) + '.' : '';
@@ -959,6 +961,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         if (s.whatsapp) WA_NUMBER = s.whatsapp;
         if (s.telegram) TG_USER = s.telegram;
         if (s.tc) { TC = parseFloat(s.tc) || TC; }
+        if (s.show_usdt !== undefined) SHOW_USDT = s.show_usdt !== false;
         if (s.yape_number) YAPE.number = s.yape_number;
         if (s.yape_name) YAPE.name = s.yape_name;
         if (s.yape_qr) YAPE.qr = s.yape_qr;
@@ -1121,8 +1124,8 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     if (eff(p).length) { openPay(id, 0); return; }
     $('#plansTitle').textContent = p.name;
     $('#plansList').innerHTML = eff(p).map(function (pl, i) {
-      return '<div class="row"><div class="info"><b>' + pl[0] + '</b>' + (pl[3] ? '<span>antes ' + fmt(pl[3]) + ' (' + fmtU(pl[3]) + ')</span>' : '') + '</div>' +
-        '<div class="p">' + fmt(pl[1]) + '<small class="usdt">' + fmtU(pl[1]) + '</small></div><button type="button" class="btn accent" data-bp="' + esc(p.id) + '" data-bi="' + i + '">Comprar</button></div>';
+      return '<div class="row"><div class="info"><b>' + pl[0] + '</b>' + (pl[3] ? '<span>antes ' + fmt(pl[3]) + (SHOW_USDT ? ' (' + fmtU(pl[3]) + ')' : '') + '</span>' : '') + '</div>' +
+        '<div class="p">' + fmt(pl[1]) + (SHOW_USDT ? '<small class="usdt">' + fmtU(pl[1]) + '</small>' : '') + '</div><button type="button" class="btn accent" data-bp="' + esc(p.id) + '" data-bi="' + i + '">Comprar</button></div>';
     }).join('');
     openSheet($('#ovPlans'));
   }
