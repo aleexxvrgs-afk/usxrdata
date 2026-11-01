@@ -1,0 +1,2043 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>USXR Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.js" integrity="sha384-lDkWTkrzxBtYvBtgQmPcLBhTbJdqB11igYtWVcCIVXO0Lv4+XuKKdd4razodiyzk" crossorigin="anonymous" defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f13;--surface:#1a1a24;--surface2:#222230;--border:#2e2e40;
+  --accent:#7c5cfc;--accent2:#5b3cf5;--hot:#e8402f;--ok:#22c55e;
+  --warn:#f59e0b;--ink:#f0eeff;--muted:#8b8aaa;--font:'Inter',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;min-height:100vh}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+@media(max-width:768px){.layout{grid-template-columns:1fr}}
+
+/* Sidebar */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;gap:8px;position:sticky;top:0;height:100vh;overflow-y:auto}
+@media(max-width:768px){.sidebar{display:none}}
+.logo{display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:16px}
+.logo-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:14px}
+.logo-text{font-weight:800;font-size:16px}
+.logo-badge{font-size:10px;background:var(--hot);color:#fff;padding:2px 6px;border-radius:4px;font-weight:700}
+.nav-section{font:700 10px/1 var(--mono);color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:8px 12px;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:0;background:transparent;width:100%;text-align:left;color:var(--muted);font-weight:500;transition:all .15s}
+.nav-item:hover{background:var(--surface2);color:var(--ink)}
+.nav-item.active{background:var(--accent);color:#fff}
+.nav-item .ic{width:18px;text-align:center;font-size:16px}
+.nav-item .badge{margin-left:auto;background:var(--hot);color:#fff;font:700 11px var(--mono);padding:2px 7px;border-radius:999px}
+
+/* Main */
+.main{display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+.topbar h1{font-size:18px;font-weight:700;flex:1}
+.topbar .user{display:flex;align-items:center;gap:8px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-weight:700;font-size:14px;flex:none}
+.content{padding:24px;flex:1}
+
+/* Cards stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:6px}
+.stat-card .label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.stat-card .value{font:700 28px/1 var(--mono)}
+.stat-card .change{font-size:12px;color:var(--ok)}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.search{flex:1;min-width:200px;height:40px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0 14px;font-size:14px;color:var(--ink)}
+.search::placeholder{color:var(--muted)}
+.search:focus{border-color:var(--accent)}
+.filter-sel{height:40px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0 12px;color:var(--ink);font-size:14px}
+.btn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 16px;border-radius:10px;border:0;font-weight:600;font-size:14px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-danger{background:var(--hot);color:#fff}
+.btn-ghost{background:var(--surface2);color:var(--ink);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{height:32px;padding:0 12px;font-size:13px}
+
+/* Table */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.table-head{display:grid;grid-template-columns:44px 1fr 100px 70px 110px 56px 140px;padding:10px 20px;border-bottom:1px solid var(--border);font:700 11px/1 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;gap:16px;align-items:center}
+.table-row{display:grid;grid-template-columns:44px 1fr 100px 70px 110px 56px 140px;padding:14px 20px;border-bottom:1px solid var(--border);gap:16px;align-items:center;transition:background .12s}
+.table-row:last-child{border-bottom:0}
+.table-row:hover{background:var(--surface2)}
+@media(max-width:900px){
+  .table-head,.table-row{grid-template-columns:44px 1fr 70px 140px}
+  .table-head .h-cat,.table-row .c-cat,.table-head .h-ord,.table-row .c-ord{display:none}
+}
+.prod-thumb{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font:700 14px var(--mono);flex:none;overflow:hidden}
+.prod-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.prod-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prod-desc{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;font:600 12px var(--mono);border:1px solid}
+.tag-ai{background:rgba(124,92,252,.15);color:#a78bfa;border-color:rgba(124,92,252,.3)}
+.tag-stream{background:rgba(34,197,94,.1);color:#4ade80;border-color:rgba(34,197,94,.2)}
+.tag-game{background:rgba(232,64,47,.1);color:#f87171;border-color:rgba(232,64,47,.2)}
+.tag-multi{background:rgba(245,158,11,.1);color:#fbbf24;border-color:rgba(245,158,11,.2)}
+.stock-val{font:600 13px var(--mono)}
+.hot-dot{width:8px;height:8px;border-radius:50%;background:var(--hot);display:inline-block;margin-right:4px}
+.actions{display:flex;gap:6px}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-overlay[hidden],.modal-overlay.hidden{display:none!important;visibility:hidden!important}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.6);position:relative;z-index:51;pointer-events:auto}
+.modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);gap:12px}
+.modal-head h2{font-size:18px;font-weight:700;flex:1;pointer-events:none}
+.modal-body{padding:24px}
+.modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;background:var(--surface)}
+.close-btn{width:34px;height:34px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:grid;place-items:center;font-size:18px;color:var(--muted);cursor:pointer;position:relative;z-index:9999;pointer-events:auto;flex-shrink:0}
+.close-btn:hover{color:var(--ink);background:var(--hot);transform:scale(1.05)}
+.close-btn:active{transform:scale(0.95)}
+
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font:600 12px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.fld{height:42px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0 14px;font-size:14px;color:var(--ink);width:100%}
+.fld:focus{border-color:var(--accent);outline:none}
+.fld::placeholder{color:var(--muted)}
+textarea.fld{height:auto;padding:10px 14px;resize:vertical;line-height:1.5}
+select.fld{cursor:pointer}
+.color-row{display:flex;align-items:center;gap:10px}
+.color-preset{width:28px;height:28px;border-radius:6px;border:2px solid transparent;cursor:pointer;transition:transform .1s,border-color .1s;padding:0}
+.color-preset:hover{transform:scale(1.15);border-color:var(--ink)}
+.emoji-preset{width:36px;height:36px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;font-size:18px;display:grid;place-items:center;transition:transform .1s,border-color .1s}
+.emoji-preset:hover{transform:scale(1.15);border-color:var(--accent)}
+.color-preview{width:42px;height:42px;border-radius:10px;border:1px solid var(--border);flex:none}
+.img-preview{width:80px;height:80px;border-radius:12px;border:2px solid var(--border);display:grid;place-items:center;overflow:hidden;background:var(--surface2);margin-bottom:8px}
+.img-preview img{width:100%;height:100%;object-fit:cover}
+.check-row{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px}
+.check-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
+
+/* Planes */
+.plans-list{display:flex;flex-direction:column;gap:8px}
+.plan-row{display:grid;grid-template-columns:1fr 90px 30px 90px 30px 90px 36px;gap:6px;align-items:center}
+.plan-row .fld{font-size:13px}
+.add-plan-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface2);border:1px solid dashed;border-color:var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:4px}
+.add-plan-btn:hover{border-color:var(--accent);color:var(--accent)}
+.del-plan{width:32px;height:32px;border-radius:8px;background:transparent;border:1px solid var(--border);display:grid;place-items:center;color:var(--muted);font-size:16px}
+.del-plan:hover{background:var(--hot);border-color:var(--hot);color:#fff}
+
+/* Login screen */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.login-screen[hidden]{display:none!important;visibility:hidden!important}
+.layout[hidden]{display:none!important;visibility:hidden!important}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:360px;text-align:center}
+.login-logo{width:56px;height:56px;background:var(--accent);border-radius:16px;display:grid;place-items:center;font-weight:800;font-size:22px;margin:0 auto 20px}
+.login-card h1{font-size:22px;font-weight:800;margin-bottom:6px}
+.login-card p{color:var(--muted);font-size:14px;margin-bottom:28px}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:48px;background:#fff;color:#1f1f1f;border-radius:12px;border:0;font-weight:700;font-size:15px;cursor:pointer;transition:opacity .15s}
+.btn-google:hover{opacity:.9}
+.btn-google svg{width:20px;height:20px}
+.login-err{margin-top:14px;color:var(--hot);font-size:13px;font-weight:600;min-height:20px}
+
+/* Empty */
+.empty{padding:48px;text-align:center;color:var(--muted)}
+.empty .ei{font-size:40px;margin-bottom:12px}
+.empty p{font-size:15px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 20px;font-weight:600;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,.4);white-space:nowrap}
+.toast.ok{border-color:var(--ok);color:var(--ok)}
+.toast.err{border-color:var(--hot);color:var(--hot)}
+
+/* Spinner */
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Confirm */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}
+.confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:360px;width:100%;text-align:center}
+.confirm-box h3{font-size:18px;font-weight:700;margin-bottom:8px}
+.confirm-box p{color:var(--muted);margin-bottom:24px;font-size:14px}
+.confirm-box .btns{display:flex;gap:10px;justify-content:center}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">U</div>
+    <h1>USXR Admin</h1>
+    <p>⚠️ Acceso restringido solo para administradores autorizados</p>
+    <button class="btn-google" id="btnGoogleLogin">
+      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continuar con Google
+    </button>
+    <!-- Cloudflare Turnstile - se renderiza manualmente -->
+    <div id="adminTurnstile" style="margin:16px auto 0;display:flex;justify-content:center"></div>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel" class="layout" hidden>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">U</div>
+      <div>
+        <div class="logo-text">USXR</div>
+      </div>
+      <span class="logo-badge">ADMIN</span>
+    </div>
+    <span class="nav-section">Principal</span>
+    <button class="nav-item active" data-view="products">
+      <span class="ic">📦</span> Productos
+      <span class="badge" id="navCount">0</span>
+    </button>
+    <button class="nav-item" data-view="flash">
+      <span class="ic">⚡</span> Flash Sale
+    </button>
+    <button class="nav-item" data-view="categories">
+      <span class="ic">🏷️</span> Categorías
+      <span class="badge" id="navCatsCount">4</span>
+    </button>
+    <span class="nav-section">Tienda</span>
+    <button class="nav-item" data-view="control">
+      <span class="ic">🔌</span> Control
+    </button>
+    <button class="nav-item" data-view="settings">
+      <span class="ic">⚙️</span> Configuración
+    </button>
+    <button class="nav-item" id="btnViewStore">
+      <span class="ic">🌐</span> Ver tienda
+    </button>
+    <div style="flex:1"></div>
+    <button class="nav-item" id="btnLogout">
+      <span class="ic">🚪</span> Cerrar sesión
+    </button>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <h1 id="viewTitle">Productos</h1>
+      <div class="user">
+        <div class="avatar" id="userAvatar">A</div>
+        <div id="userName" style="font-weight:600;font-size:13px"></div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- VISTA: PRODUCTOS -->
+      <div id="viewProducts">
+        <div class="stats">
+          <div class="stat-card">
+            <div class="label">Total productos</div>
+            <div class="value" id="statTotal">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">En stock</div>
+            <div class="value" id="statStock" style="color:var(--ok)">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Destacados 🔥</div>
+            <div class="value" id="statHot" style="color:var(--hot)">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Categorías</div>
+            <div class="value" id="statCats">4</div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <input class="search" id="searchProd" placeholder="🔍  Buscar producto..." autocomplete="off">
+          <select class="filter-sel" id="filterCat">
+            <option value="">Todas las categorías</option>
+            <option value="ai">Inteligencia Artificial</option>
+            <option value="stream">Streaming</option>
+            <option value="game">Juegos</option>
+            <option value="multi">Multiservicios</option>
+          </select>
+          <button class="btn btn-primary" id="btnNewProduct">+ Nuevo producto</button>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-head">
+            <div></div>
+            <div>Producto</div>
+            <div class="h-cat">Categoría</div>
+            <div>Stock</div>
+            <div>Estado</div>
+            <div class="h-ord">Orden</div>
+            <div>Acciones</div>
+          </div>
+          <div id="productsTable"></div>
+        </div>
+      </div>
+
+      <!-- VISTA: FLASH SALE -->
+      <div id="viewFlash" hidden>
+        <div style="max-width:600px">
+
+          <!-- Status card global -->
+          <div id="flashStatusCard" style="border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);background:var(--surface)">
+            <div>
+              <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em">Flash Sales activas</div>
+              <div id="flashStatusText" style="font-weight:700;font-size:16px;margin-top:4px">—</div>
+            </div>
+          </div>
+
+          <!-- Botón agregar + lista de ofertas -->
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+            <button class="btn btn-primary" id="btnAddFlashOffer">+ Agregar oferta</button>
+            <span style="color:var(--muted);font-size:13px">hasta 5 ofertas</span>
+          </div>
+
+          <div id="flashOffersList">
+            <!-- Bloque 0 (oferta inicial) -->
+            <div class="flash-offer-block" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px;margin-bottom:16px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-weight:700">Oferta #1</span>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <span style="font-size:13px;color:var(--muted)" id="flashToggleLabel_0">Activar</span>
+                    <div style="position:relative;width:48px;height:26px">
+                      <input type="checkbox" id="flashToggle_0" style="opacity:0;width:0;height:0;position:absolute">
+                      <div id="flashToggleTrack_0" onclick="var cb=document.getElementById('flashToggle_0');cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'))" style="position:absolute;inset:0;border-radius:13px;background:var(--border);cursor:pointer;transition:background .2s">
+                        <div id="flashToggleThumb_0" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s"></div>
+                      </div>
+                    </div>
+                  </label>
+                  <button class="btn btn-danger btn-sm" data-del-offer="0" style="display:none">Eliminar</button>
+                </div>
+              </div>
+              <div id="flashStatusText_0" style="font-size:13px;color:var(--muted)">-</div>
+              <div class="field">
+                <label>Producto</label>
+                <select class="fld" id="flashProd_0"></select>
+              </div>
+              <div class="field">
+                <label>Plan</label>
+                <select class="fld" id="flashPlan_0"></select>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label>Precio oferta (Soles S/)</label>
+                  <input class="fld" type="number" step="0.01" id="flashPriceSoles_0" placeholder="15.20">
+                  <small style="color:var(--muted);font-size:11px;margin-top:4px" id="flashPriceUSDT_0">= 0.00 USDT</small>
+                </div>
+                <div class="field">
+                  <label>Precio normal (Soles S/)</label>
+                  <input class="fld" type="number" step="0.01" id="flashRegularSoles_0" placeholder="25.00">
+                  <small style="color:var(--muted);font-size:11px;margin-top:4px" id="flashRegularUSDT_0">= 0.00 USDT</small>
+                </div>
+              </div>
+              <div class="field">
+                <label>⏰ Inicio programado (opcional)</label>
+                <input class="fld" type="datetime-local" id="flashStart_0">
+                <small style="color:var(--muted);font-size:11px;margin-top:4px">Déjalo vacío para que empiece ahora al guardar</small>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-0="1">+1h</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-0="6">+6h</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-0="12">+12h</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-0="24">+1 día</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>Fecha y hora de fin (hora Lima)</label>
+                <input class="fld" type="datetime-local" id="flashEnd_0">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-0="1">+1h</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-0="6">+6h</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-0="12">+12h</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-0="24">+1 día</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-0="72">+3 días</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-0="168">+7 días</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones globales -->
+          <div style="display:flex;gap:10px;margin-top:8px">
+            <button class="btn btn-primary" id="btnSaveFlash" style="flex:1">💾 Guardar flash sales</button>
+            <button class="btn btn-ghost" id="btnClearFlash">🗑 Desactivar todas</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA: CATEGORÍAS -->
+      <div id="viewCategories" hidden>
+        <div style="max-width:720px">
+          <p style="color:var(--muted);margin-bottom:24px">Administra las categorías de productos de la tienda.</p>
+          
+          <div class="toolbar">
+            <button class="btn btn-primary" id="btnNewCategory">+ Nueva categoría</button>
+          </div>
+
+          <div class="table-wrap">
+            <div style="display:grid;grid-template-columns:48px 2fr 1fr 1fr 120px;padding:10px 16px;border-bottom:1px solid var(--border);font:700 11px/1 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;gap:12px;align-items:center">
+              <div></div>
+              <div>Nombre</div>
+              <div>Emoji/Icono</div>
+              <div>Productos</div>
+              <div>Acciones</div>
+            </div>
+            <div id="categoriesTable"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA: CONTROL -->
+      <div id="viewControl" hidden>
+        <div style="max-width:560px;display:flex;flex-direction:column;gap:20px">
+
+          <!-- Tienda ON/OFF -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <div>
+                <div style="font-weight:700;font-size:16px">🔌 Estado de la tienda</div>
+                <div style="color:var(--muted);font-size:13px;margin-top:4px" id="storeStatusDesc">La tienda está abierta</div>
+              </div>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                <div style="position:relative;width:56px;height:28px">
+                  <input type="checkbox" id="storeToggle" checked style="opacity:0;width:0;height:0;position:absolute">
+                  <div id="storeToggleTrack" onclick="var cb=$('storeToggle');cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'))" style="position:absolute;inset:0;border-radius:14px;background:var(--ok);cursor:pointer;transition:background .2s;border:2px solid var(--ink)">
+                    <div id="storeToggleThumb" style="position:absolute;top:2px;left:26px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;border:1px solid rgba(0,0,0,.1)"></div>
+                  </div>
+                </div>
+              </label>
+            </div>
+            <button class="btn btn-primary" id="btnSaveStoreStatus" style="width:100%">💾 Guardar estado</button>
+          </div>
+
+          <!-- Modo Mantenimiento -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <div>
+                <div style="font-weight:700;font-size:16px">🔧 Modo mantenimiento</div>
+                <div style="color:var(--muted);font-size:13px;margin-top:4px">Muestra un mensaje especial en la tienda</div>
+              </div>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                <div style="position:relative;width:56px;height:28px">
+                  <input type="checkbox" id="maintenanceToggle" style="opacity:0;width:0;height:0;position:absolute">
+                  <div id="maintenanceToggleTrack" onclick="var cb=$('maintenanceToggle');cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'))" style="position:absolute;inset:0;border-radius:14px;background:var(--border);cursor:pointer;transition:background .2s;border:2px solid var(--ink)">
+                    <div id="maintenanceToggleThumb" style="position:absolute;top:2px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;border:1px solid rgba(0,0,0,.1)"></div>
+                  </div>
+                </div>
+              </label>
+            </div>
+            <div class="field" style="margin-bottom:12px">
+              <label>Mensaje de mantenimiento</label>
+              <textarea class="fld" rows="3" id="maintenanceMsg" placeholder="Estamos mejorando la tienda. Volvemos pronto 🚀"></textarea>
+            </div>
+            <div class="field" style="margin-bottom:16px">
+              <label>Tiempo estimado (opcional)</label>
+              <input class="fld" id="maintenanceTime" placeholder="Ej: 2 horas, esta noche, mañana...">
+            </div>
+            <button class="btn btn-primary" id="btnSaveMaintenance" style="width:100%">💾 Guardar mantenimiento</button>
+          </div>
+
+          <!-- Accesos rápidos -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+            <div style="font-weight:700;font-size:16px;margin-bottom:16px">⚡ Accesos rápidos</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button class="btn btn-ghost" onclick="window.open('/', '_blank')">🌐 Ver tienda</button>
+              <button class="btn btn-ghost" onclick="window.open('https://supabase.com/dashboard/project/epubjmcysdfncoiegqlc', '_blank')">🗄️ Supabase Dashboard</button>
+              <button class="btn btn-ghost" onclick="window.open('https://vercel.com/dashboard', '_blank')">▲ Vercel Dashboard</button>
+              <button class="btn btn-ghost" onclick="window.open('https://dash.cloudflare.com', '_blank')">🔶 Cloudflare Dashboard</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- VISTA: CONFIGURACIÓN -->
+      <div id="viewSettings" hidden>
+        <div style="max-width:580px">
+          <p style="color:var(--muted);margin-bottom:24px">Datos de la tienda y métodos de pago.</p>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px">
+
+            <!-- Contacto -->
+            <div style="font:700 11px/1 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Contacto</div>
+            <div class="field">
+              <label>WhatsApp (con código de país)</label>
+              <input class="fld" id="cfgWA" placeholder="Ej: 51999999999">
+            </div>
+            <div class="field">
+              <label>Grupo de WhatsApp (enlace de invitación)</label>
+              <input class="fld" id="cfgWAGroup" placeholder="https://chat.whatsapp.com/xxxxx">
+            </div>
+            <div class="field">
+              <label>Nombre del grupo (texto del botón)</label>
+              <input class="fld" id="cfgWAGroupName" placeholder="Ej: Grupo USXR Store">
+            </div>
+            <div class="field">
+              <label>Telegram (sin @)</label>
+              <input class="fld" id="cfgTG" placeholder="Ej: mitienda">
+            </div>
+            <div class="field">
+              <label>Tipo de cambio USDT → Soles</label>
+              <input class="fld" type="number" step="0.01" id="cfgTC" placeholder="3.95">
+            </div>
+            <div class="check-row">
+              <input type="checkbox" id="cfgShowUSDT" checked>
+              <span>Mostrar precios en USDT en la tienda</span>
+            </div>
+
+            <!-- Yape -->
+            <div style="border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-weight:700;font-size:15px">📱 Yape</span>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                  <span style="font-size:13px;color:var(--muted)">Activo</span>
+                  <input type="checkbox" id="cfgYapeActive" style="width:18px;height:18px;accent-color:var(--accent)" checked>
+                </label>
+              </div>
+              <div class="field">
+                <label>Número Yape</label>
+                <input class="fld" id="cfgYapeNum" placeholder="Ej: 999999999">
+              </div>
+              <div class="field">
+                <label>Nombre Yape</label>
+                <input class="fld" id="cfgYapeName" placeholder="USXR STORE">
+              </div>
+              <div class="field">
+                <label>QR Yape</label>
+                <div style="display:flex;gap:12px;align-items:flex-start">
+                  <div>
+                    <div id="yapeQrPreview" style="width:80px;height:80px;border-radius:10px;border:2px solid var(--border);background:var(--surface2);display:grid;place-items:center;overflow:hidden;margin-bottom:6px">
+                      <span style="font-size:24px">🖼</span>
+                    </div>
+                    <input type="file" accept="image/*" id="yapeQrFile" hidden>
+                    <button class="btn btn-ghost btn-sm" id="btnPickYapeQr">📷 Subir</button>
+                  </div>
+                  <textarea class="fld" rows="3" id="cfgYapeQr" placeholder="O pega URL / base64..." style="flex:1;font-size:12px"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Binance -->
+            <div style="border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-weight:700;font-size:15px">🟡 Binance Pay</span>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                  <span style="font-size:13px;color:var(--muted)">Activo</span>
+                  <input type="checkbox" id="cfgBinanceActive" style="width:18px;height:18px;accent-color:var(--accent)" checked>
+                </label>
+              </div>
+              <div class="field">
+                <label>ID Binance Pay</label>
+                <input class="fld" id="cfgBinanceId" placeholder="123456789">
+              </div>
+              <div class="field">
+                <label>Nombre Binance</label>
+                <input class="fld" id="cfgBinanceName" placeholder="USXR STORE">
+              </div>
+              <div class="field">
+                <label>QR Binance</label>
+                <div style="display:flex;gap:12px;align-items:flex-start">
+                  <div>
+                    <div id="binanceQrPreview" style="width:80px;height:80px;border-radius:10px;border:2px solid var(--border);background:var(--surface2);display:grid;place-items:center;overflow:hidden;margin-bottom:6px">
+                      <span style="font-size:24px">🖼</span>
+                    </div>
+                    <input type="file" accept="image/*" id="binanceQrFile" hidden>
+                    <button class="btn btn-ghost btn-sm" id="btnPickBinanceQr">📷 Subir</button>
+                  </div>
+                  <textarea class="fld" rows="3" id="cfgBinanceQr" placeholder="O pega URL / base64..." style="flex:1;font-size:12px"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="btnSaveSettings">Guardar configuración</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRODUCTO -->
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <h2 id="modalTitle">Nuevo producto</h2>
+      <button class="close-btn" id="btnCloseModal" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field form-full">
+          <label>Nombre del producto</label>
+          <input class="fld" id="fName" placeholder="ej: Netflix" maxlength="60">
+        </div>
+        <div class="field">
+          <label>Categoría</label>
+          <select class="fld" id="fCat">
+            <option value="ai">Inteligencia Artificial</option>
+            <option value="stream">Streaming</option>
+            <option value="game">Juegos</option>
+            <option value="multi">Multiservicios</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Stock disponible</label>
+          <input class="fld" type="number" min="0" id="fStock" placeholder="50">
+        </div>
+        <div class="field">
+          <label>Emoji / siglas (2-3 chars)</label>
+          <input class="fld" id="fEmoji" placeholder="N" maxlength="4">
+        </div>
+        <div class="field">
+          <label>Color de fondo</label>
+          <div class="color-row">
+            <input class="fld" id="fColor" placeholder="#FFD6D1" style="flex:1">
+            <input type="color" id="fColorPicker" style="width:42px;height:42px;border-radius:10px;border:1px solid var(--border);cursor:pointer;padding:2px;background:var(--surface2)">
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+            <button type="button" class="color-preset" style="background:#E1E8FF" data-color="#E1E8FF"></button>
+            <button type="button" class="color-preset" style="background:#D6F5E8" data-color="#D6F5E8"></button>
+            <button type="button" class="color-preset" style="background:#FFD6D1" data-color="#FFD6D1"></button>
+            <button type="button" class="color-preset" style="background:#D3F4F2" data-color="#D3F4F2"></button>
+            <button type="button" class="color-preset" style="background:#E3D4FF" data-color="#E3D4FF"></button>
+            <button type="button" class="color-preset" style="background:#CFE3FF" data-color="#CFE3FF"></button>
+            <button type="button" class="color-preset" style="background:#D2F5D9" data-color="#D2F5D9"></button>
+            <button type="button" class="color-preset" style="background:#FFD9D9" data-color="#FFD9D9"></button>
+            <button type="button" class="color-preset" style="background:#FFE3B8" data-color="#FFE3B8"></button>
+            <button type="button" class="color-preset" style="background:#D9DCFF" data-color="#D9DCFF"></button>
+            <button type="button" class="color-preset" style="background:#E6D6FF" data-color="#E6D6FF"></button>
+            <button type="button" class="color-preset" style="background:#E5E5EE" data-color="#E5E5EE"></button>
+          </div>
+        </div>
+        <div class="field form-full">
+          <label>Descripción corta</label>
+          <textarea class="fld" rows="2" id="fDesc" placeholder="Qué incluye, cómo se entrega…" maxlength="200"></textarea>
+        </div>
+        <div class="field form-full">
+          <label>Imagen (URL o sube un archivo)</label>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div>
+              <div class="img-preview" id="imgPreview"><span style="color:var(--muted);font-size:24px">🖼</span></div>
+              <input type="file" accept="image/*" id="fImgFile" hidden>
+              <button class="btn btn-ghost btn-sm" id="btnPickImg">📷 Subir</button>
+            </div>
+            <div style="flex:1">
+              <input class="fld" id="fImgUrl" placeholder="https://... o se llena al subir">
+            </div>
+          </div>
+        </div>
+        <div class="field form-full">
+          <label>
+            <div class="check-row"><input type="checkbox" id="fHot"> <span>Destacado 🔥 (aparece con etiqueta HOT)</span></div>
+          </label>
+        </div>
+        <div class="field form-full">
+          <label>Planes de precios</label>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:grid;grid-template-columns:1fr 90px 30px 90px 30px 90px 36px;gap:6px">
+            <span>Nombre del plan</span><span>Precio (S/)</span><span></span><span>Antes (S/)</span><span></span><span>Duración</span><span></span>
+          </div>
+          <div class="plans-list" id="plansList"></div>
+          <button class="add-plan-btn" id="btnAddPlan">+ Agregar plan</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="btnCancelModal">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveProduct"><span id="saveBtnText">Guardar producto</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CATEGORÍA -->
+<div class="modal-overlay" id="modalCategoryOverlay" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modalCategoryTitle">Nueva categoría</h2>
+      <button class="close-btn" id="btnCloseCategoryModal" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field form-full">
+          <label>ID de la categoría (único, sin espacios)</label>
+          <input class="fld" id="fCatId" placeholder="streaming" pattern="[a-z0-9_-]+" maxlength="30">
+          <small style="color:var(--muted);font-size:11px;margin-top:4px">Solo letras minúsculas, números, guiones y guiones bajos</small>
+        </div>
+        <div class="field form-full">
+          <label>Nombre de la categoría</label>
+          <input class="fld" id="fCatName" placeholder="Streaming" maxlength="50">
+        </div>
+        <div class="field">
+          <label>Emoji / Icono</label>
+          <input class="fld" id="fCatEmoji" placeholder="📺" maxlength="4">
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+            <button type="button" class="emoji-preset" data-emoji="🤖">🤖</button>
+            <button type="button" class="emoji-preset" data-emoji="📺">📺</button>
+            <button type="button" class="emoji-preset" data-emoji="🎮">🎮</button>
+            <button type="button" class="emoji-preset" data-emoji="⭐">⭐</button>
+            <button type="button" class="emoji-preset" data-emoji="🎵">🎵</button>
+            <button type="button" class="emoji-preset" data-emoji="📱">📱</button>
+            <button type="button" class="emoji-preset" data-emoji="💻">💻</button>
+            <button type="button" class="emoji-preset" data-emoji="🎬">🎬</button>
+            <button type="button" class="emoji-preset" data-emoji="🔒">🔒</button>
+            <button type="button" class="emoji-preset" data-emoji="☁️">☁️</button>
+            <button type="button" class="emoji-preset" data-emoji="🎓">🎓</button>
+            <button type="button" class="emoji-preset" data-emoji="💡">💡</button>
+            <button type="button" class="emoji-preset" data-emoji="🛡️">🛡️</button>
+            <button type="button" class="emoji-preset" data-emoji="🚀">🚀</button>
+            <button type="button" class="emoji-preset" data-emoji="💎">💎</button>
+            <button type="button" class="emoji-preset" data-emoji="🔥">🔥</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Color</label>
+          <div class="color-row">
+            <input class="fld" id="fCatColor" placeholder="#22c55e" style="flex:1">
+            <input type="color" id="fCatColorPicker" style="width:42px;height:42px;border-radius:10px;border:1px solid var(--border);cursor:pointer;padding:2px;background:var(--surface2)">
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+            <button type="button" class="color-preset cat-color-preset" style="background:#a78bfa" data-color="#a78bfa"></button>
+            <button type="button" class="color-preset cat-color-preset" style="background:#4ade80" data-color="#4ade80"></button>
+            <button type="button" class="color-preset cat-color-preset" style="background:#f87171" data-color="#f87171"></button>
+            <button type="button" class="color-preset cat-color-preset" style="background:#fbbf24" data-color="#fbbf24"></button>
+            <button type="button" class="color-preset cat-color-preset" style="background:#60a5fa" data-color="#60a5fa"></button>
+            <button type="button" class="color-preset cat-color-preset" style="background:#f472b6" data-color="#f472b6"></button>
+            <button type="button" class="color-preset cat-color-preset" style="background:#34d399" data-color="#34d399"></button>
+            <button type="button" class="color-preset cat-color-preset" style="background:#fb923c" data-color="#fb923c"></button>
+            <button type="button" class="color-preset cat-color-preset" style="background:#e879f9" data-color="#e879f9"></button>
+            <button type="button" class="color-preset cat-color-preset" style="background:#22d3ee" data-color="#22d3ee"></button>
+            <button type="button" class="color-preset cat-color-preset" style="background:#a3e635" data-color="#a3e635"></button>
+            <button type="button" class="color-preset cat-color-preset" style="background:#94a3b8" data-color="#94a3b8"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="btnCancelCategoryModal">Cancelar</button>
+      <button class="btn btn-primary" id="btnSaveCategory"><span id="saveCatBtnText">Guardar categoría</span></button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function () {
+  // Credenciales cargadas desde /api/config (variables de entorno de Vercel)
+  var SUPA_URL, SUPA_KEY, _supa;
+
+  fetch('/api/config')
+    .then(function(r) { return r.json(); })
+    .then(function(cfg) {
+      SUPA_URL = cfg.supabaseUrl;
+      SUPA_KEY = cfg.supabaseKey;
+      // Renderizar Turnstile en admin esperando a que el script esté listo
+      if (cfg.turnstileSiteKey) {
+        var _adminSiteKey = cfg.turnstileSiteKey;
+        var renderAdmin = function() {
+          var tw = document.getElementById('adminTurnstile');
+          if (tw && tw.children.length === 0) {
+            if (window.turnstile) {
+              window.turnstile.render(tw, {
+                sitekey: _adminSiteKey,
+                theme: 'dark',
+                callback: function(token) { 
+                  if (window.onTurnstileSuccess) window.onTurnstileSuccess(token); 
+                }
+              });
+            } else {
+              setTimeout(renderAdmin, 100);
+            }
+          }
+        };
+        renderAdmin();
+      }
+      _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, { auth: { detectSessionInUrl: true, persistSession: true } });
+      initAdmin();
+    })
+    .catch(function() { console.error('Error cargando configuración'); });
+
+  function initAdmin() {
+
+  var $ = function (s) { return document.getElementById(s); };
+  var products = [];
+  var categories = [];
+  var editingId = null;
+  var editingCatId = null;
+  var pendingDeleteId = null;
+  
+  // Sistema de bloqueo por intentos fallidos
+  var BLOCK_KEY = 'admin_block';
+  var MAX_ATTEMPTS = 3;
+  var BLOCK_DURATION = 60 * 60 * 1000; // 1 hora en milisegundos
+  
+  function getBlockData() {
+    try {
+      var data = localStorage.getItem(BLOCK_KEY);
+      return data ? JSON.parse(data) : { attempts: 0, blockedUntil: 0 };
+    } catch(e) {
+      return { attempts: 0, blockedUntil: 0 };
+    }
+  }
+  
+  function setBlockData(data) {
+    localStorage.setItem(BLOCK_KEY, JSON.stringify(data));
+  }
+  
+  function isBlocked() {
+    var data = getBlockData();
+    if (data.blockedUntil > Date.now()) {
+      var remaining = Math.ceil((data.blockedUntil - Date.now()) / 1000 / 60);
+      return remaining;
+    }
+    return false;
+  }
+  
+  function registerFailedAttempt() {
+    var data = getBlockData();
+    data.attempts += 1;
+    
+    if (data.attempts >= MAX_ATTEMPTS) {
+      data.blockedUntil = Date.now() + BLOCK_DURATION;
+      data.attempts = 0;
+      setBlockData(data);
+      return true; // Bloqueado
+    }
+    
+    setBlockData(data);
+    return false;
+  }
+  
+  function resetAttempts() {
+    setBlockData({ attempts: 0, blockedUntil: 0 });
+  }
+
+  // --- AUTH ---
+  _supa.auth.onAuthStateChange(function (event, session) {
+    if (session && session.user) {
+      var email = session.user.email;
+      
+      // Verificar si está bloqueado
+      var minsLeft = isBlocked();
+      if (minsLeft) {
+        _supa.auth.signOut();
+        showLogin();
+        $('loginErr').textContent = '🚫 IP bloqueada. Intenta en ' + minsLeft + ' minuto' + (minsLeft !== 1 ? 's' : '') + '.';
+        return;
+      }
+      
+      // Verificar si el email está en la tabla admins usando el cliente Supabase
+      _supa.from('admins').select('email').eq('email', email)
+        .then(function(result) {
+          if (result.error) {
+            // Siempre denegar si hay error al verificar - no hay bypass
+            _supa.auth.signOut();
+            showLogin();
+            $('loginErr').textContent = '❌ Error al verificar permisos. Intenta de nuevo.';
+            return;
+          }
+          if (result.data && result.data.length > 0) {
+            resetAttempts();
+            showPanel(session.user);
+          } else {
+            var blocked = registerFailedAttempt();
+            var data = getBlockData();
+            _supa.auth.signOut();
+            showLogin();
+            if (blocked) {
+              $('loginErr').textContent = '🚫 Demasiados intentos. IP bloqueada por 1 hora.';
+            } else {
+              var remaining = MAX_ATTEMPTS - data.attempts;
+              $('loginErr').textContent = '❌ Acceso denegado. Te queda ' + remaining + ' intento' + (remaining !== 1 ? 's' : '') + ' antes del bloqueo.';
+            }
+          }
+        });
+    } else {
+      showLogin();
+    }
+  });
+
+  $('btnLogout').addEventListener('click', function () {
+    _supa.auth.signOut();
+  });
+
+  function showLogin() {
+    var loginScreen = $('loginScreen');
+    var adminPanel = $('adminPanel');
+    loginScreen.hidden = false;
+    loginScreen.style.display = 'flex';
+    adminPanel.hidden = true;
+    adminPanel.style.display = 'none';
+  }
+
+  function showPanel(user) {
+    var loginScreen = $('loginScreen');
+    var adminPanel = $('adminPanel');
+    loginScreen.hidden = true;
+    loginScreen.style.display = 'none';
+    adminPanel.hidden = false;
+    adminPanel.style.display = 'grid';
+    
+    var name = (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) || user.email.split('@')[0];
+    $('userAvatar').textContent = name.charAt(0).toUpperCase();
+    $('userName').textContent = name;
+    loadProducts();
+    loadCategories();
+    loadSettings();
+  }
+
+  // --- NAVIGATION ---
+  document.querySelectorAll('.nav-item[data-view]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.nav-item').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var view = btn.dataset.view;
+      $('viewProducts').hidden = view !== 'products';
+      $('viewFlash').hidden = view !== 'flash';
+      $('viewCategories').hidden = view !== 'categories';
+      $('viewControl').hidden = view !== 'control';
+      $('viewSettings').hidden = view !== 'settings';
+      $('viewTitle').textContent = { products: 'Productos', flash: 'Flash Sale', categories: 'Categorías', control: 'Control', settings: 'Configuración' }[view];
+      if (view === 'flash') loadFlashSelects();
+      if (view === 'categories') loadCategories();
+      if (view === 'control') loadControlStatus();
+    });
+  });
+
+  $('btnViewStore').addEventListener('click', function () { window.open('/', '_blank'); });
+
+  // --- SUPABASE FETCH ---
+  function sbFetch(path, opts) {
+    var headers = Object.assign({ 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' }, (opts && opts.headers) || {});
+    return fetch(SUPA_URL + '/rest/v1/' + path, Object.assign({}, opts || {}, { headers: headers }))
+      .then(function (r) { return r.status === 204 ? null : r.json().then(function (d) { if (!r.ok) throw d; return d; }); });
+  }
+
+  // --- LOAD PRODUCTS ---
+  function loadProducts() {
+    sbFetch('products?select=id,name,cat,color,emoji,stock,plans,is_hot,description,image_url,sort_order&order=sort_order.asc,created_at.asc')
+      .then(function (rows) {
+        products = rows || [];
+        renderStats();
+        renderTable(products);
+        $('navCount').textContent = products.length;
+      })
+      .catch(function (e) { toast('Error al cargar productos', true); });
+  }
+
+  function renderStats() {
+    $('statTotal').textContent = products.length;
+    $('statStock').textContent = products.filter(function (p) { return Number(p.stock) > 0; }).length;
+    $('statHot').textContent = products.filter(function (p) { return p.is_hot; }).length;
+  }
+
+  var CAT_LABELS = { ai: 'IA', stream: 'Stream', game: 'Juego', multi: 'Multi' };
+  var CAT_TAGS = { ai: 'tag-ai', stream: 'tag-stream', game: 'tag-game', multi: 'tag-multi' };
+
+  function renderTable(rows) {
+    var el = $('productsTable');
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty"><div class="ei">📦</div><p>No hay productos. ¡Crea el primero!</p></div>';
+      return;
+    }
+    el.innerHTML = rows.map(function (p, idx) {
+      var plans = Array.isArray(p.plans) ? p.plans : [];
+      var thumb = p.image_url
+        ? '<img src="' + esc(p.image_url) + '" alt="">'
+        : '<span style="font-size:16px;font-weight:700">' + esc(p.emoji || '?') + '</span>';
+      var isFirst = idx === 0;
+      var isLast = idx === rows.length - 1;
+      return '<div class="table-row">' +
+        '<div class="prod-thumb" style="background:' + esc(p.color || '#333') + '">' + thumb + '</div>' +
+        '<div><div class="prod-name">' + (p.is_hot ? '<span class="hot-dot"></span>' : '') + esc(p.name) + '</div>' +
+        '<div class="prod-desc">' + esc(p.description || '—') + '</div></div>' +
+        '<div class="c-cat"><span class="tag ' + (CAT_TAGS[p.cat] || '') + '">' + (CAT_LABELS[p.cat] || p.cat) + '</span></div>' +
+        '<div class="stock-val" style="text-align:center">' + (p.stock || 0) + '</div>' +
+        '<div>' + (Number(p.stock) > 0
+          ? '<button class="btn btn-sm" style="background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2);cursor:pointer;width:100%" data-toggle-stock="' + esc(p.id) + '" title="Click para marcar sin stock">✅ En stock</button>'
+          : '<button class="btn btn-sm" style="background:rgba(232,64,47,.1);color:#f87171;border:1px solid rgba(232,64,47,.3);cursor:pointer;width:100%" data-toggle-stock="' + esc(p.id) + '" title="Click para marcar en stock">❌ Sin stock</button>') + '</div>' +
+        '<div class="c-ord" style="display:flex;flex-direction:row;gap:4px;justify-content:center">' +
+        '<button class="btn btn-ghost btn-sm" style="height:28px;width:28px;padding:0;font-size:13px" data-move-up="' + esc(p.id) + '"' + (isFirst ? ' disabled' : '') + '>↑</button>' +
+        '<button class="btn btn-ghost btn-sm" style="height:28px;width:28px;padding:0;font-size:13px" data-move-down="' + esc(p.id) + '"' + (isLast ? ' disabled' : '') + '>↓</button>' +
+        '</div>' +
+        '<div class="actions">' +
+        '<button class="btn btn-ghost btn-sm" data-edit="' + esc(p.id) + '">✏️ Editar</button>' +
+        '<button class="btn btn-sm" style="background:rgba(232,64,47,.15);color:#f87171;border:1px solid rgba(232,64,47,.3)" data-del="' + esc(p.id) + '">🗑</button>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  // Search & filter
+  function applyFilter() {
+    var q = $('searchProd').value.trim().toLowerCase();
+    var cat = $('filterCat').value;
+    var filtered = products.filter(function (p) {
+      return (!q || p.name.toLowerCase().includes(q)) && (!cat || p.cat === cat);
+    });
+    renderTable(filtered);
+  }
+  $('searchProd').addEventListener('input', applyFilter);
+  $('filterCat').addEventListener('change', applyFilter);
+
+  // Table actions
+  $('productsTable').addEventListener('click', function (e) {
+    var editBtn = e.target.closest('[data-edit]');
+    var delBtn = e.target.closest('[data-del]');
+    var upBtn = e.target.closest('[data-move-up]');
+    var downBtn = e.target.closest('[data-move-down]');
+    var toggleStockBtn = e.target.closest('[data-toggle-stock]');
+
+    if (toggleStockBtn) {
+      var pid = toggleStockBtn.dataset.toggleStock;
+      var prod = products.find(function(x) { return x.id === pid; });
+      if (!prod) return;
+      var newStock = Number(prod.stock) > 0 ? 0 : 10;
+      sbFetch('products?id=eq.' + encodeURIComponent(pid), {
+        method: 'PATCH',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ stock: newStock })
+      }).then(function() {
+        prod.stock = newStock;
+        toast(newStock === 0 ? '❌ Marcado sin stock' : '✅ Marcado en stock');
+        renderStats();
+        renderTable(products);
+      }).catch(function() { toast('Error al actualizar stock', true); });
+      return;
+    }
+    
+    if (editBtn) openModal(editBtn.dataset.edit);
+    if (delBtn) {
+      var p = products.find(function (x) { return x.id === delBtn.dataset.del; });
+      if (window.confirm('¿Eliminar "' + (p ? p.name : '') + '"?\nEsta acción no se puede deshacer.')) {
+        sbFetch('products?id=eq.' + encodeURIComponent(delBtn.dataset.del), { method: 'DELETE' })
+          .then(function () { toast('🗑 Producto eliminado'); loadProducts(); })
+          .catch(function () { toast('Error al eliminar', true); });
+      }
+    }
+    if (upBtn || downBtn) {
+      var id = upBtn ? upBtn.dataset.moveUp : downBtn.dataset.moveDown;
+      var idx = products.findIndex(function(x) { return x.id === id; });
+      if (idx === -1) return;
+      var newIdx = upBtn ? idx - 1 : idx + 1;
+      if (newIdx < 0 || newIdx >= products.length) return;
+      // Intercambiar posiciones
+      var temp = products[idx];
+      products[idx] = products[newIdx];
+      products[newIdx] = temp;
+      // Guardar nuevo orden en Supabase (campo sort_order)
+      var updates = products.map(function(p, i) {
+        return sbFetch('products?id=eq.' + encodeURIComponent(p.id), {
+          method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ sort_order: i })
+        });
+      });
+      Promise.all(updates).catch(function() {});
+      renderStats();
+      renderTable(products);
+      toast('✅ Orden actualizado');
+    }
+  });
+
+  // --- MODAL ---
+  var plans = [];
+
+  function openModal(id) {
+    editingId = id || null;
+    plans = [];
+    $('modalTitle').textContent = id ? 'Editar producto' : 'Nuevo producto';
+    $('saveBtnText').textContent = id ? 'Guardar cambios' : 'Crear producto';
+    clearForm();
+    if (id) {
+      var p = products.find(function (x) { return x.id === id; });
+      if (p) fillForm(p);
+    } else {
+      addPlanRow(['', 1, '30 días', '']);
+    }
+    
+    var overlay = $('modalOverlay');
+    overlay.hidden = false;
+    overlay.classList.remove('hidden');
+    overlay.style.display = 'flex';
+  }
+
+  function closeModal() { 
+    var overlay = $('modalOverlay');
+    overlay.hidden = true;
+    overlay.classList.add('hidden');
+    overlay.style.display = 'none';
+    editingId = null;
+  }
+  
+  // Close modal handlers - with explicit event stopping
+  $('btnCloseModal').addEventListener('click', function(e) { 
+    e.preventDefault();
+    e.stopPropagation();
+    closeModal(); 
+  });
+  
+  $('btnCancelModal').addEventListener('click', function(e) { 
+    e.preventDefault();
+    e.stopPropagation();
+    closeModal(); 
+  });
+  
+  // Overlay click - only if clicking outside modal
+  $('modalOverlay').addEventListener('click', function (e) { 
+    if (e.target === $('modalOverlay')) {
+      e.preventDefault();
+      closeModal();
+    }
+  });
+  
+  // Prevent modal body clicks from closing
+  $('modal').addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
+
+  function clearForm() {
+    ['fName','fDesc','fEmoji','fColor','fImgUrl'].forEach(function (id) { $(id).value = ''; });
+    $('fColorPicker').value = '#E5E5EE';
+    $('fCat').value = 'stream';
+    $('fStock').value = '10';
+    $('fHot').checked = false;
+    $('imgPreview').innerHTML = '<span style="color:var(--muted);font-size:24px">🖼</span>';
+    $('plansList').innerHTML = '';
+    plans = [];
+  }
+
+  function fillForm(p) {
+    $('fName').value = p.name || '';
+    $('fCat').value = p.cat || 'stream';
+    $('fStock').value = p.stock || 0;
+    $('fEmoji').value = p.emoji || '';
+    $('fColor').value = p.color || '';
+    $('fColorPicker').value = p.color || '#E5E5EE';
+    $('fDesc').value = p.description || '';
+    $('fHot').checked = !!p.is_hot;
+    $('fImgUrl').value = p.image_url || '';
+    if (p.color) $('fColorPicker').value = p.color;
+    if (p.image_url) {
+      $('imgPreview').innerHTML = '<img src="' + esc(p.image_url) + '" alt="">';
+    }
+    var rawPlans = Array.isArray(p.plans) ? p.plans : [];
+    rawPlans.forEach(function (pl) { addPlanRow(pl); });
+    if (!rawPlans.length) addPlanRow(['', 1, '30 días', '']);
+  }
+
+  $('fColor').addEventListener('input', function () {
+    $('fColorPicker').value = this.value;
+  });
+  $('fColorPicker').addEventListener('input', function() {
+    $('fColor').value = this.value;
+  });
+  document.querySelectorAll('.color-preset').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var c = this.dataset.color;
+      $('fColor').value = c;
+      $('fColorPicker').value = c;
+    });
+  });
+
+  // Image upload
+  $('btnPickImg').addEventListener('click', function () { $('fImgFile').click(); });
+  $('fImgFile').addEventListener('change', function () {
+    var f = this.files[0]; if (!f) return;
+    var fr = new FileReader();
+    fr.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var s = 400, c = document.createElement('canvas');
+        var k = Math.max(s / img.width, s / img.height);
+        c.width = c.height = s;
+        c.getContext('2d').drawImage(img, (s - img.width * k) / 2, (s - img.height * k) / 2, img.width * k, img.height * k);
+        var data = c.toDataURL('image/jpeg', 0.82);
+        $('fImgUrl').value = data;
+        $('imgPreview').innerHTML = '<img src="' + data + '" alt="">';
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(f);
+  });
+
+  $('fImgUrl').addEventListener('input', function () {
+    if (this.value.startsWith('http')) {
+      $('imgPreview').innerHTML = '<img src="' + esc(this.value) + '" alt="" onerror="this.parentNode.innerHTML=\'<span style=color:var(--muted)>Error</span>\'">';
+    }
+  });
+
+  // Plans
+  function addPlanRow(pl) {
+    var i = plans.length;
+    plans.push(pl || ['', 1, '30 días', '']);
+    var row = document.createElement('div');
+    row.className = 'plan-row';
+    row.dataset.pi = i;
+    var TC = TC_ADMIN;
+    row.innerHTML =
+      '<input class="fld" placeholder="Nombre (ej: 1 mes)" data-pi="' + i + '" data-pk="0" value="' + esc(String(pl[0] || '')) + '">' +
+      '<input class="fld" type="number" step="0.01" min="0" placeholder="S/ precio" data-pi="' + i + '" data-pk="1" data-soles="price" value="' + (pl[1] ? (pl[1] * TC).toFixed(2) : '') + '">' +
+      '<span style="font-size:10px;color:var(--muted);text-align:center" data-usdt-price-' + i + '>' + (pl[1] ? pl[1].toFixed(4) + ' USDT' : '') + '</span>' +
+      '<input class="fld" type="number" step="0.01" min="0" placeholder="S/ antes" data-pi="' + i + '" data-pk="3" data-soles="before" value="' + (pl[3] ? (pl[3] * TC).toFixed(2) : '') + '">' +
+      '<span style="font-size:10px;color:var(--muted);text-align:center" data-usdt-before-' + i + '>' + (pl[3] ? pl[3].toFixed(4) + ' USDT' : '') + '</span>' +
+      '<input class="fld" placeholder="30 días" data-pi="' + i + '" data-pk="2" value="' + esc(String(pl[2] || '')) + '">' +
+      '<button class="del-plan" data-del-plan="' + i + '">✕</button>';
+    $('plansList').appendChild(row);
+  }
+
+  // Tipo de cambio global (se actualiza desde Supabase settings)
+  var TC_ADMIN = 3.95;
+  $('plansList').addEventListener('input', function (e) {
+    var t = e.target; if (t.dataset.pi === undefined) return;
+    var i = +t.dataset.pi, k = +t.dataset.pk;
+    if (!plans[i]) return;
+    plans[i] = plans[i].slice();
+    if (k === 1 || k === 3) {
+      // Convertir Soles a USDT para guardar
+      var soles = parseFloat(t.value) || 0;
+      var usdt = Math.round(soles / TC_ADMIN * 10000) / 10000;
+      plans[i][k] = usdt;
+      // Mostrar el equivalente en USDT
+      var span = t.nextElementSibling;
+      if (span) span.textContent = usdt > 0 ? usdt.toFixed(2) + '$' : '';
+    } else {
+      plans[i][k] = t.value;
+    }
+  });
+
+  $('plansList').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-del-plan]');
+    if (!btn) return;
+    var i = +btn.dataset.delPlan;
+    var rows = $('plansList').querySelectorAll('.plan-row');
+    if (rows.length <= 1) return toast('Debe haber al menos un plan', true);
+    rows[i].remove();
+    plans.splice(i, 1);
+    // Reindex
+    $('plansList').querySelectorAll('[data-pi]').forEach(function (el, idx) {
+      el.dataset.pi = Math.floor(idx / 4);
+    });
+  });
+
+  $('btnAddPlan').addEventListener('click', function () { addPlanRow(['', 1, '30 días', '']); });
+
+  // Save product
+  $('btnSaveProduct').addEventListener('click', function () {
+    var name = $('fName').value.trim();
+    if (!name) return toast('El nombre es obligatorio', true);
+    if (!plans.length) return toast('Agrega al menos un plan', true);
+
+    var cleanPlans = plans.map(function (pl) {
+      var row = [String(pl[0] || ''), parseFloat(pl[1]) || 0, String(pl[2] || '30 días')];
+      var before = parseFloat(pl[3]);
+      if (before > 0) row.push(before);
+      return row;
+    }).filter(function (pl) { return pl[0]; });
+
+    if (!cleanPlans.length) return toast('Los planes deben tener nombre', true);
+
+    var data = {
+      name: name,
+      cat: $('fCat').value,
+      stock: Math.max(0, parseInt($('fStock').value) || 0),
+      emoji: $('fEmoji').value.trim() || name.slice(0, 2),
+      color: $('fColor').value.trim() || '#E5E5EE',
+      description: $('fDesc').value.trim(),
+      is_hot: $('fHot').checked,
+      image_url: $('fImgUrl').value.trim(),
+      plans: cleanPlans
+    };
+
+    $('saveBtnText').innerHTML = '<span class="spin"></span>';
+    $('btnSaveProduct').disabled = true;
+
+    var promise;
+    if (editingId) {
+      promise = sbFetch('products?id=eq.' + encodeURIComponent(editingId), {
+        method: 'PATCH', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify(data)
+      });
+    } else {
+      data.id = 'p' + Date.now().toString(36);
+      data.created_at = new Date().toISOString();
+      promise = sbFetch('products', {
+        method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify(data)
+      });
+    }
+
+    promise.then(function () {
+      toast(editingId ? '✅ Producto actualizado' : '✅ Producto creado');
+      closeModal();
+      loadProducts();
+    }).catch(function (e) {
+      toast('Error al guardar: ' + (e.message || JSON.stringify(e)), true);
+    }).finally(function () {
+      $('saveBtnText').textContent = editingId ? 'Guardar cambios' : 'Crear producto';
+      $('btnSaveProduct').disabled = false;
+    });
+  });
+
+  $('btnNewProduct').addEventListener('click', function () { openModal(null); });
+
+
+  // --- FLASH SALE MULTI ---
+  // Tipo de cambio - también definido en la sección settings, se usa una sola var
+  // TC_ADMIN ya está definido más abajo, se usa con var local aquí para los listeners
+
+  function updateFlashStatus(cfg, i) {
+    var sfx = (i !== undefined) ? '_' + i : '_0';
+    var now = Date.now();
+    var toggle = $(('flashToggle' + sfx).replace('__','_'));
+    var track = $(('flashToggleTrack' + sfx).replace('__','_'));
+    var thumb = $(('flashToggleThumb' + sfx).replace('__','_'));
+    var statusText = $(('flashStatusText' + sfx).replace('__','_'));
+    var label = $(('flashToggleLabel' + sfx).replace('__','_'));
+
+    if (!toggle) return;
+
+    if (!cfg || !cfg.end || cfg.active === false) {
+      toggle.checked = false;
+      if (track) { track.style.background = 'var(--border)'; }
+      if (thumb) { thumb.style.left = '3px'; }
+      if (statusText) { statusText.textContent = '⭕ Desactivada'; statusText.style.color = 'var(--muted)'; }
+      if (label) label.textContent = 'Activar';
+    } else if (cfg.start && cfg.start > now) {
+      toggle.checked = true;
+      if (track) { track.style.background = 'var(--warn)'; }
+      if (thumb) { thumb.style.left = '25px'; }
+      if (statusText) {
+        var d = new Date(cfg.start);
+        statusText.textContent = '🕐 Programada — inicia ' + d.toLocaleString('es-PE', { timeZone: 'America/Lima', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        statusText.style.color = 'var(--warn)';
+      }
+      if (label) label.textContent = 'Programada';
+    } else if (cfg.end > now) {
+      toggle.checked = true;
+      if (track) { track.style.background = 'var(--ok)'; }
+      if (thumb) { thumb.style.left = '25px'; }
+      if (statusText) {
+        var remaining = Math.ceil((cfg.end - now) / 60000);
+        var hrs = Math.floor(remaining / 60), mins = remaining % 60;
+        statusText.textContent = '✅ Activa — termina en ' + (hrs > 0 ? hrs + 'h ' : '') + mins + 'min';
+        statusText.style.color = 'var(--ok)';
+      }
+      if (label) label.textContent = 'Activa';
+    } else {
+      toggle.checked = false;
+      if (track) { track.style.background = 'var(--hot)'; }
+      if (thumb) { thumb.style.left = '3px'; }
+      if (statusText) { statusText.textContent = '⌛ Vencida — cambia la fecha para reactivar'; statusText.style.color = 'var(--hot)'; }
+      if (label) label.textContent = 'Vencida';
+    }
+  }
+
+  function _makeBlockHTML(i, cfg) {
+    cfg = cfg || {};
+    var pad = function(n) { return String(n).padStart(2,'0'); };
+    var endVal = '', startVal = '';
+    if (cfg.end && cfg.end > 0 && !isNaN(cfg.end)) {
+      var de = new Date(cfg.end);
+      if (de.getFullYear() > 2020) endVal = de.getFullYear() + '-' + pad(de.getMonth()+1) + '-' + pad(de.getDate()) + 'T' + pad(de.getHours()) + ':' + pad(de.getMinutes());
+    }
+    if (cfg.start && cfg.start > 0 && !isNaN(cfg.start)) {
+      var ds = new Date(cfg.start);
+      if (ds.getFullYear() > 2020) startVal = ds.getFullYear() + '-' + pad(ds.getMonth()+1) + '-' + pad(ds.getDate()) + 'T' + pad(ds.getHours()) + ':' + pad(ds.getMinutes());
+    }
+    var prodOpts = products.map(function(p) {
+      return '<option value="' + esc(p.id) + '"' + (cfg.productId === p.id ? ' selected' : '') + '>' + esc(p.name) + '</option>';
+    }).join('');
+    var selProd = products.find(function(p) { return p.id === cfg.productId; });
+    var planOpts = '';
+    if (selProd) {
+      var pls = Array.isArray(selProd.plans) ? selProd.plans : [];
+      planOpts = pls.map(function(pl) {
+        var soles = (pl[1] * TC_ADMIN).toFixed(2);
+        return '<option value="' + esc(String(pl[0])) + '"' + (cfg.plan === pl[0] ? ' selected' : '') + '>' + esc(String(pl[0])) + ' — S/ ' + soles + '</option>';
+      }).join('');
+    }
+    var priceSOL = cfg.price ? (cfg.price * TC_ADMIN).toFixed(2) : '';
+    var priceUSDT = cfg.price ? ('= ' + cfg.price.toFixed(2) + ' USDT') : '= 0.00 USDT';
+    var regSOL = cfg.regular ? (cfg.regular * TC_ADMIN).toFixed(2) : '';
+    var regUSDT = cfg.regular ? ('= ' + cfg.regular.toFixed(2) + ' USDT') : '= 0.00 USDT';
+    return '<div class="flash-offer-block" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px;margin-bottom:16px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between">' +
+        '<span style="font-weight:700">Oferta #' + (i + 1) + '</span>' +
+        '<div style="display:flex;align-items:center;gap:10px">' +
+          '<label style="display:flex;align-items:center;gap:8px;cursor:pointer">' +
+            '<span style="font-size:13px;color:var(--muted)" id="flashToggleLabel_' + i + '">Activar</span>' +
+            '<div style="position:relative;width:48px;height:26px">' +
+              '<input type="checkbox" id="flashToggle_' + i + '" style="opacity:0;width:0;height:0;position:absolute">' +
+              '<div id="flashToggleTrack_' + i + '" onclick="var cb=document.getElementById(\'flashToggle_' + i + '\');cb.checked=!cb.checked;cb.dispatchEvent(new Event(\'change\'))" style="position:absolute;inset:0;border-radius:13px;background:var(--border);cursor:pointer;transition:background .2s">' +
+                '<div id="flashToggleThumb_' + i + '" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s"></div>' +
+              '</div>' +
+            '</div>' +
+          '</label>' +
+          '<button class="btn btn-danger btn-sm" data-del-offer="' + i + '">Eliminar</button>' +
+        '</div>' +
+      '</div>' +
+      '<div id="flashStatusText_' + i + '" style="font-size:13px;color:var(--muted)">-</div>' +
+      '<div class="field"><label>Producto</label><select class="fld" id="flashProd_' + i + '">' + prodOpts + '</select></div>' +
+      '<div class="field"><label>Plan</label><select class="fld" id="flashPlan_' + i + '">' + planOpts + '</select></div>' +
+      '<div class="form-grid">' +
+        '<div class="field"><label>Precio oferta (Soles S/)</label><input class="fld" type="number" step="0.01" id="flashPriceSoles_' + i + '" placeholder="15.20" value="' + esc(priceSOL) + '"><small style="color:var(--muted);font-size:11px;margin-top:4px" id="flashPriceUSDT_' + i + '">' + priceUSDT + '</small></div>' +
+        '<div class="field"><label>Precio normal (Soles S/)</label><input class="fld" type="number" step="0.01" id="flashRegularSoles_' + i + '" placeholder="25.00" value="' + esc(regSOL) + '"><small style="color:var(--muted);font-size:11px;margin-top:4px" id="flashRegularUSDT_' + i + '">' + regUSDT + '</small></div>' +
+      '</div>' +
+      '<div class="field"><label>⏰ Inicio programado (opcional)</label><input class="fld" type="datetime-local" id="flashStart_' + i + '" value="' + startVal + '"><small style="color:var(--muted);font-size:11px;margin-top:4px">Déjalo vacío para que empiece ahora al guardar</small>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-' + i + '="1">+1h</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-' + i + '="6">+6h</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-' + i + '="12">+12h</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-' + i + '="24">+1 día</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="field"><label>Fecha y hora de fin (hora Lima)</label><input class="fld" type="datetime-local" id="flashEnd_' + i + '" value="' + endVal + '">' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-' + i + '="1">+1h</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-' + i + '="6">+6h</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-' + i + '="12">+12h</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-' + i + '="24">+1 día</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-' + i + '="72">+3 días</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-' + i + '="168">+7 días</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderFlashOfferBlocks(list) {
+    var container = $('flashOffersList');
+    container.innerHTML = '';
+    var max = Math.min(list.length, 5);
+    for (var i = 0; i < max; i++) {
+      container.innerHTML += _makeBlockHTML(i, list[i]);
+    }
+    // Ocultar botón eliminar si solo hay 1
+    var blocks = container.querySelectorAll('.flash-offer-block');
+    blocks.forEach(function(block, idx) {
+      var delBtn = block.querySelector('[data-del-offer]');
+      if (delBtn) delBtn.style.display = (blocks.length <= 1) ? 'none' : '';
+    });
+    for (var j = 0; j < max; j++) {
+      bindFlashOfferBlock(j, list[j] || {});
+    }
+    // Actualizar estado global
+    var active = list.filter(function(f) { return f.active !== false && f.end > Date.now(); }).length;
+    $('flashStatusText').textContent = active > 0 ? ('✅ ' + active + ' oferta' + (active !== 1 ? 's' : '') + ' activa' + (active !== 1 ? 's' : '')) : '⭕ Sin ofertas activas';
+  }
+
+  function bindFlashOfferBlock(i, cfg) {
+    var prodEl = $('flashProd_' + i);
+    var planEl = $('flashPlan_' + i);
+    var priceEl = $('flashPriceSoles_' + i);
+    var priceUsdtEl = $('flashPriceUSDT_' + i);
+    var regEl = $('flashRegularSoles_' + i);
+    var regUsdtEl = $('flashRegularUSDT_' + i);
+    var startEl = $('flashStart_' + i);
+    var endEl = $('flashEnd_' + i);
+    var toggleEl = $('flashToggle_' + i);
+    var trackEl = $('flashToggleTrack_' + i);
+    var thumbEl = $('flashToggleThumb_' + i);
+
+    if (!prodEl) return;
+
+    // Poner fecha fin por defecto si vacío
+    if (endEl && !endEl.value) {
+      var now = new Date();
+      var pad = function(n) { return String(n).padStart(2,'0'); };
+      endEl.value = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+    }
+
+    // Listener cambio de producto → actualizar planes
+    if (prodEl) {
+      prodEl.addEventListener('change', function() {
+        var pid = prodEl.value;
+        var p = products.find(function(x) { return x.id === pid; });
+        var pls = p ? (Array.isArray(p.plans) ? p.plans : []) : [];
+        if (planEl) planEl.innerHTML = pls.map(function(pl) {
+          var soles = (pl[1] * TC_ADMIN).toFixed(2);
+          return '<option value="' + esc(String(pl[0])) + '">' + esc(String(pl[0])) + ' — S/ ' + soles + '</option>';
+        }).join('');
+      });
+    }
+
+    // Listeners conversión Soles → USDT
+    if (priceEl) {
+      priceEl.addEventListener('input', function() {
+        var soles = parseFloat(priceEl.value) || 0;
+        var usdt = Math.round(soles / TC_ADMIN * 100) / 100;
+        if (priceUsdtEl) priceUsdtEl.textContent = '= ' + usdt.toFixed(2) + ' USDT';
+      });
+    }
+    if (regEl) {
+      regEl.addEventListener('input', function() {
+        var soles = parseFloat(regEl.value) || 0;
+        var usdt = Math.round(soles / TC_ADMIN * 100) / 100;
+        if (regUsdtEl) regUsdtEl.textContent = '= ' + usdt.toFixed(2) + ' USDT';
+      });
+    }
+
+    // Botones +horas para inicio
+    var container = $('flashOffersList');
+    container.querySelectorAll('[data-add-hours-start-' + i + ']').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var hours = parseInt(btn.getAttribute('data-add-hours-start-' + i));
+        var base = startEl && startEl.value ? new Date(startEl.value) : new Date();
+        var nd = new Date(base.getTime() + hours * 3600000);
+        var pad = function(n) { return String(n).padStart(2,'0'); };
+        if (startEl) startEl.value = nd.getFullYear() + '-' + pad(nd.getMonth()+1) + '-' + pad(nd.getDate()) + 'T' + pad(nd.getHours()) + ':' + pad(nd.getMinutes());
+      });
+    });
+
+    // Botones +horas para fin
+    container.querySelectorAll('[data-add-hours-' + i + ']').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var hours = parseInt(btn.getAttribute('data-add-hours-' + i));
+        var base = endEl && endEl.value ? new Date(endEl.value) : new Date();
+        var nd = new Date(base.getTime() + hours * 3600000);
+        var pad = function(n) { return String(n).padStart(2,'0'); };
+        if (endEl) endEl.value = nd.getFullYear() + '-' + pad(nd.getMonth()+1) + '-' + pad(nd.getDate()) + 'T' + pad(nd.getHours()) + ':' + pad(nd.getMinutes());
+      });
+    });
+
+    // Toggle visual
+    if (toggleEl) {
+      toggleEl.addEventListener('change', function() {
+        if (trackEl && thumbEl) {
+          if (toggleEl.checked) { trackEl.style.background = 'var(--ok)'; thumbEl.style.left = '25px'; }
+          else { trackEl.style.background = 'var(--border)'; thumbEl.style.left = '3px'; }
+        }
+      });
+    }
+
+    // Mostrar estado inicial
+    updateFlashStatus(cfg, i);
+  }
+
+  function loadFlashSelects() {
+    // Intentar cargar flash_list primero, fallback a flash
+    sbFetch('settings?key=eq.flash_list&select=value').then(function(rows) {
+      if (rows && rows[0]) {
+        try {
+          var list = JSON.parse(rows[0].value);
+          if (Array.isArray(list) && list.length > 0) {
+            renderFlashOfferBlocks(list.slice(0, 5));
+            return;
+          }
+        } catch(e) {}
+      }
+      // Fallback a clave flash
+      sbFetch('settings?key=eq.flash&select=value').then(function(rows2) {
+        if (rows2 && rows2[0]) {
+          try {
+            var cfg = JSON.parse(rows2[0].value);
+            renderFlashOfferBlocks([cfg]);
+          } catch(e) { renderFlashOfferBlocks([{}]); }
+        } else {
+          renderFlashOfferBlocks([{}]);
+        }
+      }).catch(function() { renderFlashOfferBlocks([{}]); });
+    }).catch(function() { renderFlashOfferBlocks([{}]); });
+  }
+
+  // Delegación: botón + agregar oferta
+  $('btnAddFlashOffer').addEventListener('click', function() {
+    var blocks = $('flashOffersList').querySelectorAll('.flash-offer-block');
+    if (blocks.length >= 5) { toast('Máximo 5 ofertas', true); return; }
+    // Leer estado actual de todos los bloques
+    var currentList = _readAllBlocks();
+    currentList.push({});
+    renderFlashOfferBlocks(currentList);
+  });
+
+  // Delegación: botón eliminar oferta
+  $('flashOffersList').addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-del-offer]');
+    if (!btn) return;
+    var blocks = $('flashOffersList').querySelectorAll('.flash-offer-block');
+    if (blocks.length <= 1) { toast('Debe haber al menos una oferta', true); return; }
+    var idx = parseInt(btn.dataset.delOffer);
+    var list = _readAllBlocks();
+    list.splice(idx, 1);
+    renderFlashOfferBlocks(list);
+  });
+
+  function _readAllBlocks() {
+    var blocks = $('flashOffersList').querySelectorAll('.flash-offer-block');
+    var list = [];
+    blocks.forEach(function(block, idx) {
+      var startVal = $('flashStart_' + idx) ? $('flashStart_' + idx).value : '';
+      var endVal = $('flashEnd_' + idx) ? $('flashEnd_' + idx).value : '';
+      list.push({
+        active: $('flashToggle_' + idx) ? $('flashToggle_' + idx).checked : false,
+        productId: $('flashProd_' + idx) ? $('flashProd_' + idx).value : '',
+        plan: $('flashPlan_' + idx) ? $('flashPlan_' + idx).value : '',
+        price: Math.round((parseFloat(($('flashPriceSoles_' + idx) || {}).value) || 0) / TC_ADMIN * 10000) / 10000,
+        regular: Math.round((parseFloat(($('flashRegularSoles_' + idx) || {}).value) || 0) / TC_ADMIN * 10000) / 10000,
+        start: startVal ? new Date(startVal).getTime() : Date.now(),
+        end: endVal ? new Date(endVal).getTime() : 0
+      });
+    });
+    return list;
+  }
+
+  $('btnSaveFlash').addEventListener('click', function () {
+    var blocks = $('flashOffersList').querySelectorAll('.flash-offer-block');
+    if (!blocks.length) return toast('No hay ofertas para guardar', true);
+    // Validar al menos una tenga fecha de fin
+    for (var vi = 0; vi < blocks.length; vi++) {
+      var endEl = $('flashEnd_' + vi);
+      if (!endEl || !endEl.value) return toast('La oferta #' + (vi+1) + ' no tiene fecha de fin', true);
+    }
+    var flashList = _readAllBlocks();
+    // Validar fechas
+    for (var vj = 0; vj < flashList.length; vj++) {
+      var f = flashList[vj];
+      if (f.end <= f.start) return toast('La oferta #' + (vj+1) + ': la fecha de fin debe ser posterior al inicio', true);
+    }
+    var first = flashList[0];
+    // Guardar flash_list y flash (compatibilidad)
+    Promise.all([
+      sbFetch('settings', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ key: 'flash_list', value: JSON.stringify(flashList) })
+      }),
+      sbFetch('settings', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ key: 'flash', value: JSON.stringify(first) })
+      })
+    ]).then(function() {
+      toast('✅ Flash sales guardados');
+      // Actualizar estado global
+      var active = flashList.filter(function(f) { return f.active !== false && f.end > Date.now(); }).length;
+      $('flashStatusText').textContent = active > 0 ? ('✅ ' + active + ' oferta' + (active !== 1 ? 's' : '') + ' activa' + (active !== 1 ? 's' : '')) : '⭕ Sin ofertas activas';
+    }).catch(function() { toast('Error al guardar flash sales', true); });
+  });
+
+  $('btnClearFlash').addEventListener('click', function() {
+    if (!window.confirm('¿Desactivar todos los flash sales?')) return;
+    var blocks = $('flashOffersList').querySelectorAll('.flash-offer-block');
+    var flashList = _readAllBlocks().map(function(f) { f.active = false; return f; });
+    var first = flashList[0] || { active: false, productId: '', plan: '', price: 0, regular: 0, start: 0, end: 0 };
+    Promise.all([
+      sbFetch('settings', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ key: 'flash_list', value: JSON.stringify(flashList) })
+      }),
+      sbFetch('settings', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ key: 'flash', value: JSON.stringify(first) })
+      })
+    ]).then(function() {
+      toast('⭕ Flash sales desactivados');
+      $('flashStatusText').textContent = '⭕ Sin ofertas activas';
+      // Re-renderizar con todos desactivados
+      renderFlashOfferBlocks(flashList);
+    }).catch(function() { toast('Error al desactivar', true); });
+  });
+
+  // --- SETTINGS ---
+  function loadSettings() {
+    sbFetch('settings?select=key,value').then(function (rows) {
+      var map = {};
+      (rows || []).forEach(function (r) { try { map[r.key] = JSON.parse(r.value); } catch (e) { map[r.key] = r.value; } });
+      var s = map.store || {};
+      $('cfgWA').value = s.whatsapp || '';
+      $('cfgWAGroup').value = s.whatsapp_group || '';
+      $('cfgWAGroupName').value = s.whatsapp_group_name || '';
+      $('cfgTG').value = s.telegram || '';
+      $('cfgTC').value = s.tc || '';
+      // Actualizar tipo de cambio global
+      if (s.tc) TC_ADMIN = parseFloat(s.tc) || TC_ADMIN;
+      $('cfgShowUSDT').checked = s.show_usdt !== false;
+      $('cfgYapeNum').value = s.yape_number || '';
+      $('cfgYapeName').value = s.yape_name || '';
+      $('cfgBinanceId').value = s.binance_id || '';
+      $('cfgBinanceName').value = s.binance_name || '';
+      $('cfgYapeQr').value = s.yape_qr || '';
+      $('cfgBinanceQr').value = s.binance_qr || '';
+      $('cfgYapeActive').checked = s.yape_active !== false;
+      $('cfgBinanceActive').checked = s.binance_active !== false;
+      // Mostrar preview de QR si existe
+      if (s.yape_qr) $('yapeQrPreview').innerHTML = '<img src="' + s.yape_qr + '" style="width:100%;height:100%;object-fit:contain">';
+      if (s.binance_qr) $('binanceQrPreview').innerHTML = '<img src="' + s.binance_qr + '" style="width:100%;height:100%;object-fit:contain">';
+    }).catch(function () {});
+  }
+
+  // Upload QR helpers
+  function setupQrUpload(btnId, fileId, previewId, textareaId) {
+    $(btnId).addEventListener('click', function() { $(fileId).click(); });
+    $(fileId).addEventListener('change', function() {
+      var f = this.files[0]; if (!f) return;
+      var fr = new FileReader();
+      fr.onload = function() {
+        var img = new Image();
+        img.onload = function() {
+          var s = 300, c = document.createElement('canvas');
+          c.width = c.height = s;
+          c.getContext('2d').drawImage(img, 0, 0, s, s);
+          var data = c.toDataURL('image/png', 0.9);
+          $(textareaId).value = data;
+          $(previewId).innerHTML = '<img src="' + data + '" style="width:100%;height:100%;object-fit:contain">';
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(f);
+    });
+    $(textareaId).addEventListener('input', function() {
+      var v = this.value.trim();
+      if (v) $(previewId).innerHTML = '<img src="' + v + '" style="width:100%;height:100%;object-fit:contain" onerror="this.parentNode.innerHTML=\'<span style=font-size:24px>🖼</span>\'">';
+    });
+  }
+  setupQrUpload('btnPickYapeQr', 'yapeQrFile', 'yapeQrPreview', 'cfgYapeQr');
+  setupQrUpload('btnPickBinanceQr', 'binanceQrFile', 'binanceQrPreview', 'cfgBinanceQr');
+
+  // Actualizar TC_ADMIN en tiempo real cuando se cambia el campo
+  $('cfgTC').addEventListener('input', function() {
+    var val = parseFloat(this.value);
+    if (val > 0) TC_ADMIN = val;
+  });
+
+  $('btnSaveSettings').addEventListener('click', function () {
+    var config = {
+      whatsapp: $('cfgWA').value.trim(),
+      whatsapp_group: $('cfgWAGroup').value.trim(),
+      whatsapp_group_name: $('cfgWAGroupName').value.trim(),
+      telegram: $('cfgTG').value.trim(),
+      tc: parseFloat($('cfgTC').value) || 3.95,
+      show_usdt: $('cfgShowUSDT').checked,
+      yape_active: $('cfgYapeActive').checked,
+      yape_number: $('cfgYapeNum').value.trim(),
+      yape_name: $('cfgYapeName').value.trim(),
+      yape_qr: $('cfgYapeQr').value.trim(),
+      binance_active: $('cfgBinanceActive').checked,
+      binance_id: $('cfgBinanceId').value.trim(),
+      binance_name: $('cfgBinanceName').value.trim(),
+      binance_qr: $('cfgBinanceQr').value.trim()
+    };
+    sbFetch('settings', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ key: 'store', value: JSON.stringify(config) })
+    }).then(function () { toast('✅ Configuración guardada'); })
+      .catch(function () { toast('Error al guardar', true); });
+  });
+
+  // --- TOAST ---
+  function toast(msg, err) {
+    var el = document.createElement('div');
+    el.className = 'toast' + (err ? ' err' : ' ok');
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(function () { el.remove(); }, 3000);
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/'/g, '&#x27;');
+  }
+
+  // --- CATEGORÍAS ---
+  function loadCategories() {
+    sbFetch('settings?key=eq.categories&select=value')
+      .then(function (rows) {
+        if (rows && rows[0]) {
+          categories = JSON.parse(rows[0].value);
+        } else {
+          // Categorías por defecto
+          categories = [
+            { id: 'ai', name: 'Inteligencia Artificial', emoji: '🤖', color: '#a78bfa' },
+            { id: 'stream', name: 'Streaming', emoji: '📺', color: '#4ade80' },
+            { id: 'game', name: 'Juegos', emoji: '🎮', color: '#f87171' },
+            { id: 'multi', name: 'Multiservicios', emoji: '⭐', color: '#fbbf24' }
+          ];
+        }
+        renderCategories();
+        updateCategorySelects();
+        $('navCatsCount').textContent = categories.length;
+      })
+      .catch(function () { toast('Error al cargar categorías', true); });
+  }
+
+  function renderCategories() {
+    var el = $('categoriesTable');
+    if (!categories.length) {
+      el.innerHTML = '<div class="empty"><div class="ei">🏷️</div><p>No hay categorías.</p></div>';
+      return;
+    }
+    el.innerHTML = categories.map(function (cat) {
+      var prodCount = products.filter(function (p) { return p.cat === cat.id; }).length;
+      return '<div style="display:grid;grid-template-columns:48px 2fr 1fr 1fr 120px;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px;align-items:center;transition:background .12s" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'transparent\'">' +
+        '<div style="width:36px;height:36px;border-radius:10px;background:' + esc(cat.color || '#333') + ';display:grid;place-items:center;font-size:18px">' + esc(cat.emoji || '📦') + '</div>' +
+        '<div style="font-weight:600">' + esc(cat.name) + '<div style="font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono)">ID: ' + esc(cat.id) + '</div></div>' +
+        '<div style="font-size:20px">' + esc(cat.emoji || '—') + '</div>' +
+        '<div style="color:var(--muted);font-size:13px">' + prodCount + ' producto' + (prodCount !== 1 ? 's' : '') + '</div>' +
+        '<div style="display:flex;gap:6px">' +
+        '<button class="btn btn-ghost btn-sm" data-edit-cat="' + esc(cat.id) + '">✏️ Editar</button>' +
+        (prodCount === 0 ? '<button class="btn btn-sm" style="background:rgba(232,64,47,.15);color:#f87171;border:1px solid rgba(232,64,47,.3)" data-del-cat="' + esc(cat.id) + '">🗑</button>' : '') +
+        '</div></div>';
+    }).join('');
+  }
+
+  $('categoriesTable').addEventListener('click', function (e) {
+    var editBtn = e.target.closest('[data-edit-cat]');
+    var delBtn = e.target.closest('[data-del-cat]');
+    if (editBtn) openCategoryModal(editBtn.dataset.editCat);
+    if (delBtn) {
+      var cat = categories.find(function (c) { return c.id === delBtn.dataset.delCat; });
+      if (window.confirm('¿Eliminar categoría "' + (cat ? cat.name : '') + '"?\nEsta acción no se puede deshacer.')) {
+        deleteCategory(delBtn.dataset.delCat);
+      }
+    }
+  });
+
+  function deleteCategory(id) {
+    categories = categories.filter(function (c) { return c.id !== id; });
+    saveCategories();
+  }
+
+  function saveCategories() {
+    sbFetch('settings', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ key: 'categories', value: JSON.stringify(categories) })
+    }).then(function () {
+      toast('✅ Categorías guardadas');
+      loadCategories();
+    }).catch(function () { toast('Error al guardar categorías', true); });
+  }
+
+  function updateCategorySelects() {
+    var sel = $('fCat');
+    if (sel) {
+      sel.innerHTML = categories.map(function (cat) {
+        return '<option value="' + esc(cat.id) + '">' + esc(cat.name) + '</option>';
+      }).join('');
+    }
+    var filterSel = $('filterCat');
+    if (filterSel) {
+      filterSel.innerHTML = '<option value="">Todas las categorías</option>' +
+        categories.map(function (cat) {
+          return '<option value="' + esc(cat.id) + '">' + esc(cat.name) + '</option>';
+        }).join('');
+    }
+  }
+
+  // Modal categoría
+  $('btnNewCategory').addEventListener('click', function () { openCategoryModal(null); });
+
+  function openCategoryModal(id) {
+    editingCatId = id || null;
+    $('modalCategoryTitle').textContent = id ? 'Editar categoría' : 'Nueva categoría';
+    $('saveCatBtnText').textContent = id ? 'Guardar cambios' : 'Crear categoría';
+    
+    if (id) {
+      var cat = categories.find(function (c) { return c.id === id; });
+      if (cat) {
+        $('fCatId').value = cat.id;
+        $('fCatId').disabled = true;
+        $('fCatName').value = cat.name;
+        $('fCatEmoji').value = cat.emoji || '';
+        $('fCatColor').value = cat.color || '';
+        $('fCatColorPicker').value = cat.color || '#22c55e';
+      }
+    } else {
+      $('fCatId').value = '';
+      $('fCatId').disabled = false;
+      $('fCatName').value = '';
+      $('fCatEmoji').value = '';
+      $('fCatColor').value = '';
+      $('fCatColorPicker').value = '#22c55e';
+    }
+    
+    var overlay = $('modalCategoryOverlay');
+    overlay.hidden = false;
+    overlay.classList.remove('hidden');
+    overlay.style.display = 'flex';
+  }
+
+  function closeCategoryModal() {
+    var overlay = $('modalCategoryOverlay');
+    overlay.hidden = true;
+    overlay.classList.add('hidden');
+    overlay.style.display = 'none';
+    editingCatId = null;
+  }
+
+  $('btnCloseCategoryModal').addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeCategoryModal();
+  });
+
+  $('btnCancelCategoryModal').addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeCategoryModal();
+  });
+
+  $('modalCategoryOverlay').addEventListener('click', function (e) {
+    if (e.target === $('modalCategoryOverlay')) {
+      e.preventDefault();
+      closeCategoryModal();
+    }
+  });
+
+  $('fCatColor').addEventListener('input', function () {
+    $('fCatColorPicker').value = this.value || '#22c55e';
+  });
+  $('fCatColorPicker').addEventListener('input', function() {
+    $('fCatColor').value = this.value;
+  });
+  document.querySelectorAll('.cat-color-preset').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var c = this.dataset.color;
+      $('fCatColor').value = c;
+      $('fCatColorPicker').value = c;
+    });
+  });
+  document.querySelectorAll('.emoji-preset').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      $('fCatEmoji').value = this.dataset.emoji;
+    });
+  });
+
+  $('btnSaveCategory').addEventListener('click', function () {
+    var id = $('fCatId').value.trim().toLowerCase();
+    var name = $('fCatName').value.trim();
+    var emoji = $('fCatEmoji').value.trim();
+    var color = $('fCatColor').value.trim();
+
+    if (!id || !name) return toast('ID y nombre son obligatorios', true);
+    if (!/^[a-z0-9_-]+$/.test(id)) return toast('ID solo puede contener letras, números, guiones', true);
+
+    if (editingCatId) {
+      var idx = categories.findIndex(function (c) { return c.id === editingCatId; });
+      if (idx !== -1) {
+        categories[idx] = { id: editingCatId, name: name, emoji: emoji, color: color };
+      }
+    } else {
+      if (categories.find(function (c) { return c.id === id; })) {
+        return toast('Ya existe una categoría con ese ID', true);
+      }
+      categories.push({ id: id, name: name, emoji: emoji, color: color });
+    }
+
+    saveCategories();
+    closeCategoryModal();
+  });
+
+  // Turnstile callback y control del botón Google
+  var turnstileVerified = false;
+  window.onTurnstileSuccess = function(token) {
+    turnstileVerified = true;
+    $('loginErr').textContent = '';
+  };
+
+  // Check session on load
+  var minsBlockedOnLoad = isBlocked();
+  if (minsBlockedOnLoad) {
+    showLogin();
+    $('loginErr').textContent = '🚫 IP bloqueada. Intenta en ' + minsBlockedOnLoad + ' minuto' + (minsBlockedOnLoad !== 1 ? 's' : '') + '.';
+  }
+
+  // Botón Google con verificación Turnstile + bloqueo
+  $('btnGoogleLogin').addEventListener('click', function() {
+    var mins = isBlocked();
+    if (mins) {
+      $('loginErr').textContent = '🚫 IP bloqueada. Intenta en ' + mins + ' minuto' + (mins !== 1 ? 's' : '') + '.';
+      return;
+    }
+    if (!turnstileVerified) {
+      $('loginErr').textContent = '⚠️ Completa la verificación de seguridad primero.';
+      return;
+    }
+    $('loginErr').textContent = '';
+    _supa.auth.signInWithOAuth({ 
+      provider: 'google', 
+      options: { redirectTo: window.location.href }
+    });
+  });
+  
+  // --- CONTROL ---
+  function updateControlToggle(id, trackId, thumbId, checked) {
+    var track = $(trackId), thumb = $(thumbId);
+    if (checked) { track.style.background = 'var(--ok)'; thumb.style.left = '26px'; }
+    else { track.style.background = 'var(--border)'; thumb.style.left = '4px'; }
+  }
+
+  function loadControlStatus() {
+    sbFetch('settings?key=eq.control&select=value').then(function(rows) {
+      var cfg = {};
+      if (rows && rows[0]) { try { cfg = JSON.parse(rows[0].value); } catch(e) {} }
+      
+      var storeOn = cfg.store_open !== false;
+      $('storeToggle').checked = storeOn;
+      updateControlToggle('storeToggle', 'storeToggleTrack', 'storeToggleThumb', storeOn);
+      $('storeStatusDesc').textContent = storeOn ? '✅ La tienda está abierta' : '🔴 La tienda está cerrada';
+      
+      var maintOn = !!cfg.maintenance;
+      $('maintenanceToggle').checked = maintOn;
+      updateControlToggle('maintenanceToggle', 'maintenanceToggleTrack', 'maintenanceToggleThumb', maintOn);
+      $('maintenanceMsg').value = cfg.maintenance_msg || '';
+      $('maintenanceTime').value = cfg.maintenance_time || '';
+    }).catch(function() {});
+  }
+
+  $('storeToggle').addEventListener('change', function() {
+    updateControlToggle('storeToggle', 'storeToggleTrack', 'storeToggleThumb', this.checked);
+    $('storeStatusDesc').textContent = this.checked ? '✅ La tienda está abierta' : '🔴 La tienda está cerrada';
+  });
+
+  $('maintenanceToggle').addEventListener('change', function() {
+    updateControlToggle('maintenanceToggle', 'maintenanceToggleTrack', 'maintenanceToggleThumb', this.checked);
+  });
+
+  $('btnSaveStoreStatus').addEventListener('click', function() {
+    sbFetch('settings?key=eq.control&select=value').then(function(rows) {
+      var cfg = {};
+      if (rows && rows[0]) { try { cfg = JSON.parse(rows[0].value); } catch(e) {} }
+      cfg.store_open = $('storeToggle').checked;
+      return sbFetch('settings', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ key: 'control', value: JSON.stringify(cfg) })
+      });
+    }).then(function() { toast(($('storeToggle').checked ? '✅ Tienda activada' : '🔴 Tienda desactivada')); })
+    .catch(function() { toast('Error al guardar', true); });
+  });
+
+  $('btnSaveMaintenance').addEventListener('click', function() {
+    sbFetch('settings?key=eq.control&select=value').then(function(rows) {
+      var cfg = {};
+      if (rows && rows[0]) { try { cfg = JSON.parse(rows[0].value); } catch(e) {} }
+      cfg.maintenance = $('maintenanceToggle').checked;
+      cfg.maintenance_msg = $('maintenanceMsg').value.trim();
+      cfg.maintenance_time = $('maintenanceTime').value.trim();
+      return sbFetch('settings', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ key: 'control', value: JSON.stringify(cfg) })
+      });
+    }).then(function() { toast('✅ Mantenimiento guardado'); })
+    .catch(function() { toast('Error al guardar', true); });
+  });
+
+  } // fin initAdmin
+})();
+</script>
+</body>
+</html>

@@ -137,6 +137,13 @@ button { cursor: pointer; }
 .sticker b { font: 700 38px/1 var(--font-mono); }
 .flash .btn { grid-column: 1 / -1; height: 52px; font-size: 17px; margin-top: 8px; }
 
+.flash-carousel-wrap { overflow: hidden; position: relative; }
+.flash-carousel-track { display: flex; transition: transform 0.45s cubic-bezier(.77,0,.18,1); will-change: transform; }
+.flash-carousel-track .flash-slide { min-width: 100%; flex-shrink: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: center; }
+.flash-dots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+.flash-dot { width: 10px; height: 10px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--surface); cursor: pointer; transition: background .2s; padding: 0; }
+.flash-dot.active { background: var(--accent); }
+
 /* Catálogo */
 .cat-title { font-family: var(--font-display); font-weight: 700; font-size: clamp(44px, 12vw, 76px); line-height: 1; letter-spacing: .04em; margin: 38px 0 8px; text-transform: uppercase; }
 .cat-sub { color: var(--muted); margin: 0 0 18px; max-width: 52ch; }
@@ -511,7 +518,10 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   var byId = function (id) { return PRODUCTS.filter(function (p) { return p.id === id; })[0]; };
   /* FLASH SALE: se carga desde Supabase. Por defecto desactivado. */
   var FLASH = { productId: '', plan: '', price: 0, regular: 0, end: 0 };
+  var FLASH_LIST = [];
   var flashOn = function () { return Date.now() < FLASH.end; };
+  var _carouselIdx = 0;
+  var _carouselTimer = null;
   var eff = function (p) {
     if (p.id !== FLASH.productId) return p.plans;
     return p.plans.map(function (pl) {
@@ -569,30 +579,114 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     tick();
   }
   function renderFlash() {
-    var sec = $('.flash'), p = byId(FLASH.productId);
-    var on = flashOn() && !!p && p.plans.some(function (pl) { return pl[0] === FLASH.plan; });
-    sec.hidden = !on;
-    if (!on) return;
-    // Actualizar imagen/thumbnail del producto en el flash
-    var tileSm = $('.flash .tile-sm');
-    if (tileSm) {
-      tileSm.style.background = p.tile || '#E1E8FF';
-      if (p.img) {
-        tileSm.innerHTML = '<img src="' + p.img + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:13px">';
-      } else {
-        tileSm.textContent = p.glyph || p.name.slice(0,2);
-      }
+    var sec = document.querySelector('.flash');
+    var now = Date.now();
+    var active = FLASH_LIST.filter(function(f) {
+      var p = byId(f.productId);
+      return f.end > now && !!p && p.plans.some(function(pl) { return pl[0] === f.plan; });
+    });
+    if (!active.length) {
+      sec.hidden = true;
+      if (_carouselTimer) { clearInterval(_carouselTimer); _carouselTimer = null; }
+      return;
     }
-    $('#flashName').textContent = p.name + ' ' + FLASH.plan;
-    $('#flashOld').textContent = fmt(FLASH.regular) + ' (' + fmtU(FLASH.regular) + ')';
-    $('#flashNew').textContent = fmt(FLASH.price);
-    var flashUsdtEl = document.getElementById('flashUsdt');
-    if (flashUsdtEl) { flashUsdtEl.textContent = fmtU(FLASH.price); flashUsdtEl.style.display = SHOW_USDT ? '' : 'none'; }
+    sec.hidden = false;
+    if (active.length === 1) {
+      if (_carouselTimer) { clearInterval(_carouselTimer); _carouselTimer = null; }
+      _renderSingleFlash(sec, active[0]);
+      return;
+    }
+    _renderCarousel(sec, active);
+  }
+
+  function _flashCardInnerHTML(f, p) {
+    var tileBg = p.tile || '#E1E8FF';
+    var tileInner = p.img ? '<img src="' + p.img + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:13px">' : (p.glyph || p.name.slice(0,2));
     var fin = '';
-    try { fin = new Date(FLASH.end).toLocaleString('es-PE', { timeZone: 'America/Lima', weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }); } catch (e) {}
-    $('#flashEnd').textContent = fin ? 'Termina el ' + fin + ' (hora de Lima). Después vuelve a ' + fmt(FLASH.regular) + '.' : '';
-    var fi = eff(p).map(function (x) { return x[0]; }).indexOf(FLASH.plan);
-    $('#flashBuy').dataset.bp = p.id; $('#flashBuy').dataset.bi = String(fi);
+    try { fin = new Date(f.end).toLocaleString('es-PE',{timeZone:'America/Lima',weekday:'long',day:'numeric',month:'long',hour:'numeric',minute:'2-digit'}); } catch(e) {}
+    return '<div class="tile-sm" style="background:' + tileBg + '">' + tileInner + '</div>' +
+      '<div><h2 id="flashName">' + esc(p.name + ' ' + f.plan) + '</h2>' +
+      '<div class="before">Precio normal <s class="mono" id="flashOld">' + fmt(f.regular) + (SHOW_USDT ? ' (' + fmtU(f.regular) + ')' : '') + '</s></div></div>' +
+      '<div class="flash-row"><div><span class="chip-flash">⚡ FLASH SALE</span>' +
+      '<div class="clock" id="clock" aria-live="off">--:--:--</div>' +
+      '<div class="before" id="flashEnd" style="margin-top:4px">' + (fin ? 'Termina el ' + fin + ' (hora de Lima).' : '') + '</div></div>' +
+      '<div class="sticker"><small>¡Oferta limitada!</small><b id="flashNew">' + fmt(f.price) + '</b>' +
+      (SHOW_USDT ? '<small id="flashUsdt" style="letter-spacing:.04em;margin-top:4px">' + fmtU(f.price) + '</small>' : '') +
+      '</div></div>';
+  }
+
+  function _renderSingleFlash(sec, f) {
+    var p = byId(f.productId);
+    var fi = p.plans.map(function(x){return x[0];}).indexOf(f.plan);
+    sec.className = 'flash';
+    sec.innerHTML = _flashCardInnerHTML(f, p) +
+      '<button type="button" class="btn hot block" id="flashBuy" data-bp="' + esc(p.id) + '" data-bi="' + fi + '">Comprar</button>';
+    FLASH = f;
+    tick();
+  }
+
+  function _renderCarousel(sec, active) {
+    if (_carouselIdx >= active.length) _carouselIdx = 0;
+    var slidesHTML = active.map(function(f, idx) {
+      var p = byId(f.productId);
+      var fi = p.plans.map(function(x){return x[0];}).indexOf(f.plan);
+      return '<div class="flash-slide" data-bp="' + esc(p.id) + '" data-bi="' + fi + '">' + _flashCardInnerHTML(f, p) + '</div>';
+    }).join('');
+    var dotsHTML = active.map(function(_, idx) {
+      return '<button class="flash-dot' + (idx === _carouselIdx ? ' active' : '') + '" data-dot="' + idx + '" aria-label="Oferta ' + (idx+1) + '"></button>';
+    }).join('');
+    sec.className = 'flash flash-carousel-wrap';
+    sec.innerHTML = '<div class="flash-carousel-track" id="flashTrack" style="transform:translateX(-' + (_carouselIdx * 100) + '%)">'
+      + slidesHTML + '</div>'
+      + '<button type="button" class="btn hot block" id="flashBuy" style="margin-top:8px">Comprar</button>'
+      + '<div class="flash-dots" id="flashDots">' + dotsHTML + '</div>';
+    sec.querySelectorAll('.flash-dot').forEach(function(dot) {
+      dot.addEventListener('click', function() { _goToSlide(active, parseInt(this.dataset.dot)); });
+    });
+    FLASH = active[_carouselIdx];
+    _updateCarouselBuy(sec, active, _carouselIdx);
+    tick();
+    if (_carouselTimer) clearInterval(_carouselTimer);
+    _carouselTimer = setInterval(function() {
+      var nowT = Date.now();
+      var still = active.filter(function(f) { return f.end > nowT; });
+      if (!still.length) { FLASH_LIST = []; renderFlash(); renderGrid(); return; }
+      if (still.length !== active.length) { FLASH_LIST = still; renderFlash(); return; }
+      _goToSlide(active, (_carouselIdx + 1) % active.length);
+    }, 4000);
+  }
+
+  function _goToSlide(active, idx) {
+    _carouselIdx = idx;
+    var track = document.getElementById('flashTrack');
+    if (track) track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+    document.querySelectorAll('.flash-dot').forEach(function(d,i){d.classList.toggle('active',i===idx);});
+    FLASH = active[idx];
+    var sec = document.querySelector('.flash');
+    _updateCarouselBuy(sec, active, idx);
+    tick();
+  }
+
+  function _updateCarouselBuy(sec, active, idx) {
+    var f = active[idx];
+    var p = byId(f.productId);
+    var fi = p ? p.plans.map(function(x){return x[0];}).indexOf(f.plan) : 0;
+    var btn = document.getElementById('flashBuy');
+    if (btn && p) { btn.dataset.bp = p.id; btn.dataset.bi = String(fi); }
+    var endEl = document.getElementById('flashEnd');
+    if (endEl) {
+      var fin = '';
+      try { fin = new Date(f.end).toLocaleString('es-PE',{timeZone:'America/Lima',weekday:'long',day:'numeric',month:'long',hour:'numeric',minute:'2-digit'}); } catch(e) {}
+      endEl.textContent = fin ? 'Termina el ' + fin + ' (hora de Lima).' : '';
+    }
+    var nameEl = document.getElementById('flashName');
+    if (nameEl) nameEl.textContent = p.name + ' ' + f.plan;
+    var oldEl = document.getElementById('flashOld');
+    if (oldEl) oldEl.textContent = fmt(f.regular) + (SHOW_USDT ? ' (' + fmtU(f.regular) + ')' : '');
+    var newEl = document.getElementById('flashNew');
+    if (newEl) newEl.textContent = fmt(f.price);
+    var uEl = document.getElementById('flashUsdt');
+    if (uEl) { uEl.textContent = fmtU(f.price); uEl.style.display = SHOW_USDT ? '' : 'none'; }
   }
   function tick() {
     var ms = Math.max(0, FLASH.end - Date.now());
@@ -950,7 +1044,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
 
   // Carga configuración desde Supabase settings
   function loadStoreSettings() {
-    supaFetch('settings?select=key,value&key=in.(store,flash,categories)')
+    supaFetch('settings?select=key,value&key=in.(store,flash,flash_list,categories)')
       .then(function (rows) {
         if (!rows || !rows.length) return;
         var map = {};
@@ -988,6 +1082,25 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
           }
         } else {
           FLASH.end = 0;
+        }
+        
+        // Cargar flash_list (múltiples ofertas)
+        var flashList = null;
+        var rawList = map.flash_list;
+        if (Array.isArray(rawList) && rawList.length > 0) {
+          flashList = rawList;
+        } else if (map.flash && map.flash.productId) {
+          flashList = [map.flash];
+        }
+        var nowTs = Date.now();
+        FLASH_LIST = [];
+        if (flashList) {
+          FLASH_LIST = flashList.filter(function(fi) {
+            return fi.active !== false && fi.productId && fi.end > nowTs && (!fi.start || fi.start <= nowTs);
+          });
+        }
+        if (FLASH_LIST.length > 0) {
+          FLASH = FLASH_LIST[0];
         }
         
         // Cargar categorías dinámicas desde Supabase

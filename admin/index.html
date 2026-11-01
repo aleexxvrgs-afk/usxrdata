@@ -287,76 +287,91 @@ select.fld{cursor:pointer}
 
       <!-- VISTA: FLASH SALE -->
       <div id="viewFlash" hidden>
-        <div style="max-width:560px">
-          
-          <!-- Status card -->
+        <div style="max-width:600px">
+
+          <!-- Status card global -->
           <div id="flashStatusCard" style="border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);background:var(--surface)">
             <div>
-              <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em">Estado actual</div>
+              <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em">Flash Sales activas</div>
               <div id="flashStatusText" style="font-weight:700;font-size:16px;margin-top:4px">—</div>
             </div>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-              <span style="font-size:13px;color:var(--muted)" id="flashToggleLabel">Activar</span>
-              <div style="position:relative;width:48px;height:26px">
-                <input type="checkbox" id="flashToggle" style="opacity:0;width:0;height:0;position:absolute">
-                <div id="flashToggleTrack" onclick="var cb=$('flashToggle');cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'))" style="position:absolute;inset:0;border-radius:13px;background:var(--border);cursor:pointer;transition:background .2s">
-                  <div id="flashToggleThumb" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s"></div>
-                </div>
-              </div>
-            </label>
           </div>
 
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div class="field">
-              <label>Producto</label>
-              <select class="fld" id="flashProd"></select>
-            </div>
-            <div class="field">
-              <label>Plan</label>
-              <select class="fld" id="flashPlan"></select>
-            </div>
-            <div class="form-grid">
-              <div class="field">
-                <label>Precio oferta (Soles S/)</label>
-                <input class="fld" type="number" step="0.01" id="flashPriceSoles" placeholder="15.20">
-                <small style="color:var(--muted);font-size:11px;margin-top:4px" id="flashPriceUSDT">= 0.00 USDT</small>
-              </div>
-              <div class="field">
-                <label>Precio normal (Soles S/)</label>
-                <input class="fld" type="number" step="0.01" id="flashRegularSoles" placeholder="25.00">
-                <small style="color:var(--muted);font-size:11px;margin-top:4px" id="flashRegularUSDT">= 0.00 USDT</small>
-              </div>
-            </div>
+          <!-- Botón agregar + lista de ofertas -->
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+            <button class="btn btn-primary" id="btnAddFlashOffer">+ Agregar oferta</button>
+            <span style="color:var(--muted);font-size:13px">hasta 5 ofertas</span>
+          </div>
 
-            <!-- PROGRAMAR INICIO -->
-            <div class="field">
-              <label>⏰ Inicio programado (opcional)</label>
-              <input class="fld" type="datetime-local" id="flashStart">
-              <small style="color:var(--muted);font-size:11px;margin-top:4px">Déjalo vacío para que empiece ahora al guardar</small>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-                <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start="1">+1h</button>
-                <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start="6">+6h</button>
-                <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start="12">+12h</button>
-                <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start="24">+1 día</button>
+          <div id="flashOffersList">
+            <!-- Bloque 0 (oferta inicial) -->
+            <div class="flash-offer-block" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px;margin-bottom:16px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-weight:700">Oferta #1</span>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <span style="font-size:13px;color:var(--muted)" id="flashToggleLabel_0">Activar</span>
+                    <div style="position:relative;width:48px;height:26px">
+                      <input type="checkbox" id="flashToggle_0" style="opacity:0;width:0;height:0;position:absolute">
+                      <div id="flashToggleTrack_0" onclick="var cb=document.getElementById('flashToggle_0');cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'))" style="position:absolute;inset:0;border-radius:13px;background:var(--border);cursor:pointer;transition:background .2s">
+                        <div id="flashToggleThumb_0" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s"></div>
+                      </div>
+                    </div>
+                  </label>
+                  <button class="btn btn-danger btn-sm" data-del-offer="0" style="display:none">Eliminar</button>
+                </div>
+              </div>
+              <div id="flashStatusText_0" style="font-size:13px;color:var(--muted)">-</div>
+              <div class="field">
+                <label>Producto</label>
+                <select class="fld" id="flashProd_0"></select>
+              </div>
+              <div class="field">
+                <label>Plan</label>
+                <select class="fld" id="flashPlan_0"></select>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label>Precio oferta (Soles S/)</label>
+                  <input class="fld" type="number" step="0.01" id="flashPriceSoles_0" placeholder="15.20">
+                  <small style="color:var(--muted);font-size:11px;margin-top:4px" id="flashPriceUSDT_0">= 0.00 USDT</small>
+                </div>
+                <div class="field">
+                  <label>Precio normal (Soles S/)</label>
+                  <input class="fld" type="number" step="0.01" id="flashRegularSoles_0" placeholder="25.00">
+                  <small style="color:var(--muted);font-size:11px;margin-top:4px" id="flashRegularUSDT_0">= 0.00 USDT</small>
+                </div>
+              </div>
+              <div class="field">
+                <label>⏰ Inicio programado (opcional)</label>
+                <input class="fld" type="datetime-local" id="flashStart_0">
+                <small style="color:var(--muted);font-size:11px;margin-top:4px">Déjalo vacío para que empiece ahora al guardar</small>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-0="1">+1h</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-0="6">+6h</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-0="12">+12h</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-0="24">+1 día</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>Fecha y hora de fin (hora Lima)</label>
+                <input class="fld" type="datetime-local" id="flashEnd_0">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-0="1">+1h</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-0="6">+6h</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-0="12">+12h</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-0="24">+1 día</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-0="72">+3 días</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-add-hours-0="168">+7 días</button>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div class="field">
-              <label>Fecha y hora de fin (hora Lima)</label>
-              <input class="fld" type="datetime-local" id="flashEnd">
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-                <button type="button" class="btn btn-ghost btn-sm" data-add-hours="1">+1h</button>
-                <button type="button" class="btn btn-ghost btn-sm" data-add-hours="6">+6h</button>
-                <button type="button" class="btn btn-ghost btn-sm" data-add-hours="12">+12h</button>
-                <button type="button" class="btn btn-ghost btn-sm" data-add-hours="24">+1 día</button>
-                <button type="button" class="btn btn-ghost btn-sm" data-add-hours="72">+3 días</button>
-                <button type="button" class="btn btn-ghost btn-sm" data-add-hours="168">+7 días</button>
-              </div>
-            </div>
-            <div style="display:flex;gap:10px">
-              <button class="btn btn-primary" id="btnSaveFlash" style="flex:1">💾 Guardar flash sale</button>
-              <button class="btn btn-ghost" id="btnClearFlash">🗑 Desactivar</button>
-            </div>
+          <!-- Botones globales -->
+          <div style="display:flex;gap:10px;margin-top:8px">
+            <button class="btn btn-primary" id="btnSaveFlash" style="flex:1">💾 Guardar flash sales</button>
+            <button class="btn btn-ghost" id="btnClearFlash">🗑 Desactivar todas</button>
           </div>
         </div>
       </div>
@@ -1272,197 +1287,362 @@ select.fld{cursor:pointer}
   $('btnNewProduct').addEventListener('click', function () { openModal(null); });
 
 
-  // --- FLASH SALE ---
-  function updateFlashStatus(cfg) {
+  // --- FLASH SALE MULTI ---
+  // Tipo de cambio - también definido en la sección settings, se usa una sola var
+  // TC_ADMIN ya está definido más abajo, se usa con var local aquí para los listeners
+
+  function updateFlashStatus(cfg, i) {
+    var sfx = (i !== undefined) ? '_' + i : '_0';
     var now = Date.now();
-    var toggle = $('flashToggle');
-    var track = $('flashToggleTrack');
-    var thumb = $('flashToggleThumb');
-    var statusText = $('flashStatusText');
-    var label = $('flashToggleLabel');
+    var toggle = $(('flashToggle' + sfx).replace('__','_'));
+    var track = $(('flashToggleTrack' + sfx).replace('__','_'));
+    var thumb = $(('flashToggleThumb' + sfx).replace('__','_'));
+    var statusText = $(('flashStatusText' + sfx).replace('__','_'));
+    var label = $(('flashToggleLabel' + sfx).replace('__','_'));
+
+    if (!toggle) return;
 
     if (!cfg || !cfg.end || cfg.active === false) {
       toggle.checked = false;
-      track.style.background = 'var(--border)';
-      thumb.style.left = '3px';
-      statusText.textContent = '⭕ Desactivada';
-      statusText.style.color = 'var(--muted)';
-      label.textContent = 'Activar';
+      if (track) { track.style.background = 'var(--border)'; }
+      if (thumb) { thumb.style.left = '3px'; }
+      if (statusText) { statusText.textContent = '⭕ Desactivada'; statusText.style.color = 'var(--muted)'; }
+      if (label) label.textContent = 'Activar';
     } else if (cfg.start && cfg.start > now) {
       toggle.checked = true;
-      track.style.background = 'var(--warn)';
-      thumb.style.left = '25px';
-      var d = new Date(cfg.start);
-      statusText.textContent = '🕐 Programada — inicia ' + d.toLocaleString('es-PE', { timeZone: 'America/Lima', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-      statusText.style.color = 'var(--warn)';
-      label.textContent = 'Programada';
+      if (track) { track.style.background = 'var(--warn)'; }
+      if (thumb) { thumb.style.left = '25px'; }
+      if (statusText) {
+        var d = new Date(cfg.start);
+        statusText.textContent = '🕐 Programada — inicia ' + d.toLocaleString('es-PE', { timeZone: 'America/Lima', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        statusText.style.color = 'var(--warn)';
+      }
+      if (label) label.textContent = 'Programada';
     } else if (cfg.end > now) {
       toggle.checked = true;
-      track.style.background = 'var(--ok)';
-      thumb.style.left = '25px';
-      var remaining = Math.ceil((cfg.end - now) / 60000);
-      var hrs = Math.floor(remaining / 60), mins = remaining % 60;
-      statusText.textContent = '✅ Activa — termina en ' + (hrs > 0 ? hrs + 'h ' : '') + mins + 'min';
-      statusText.style.color = 'var(--ok)';
-      label.textContent = 'Activa';
+      if (track) { track.style.background = 'var(--ok)'; }
+      if (thumb) { thumb.style.left = '25px'; }
+      if (statusText) {
+        var remaining = Math.ceil((cfg.end - now) / 60000);
+        var hrs = Math.floor(remaining / 60), mins = remaining % 60;
+        statusText.textContent = '✅ Activa — termina en ' + (hrs > 0 ? hrs + 'h ' : '') + mins + 'min';
+        statusText.style.color = 'var(--ok)';
+      }
+      if (label) label.textContent = 'Activa';
     } else {
       toggle.checked = false;
-      track.style.background = 'var(--hot)';
-      thumb.style.left = '3px';
-      statusText.textContent = '⌛ Vencida — cambia la fecha para reactivar';
-      statusText.style.color = 'var(--hot)';
-      label.textContent = 'Vencida';
+      if (track) { track.style.background = 'var(--hot)'; }
+      if (thumb) { thumb.style.left = '3px'; }
+      if (statusText) { statusText.textContent = '⌛ Vencida — cambia la fecha para reactivar'; statusText.style.color = 'var(--hot)'; }
+      if (label) label.textContent = 'Vencida';
     }
   }
 
-  $('flashToggle').addEventListener('change', function() {
-    var track = $('flashToggleTrack');
-    var thumb = $('flashToggleThumb');
-    if (this.checked) {
-      track.style.background = 'var(--ok)';
-      thumb.style.left = '25px';
-    } else {
-      track.style.background = 'var(--border)';
-      thumb.style.left = '3px';
+  function _makeBlockHTML(i, cfg) {
+    cfg = cfg || {};
+    var pad = function(n) { return String(n).padStart(2,'0'); };
+    var endVal = '', startVal = '';
+    if (cfg.end && cfg.end > 0 && !isNaN(cfg.end)) {
+      var de = new Date(cfg.end);
+      if (de.getFullYear() > 2020) endVal = de.getFullYear() + '-' + pad(de.getMonth()+1) + '-' + pad(de.getDate()) + 'T' + pad(de.getHours()) + ':' + pad(de.getMinutes());
     }
-  });
-
-  function loadFlashSelects() {
-    var sel = $('flashProd');
-    sel.innerHTML = products.map(function (p) {
-      return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>';
+    if (cfg.start && cfg.start > 0 && !isNaN(cfg.start)) {
+      var ds = new Date(cfg.start);
+      if (ds.getFullYear() > 2020) startVal = ds.getFullYear() + '-' + pad(ds.getMonth()+1) + '-' + pad(ds.getDate()) + 'T' + pad(ds.getHours()) + ':' + pad(ds.getMinutes());
+    }
+    var prodOpts = products.map(function(p) {
+      return '<option value="' + esc(p.id) + '"' + (cfg.productId === p.id ? ' selected' : '') + '>' + esc(p.name) + '</option>';
     }).join('');
-    updateFlashPlans();
-    
-    // Poner fecha actual por defecto si no hay valor
-    if (!$('flashEnd').value) {
+    var selProd = products.find(function(p) { return p.id === cfg.productId; });
+    var planOpts = '';
+    if (selProd) {
+      var pls = Array.isArray(selProd.plans) ? selProd.plans : [];
+      planOpts = pls.map(function(pl) {
+        var soles = (pl[1] * TC_ADMIN).toFixed(2);
+        return '<option value="' + esc(String(pl[0])) + '"' + (cfg.plan === pl[0] ? ' selected' : '') + '>' + esc(String(pl[0])) + ' — S/ ' + soles + '</option>';
+      }).join('');
+    }
+    var priceSOL = cfg.price ? (cfg.price * TC_ADMIN).toFixed(2) : '';
+    var priceUSDT = cfg.price ? ('= ' + cfg.price.toFixed(2) + ' USDT') : '= 0.00 USDT';
+    var regSOL = cfg.regular ? (cfg.regular * TC_ADMIN).toFixed(2) : '';
+    var regUSDT = cfg.regular ? ('= ' + cfg.regular.toFixed(2) + ' USDT') : '= 0.00 USDT';
+    return '<div class="flash-offer-block" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:16px;margin-bottom:16px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between">' +
+        '<span style="font-weight:700">Oferta #' + (i + 1) + '</span>' +
+        '<div style="display:flex;align-items:center;gap:10px">' +
+          '<label style="display:flex;align-items:center;gap:8px;cursor:pointer">' +
+            '<span style="font-size:13px;color:var(--muted)" id="flashToggleLabel_' + i + '">Activar</span>' +
+            '<div style="position:relative;width:48px;height:26px">' +
+              '<input type="checkbox" id="flashToggle_' + i + '" style="opacity:0;width:0;height:0;position:absolute">' +
+              '<div id="flashToggleTrack_' + i + '" onclick="var cb=document.getElementById(\'flashToggle_' + i + '\');cb.checked=!cb.checked;cb.dispatchEvent(new Event(\'change\'))" style="position:absolute;inset:0;border-radius:13px;background:var(--border);cursor:pointer;transition:background .2s">' +
+                '<div id="flashToggleThumb_' + i + '" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s"></div>' +
+              '</div>' +
+            '</div>' +
+          '</label>' +
+          '<button class="btn btn-danger btn-sm" data-del-offer="' + i + '">Eliminar</button>' +
+        '</div>' +
+      '</div>' +
+      '<div id="flashStatusText_' + i + '" style="font-size:13px;color:var(--muted)">-</div>' +
+      '<div class="field"><label>Producto</label><select class="fld" id="flashProd_' + i + '">' + prodOpts + '</select></div>' +
+      '<div class="field"><label>Plan</label><select class="fld" id="flashPlan_' + i + '">' + planOpts + '</select></div>' +
+      '<div class="form-grid">' +
+        '<div class="field"><label>Precio oferta (Soles S/)</label><input class="fld" type="number" step="0.01" id="flashPriceSoles_' + i + '" placeholder="15.20" value="' + esc(priceSOL) + '"><small style="color:var(--muted);font-size:11px;margin-top:4px" id="flashPriceUSDT_' + i + '">' + priceUSDT + '</small></div>' +
+        '<div class="field"><label>Precio normal (Soles S/)</label><input class="fld" type="number" step="0.01" id="flashRegularSoles_' + i + '" placeholder="25.00" value="' + esc(regSOL) + '"><small style="color:var(--muted);font-size:11px;margin-top:4px" id="flashRegularUSDT_' + i + '">' + regUSDT + '</small></div>' +
+      '</div>' +
+      '<div class="field"><label>⏰ Inicio programado (opcional)</label><input class="fld" type="datetime-local" id="flashStart_' + i + '" value="' + startVal + '"><small style="color:var(--muted);font-size:11px;margin-top:4px">Déjalo vacío para que empiece ahora al guardar</small>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-' + i + '="1">+1h</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-' + i + '="6">+6h</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-' + i + '="12">+12h</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-start-' + i + '="24">+1 día</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="field"><label>Fecha y hora de fin (hora Lima)</label><input class="fld" type="datetime-local" id="flashEnd_' + i + '" value="' + endVal + '">' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-' + i + '="1">+1h</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-' + i + '="6">+6h</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-' + i + '="12">+12h</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-' + i + '="24">+1 día</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-' + i + '="72">+3 días</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-add-hours-' + i + '="168">+7 días</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderFlashOfferBlocks(list) {
+    var container = $('flashOffersList');
+    container.innerHTML = '';
+    var max = Math.min(list.length, 5);
+    for (var i = 0; i < max; i++) {
+      container.innerHTML += _makeBlockHTML(i, list[i]);
+    }
+    // Ocultar botón eliminar si solo hay 1
+    var blocks = container.querySelectorAll('.flash-offer-block');
+    blocks.forEach(function(block, idx) {
+      var delBtn = block.querySelector('[data-del-offer]');
+      if (delBtn) delBtn.style.display = (blocks.length <= 1) ? 'none' : '';
+    });
+    for (var j = 0; j < max; j++) {
+      bindFlashOfferBlock(j, list[j] || {});
+    }
+    // Actualizar estado global
+    var active = list.filter(function(f) { return f.active !== false && f.end > Date.now(); }).length;
+    $('flashStatusText').textContent = active > 0 ? ('✅ ' + active + ' oferta' + (active !== 1 ? 's' : '') + ' activa' + (active !== 1 ? 's' : '')) : '⭕ Sin ofertas activas';
+  }
+
+  function bindFlashOfferBlock(i, cfg) {
+    var prodEl = $('flashProd_' + i);
+    var planEl = $('flashPlan_' + i);
+    var priceEl = $('flashPriceSoles_' + i);
+    var priceUsdtEl = $('flashPriceUSDT_' + i);
+    var regEl = $('flashRegularSoles_' + i);
+    var regUsdtEl = $('flashRegularUSDT_' + i);
+    var startEl = $('flashStart_' + i);
+    var endEl = $('flashEnd_' + i);
+    var toggleEl = $('flashToggle_' + i);
+    var trackEl = $('flashToggleTrack_' + i);
+    var thumbEl = $('flashToggleThumb_' + i);
+
+    if (!prodEl) return;
+
+    // Poner fecha fin por defecto si vacío
+    if (endEl && !endEl.value) {
       var now = new Date();
       var pad = function(n) { return String(n).padStart(2,'0'); };
-      $('flashEnd').value = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+      endEl.value = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
     }
-    
-    // Pre-cargar valores guardados del flash sale
-    sbFetch('settings?key=eq.flash&select=value').then(function(rows) {
-      if (!rows || !rows[0]) { updateFlashStatus(null); return; }
-      try {
-        var cfg = JSON.parse(rows[0].value);
-        if (cfg.productId) {
-          $('flashProd').value = cfg.productId;
-          updateFlashPlans();
-          setTimeout(function() {
-            if (cfg.plan) $('flashPlan').value = cfg.plan;
-          }, 100);
-        }
-        if (cfg.price) {
-          $('flashPriceSoles').value = (cfg.price * TC_ADMIN).toFixed(2);
-          $('flashPriceUSDT').textContent = '= ' + cfg.price + ' USDT';
-        }
-        if (cfg.regular) {
-          $('flashRegularSoles').value = (cfg.regular * TC_ADMIN).toFixed(2);
-          $('flashRegularUSDT').textContent = '= ' + cfg.regular + ' USDT';
-        }
-        if (cfg.end && cfg.end > 0 && !isNaN(cfg.end)) {
-          var d = new Date(cfg.end);
-          if (d.getFullYear() > 2020) {
-            var pad = function(n) { return String(n).padStart(2,'0'); };
-            $('flashEnd').value = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-          }
-        }
-        if (cfg.start && cfg.start > 0 && !isNaN(cfg.start)) {
-          var ds = new Date(cfg.start);
-          if (ds.getFullYear() > 2020) {
-            var pad2 = function(n) { return String(n).padStart(2,'0'); };
-            $('flashStart').value = ds.getFullYear() + '-' + pad2(ds.getMonth()+1) + '-' + pad2(ds.getDate()) + 'T' + pad2(ds.getHours()) + ':' + pad2(ds.getMinutes());
-          }
-        }
-        updateFlashStatus(cfg);
-      } catch(e) { updateFlashStatus(null); }
-    }).catch(function() { updateFlashStatus(null); });
-  }
 
-  // Conversión automática Soles → USDT en tiempo real
-  var TC_ADMIN = 3.95;
-  $('flashPriceSoles').addEventListener('input', function() {
-    var soles = parseFloat(this.value) || 0;
-    var usdt = Math.round(soles / TC_ADMIN * 100) / 100;
-    $('flashPriceUSDT').textContent = '= ' + usdt.toFixed(2) + ' USDT';
-  });
-  $('flashRegularSoles').addEventListener('input', function() {
-    var soles = parseFloat(this.value) || 0;
-    var usdt = Math.round(soles / TC_ADMIN * 100) / 100;
-    $('flashRegularUSDT').textContent = '= ' + usdt.toFixed(2) + ' USDT';
-  });
+    // Listener cambio de producto → actualizar planes
+    if (prodEl) {
+      prodEl.addEventListener('change', function() {
+        var pid = prodEl.value;
+        var p = products.find(function(x) { return x.id === pid; });
+        var pls = p ? (Array.isArray(p.plans) ? p.plans : []) : [];
+        if (planEl) planEl.innerHTML = pls.map(function(pl) {
+          var soles = (pl[1] * TC_ADMIN).toFixed(2);
+          return '<option value="' + esc(String(pl[0])) + '">' + esc(String(pl[0])) + ' — S/ ' + soles + '</option>';
+        }).join('');
+      });
+    }
 
-  // Botones de duración rápida para flash sale
-  document.querySelectorAll('[data-add-hours]').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var hours = parseInt(this.dataset.addHours);
-      var base = $('flashEnd').value ? new Date($('flashEnd').value) : new Date();
-      var newDate = new Date(base.getTime() + hours * 3600000);
-      var pad = function(n) { return String(n).padStart(2,'0'); };
-      $('flashEnd').value = newDate.getFullYear() + '-' + pad(newDate.getMonth()+1) + '-' + pad(newDate.getDate()) + 'T' + pad(newDate.getHours()) + ':' + pad(newDate.getMinutes());
+    // Listeners conversión Soles → USDT
+    if (priceEl) {
+      priceEl.addEventListener('input', function() {
+        var soles = parseFloat(priceEl.value) || 0;
+        var usdt = Math.round(soles / TC_ADMIN * 100) / 100;
+        if (priceUsdtEl) priceUsdtEl.textContent = '= ' + usdt.toFixed(2) + ' USDT';
+      });
+    }
+    if (regEl) {
+      regEl.addEventListener('input', function() {
+        var soles = parseFloat(regEl.value) || 0;
+        var usdt = Math.round(soles / TC_ADMIN * 100) / 100;
+        if (regUsdtEl) regUsdtEl.textContent = '= ' + usdt.toFixed(2) + ' USDT';
+      });
+    }
+
+    // Botones +horas para inicio
+    var container = $('flashOffersList');
+    container.querySelectorAll('[data-add-hours-start-' + i + ']').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var hours = parseInt(btn.getAttribute('data-add-hours-start-' + i));
+        var base = startEl && startEl.value ? new Date(startEl.value) : new Date();
+        var nd = new Date(base.getTime() + hours * 3600000);
+        var pad = function(n) { return String(n).padStart(2,'0'); };
+        if (startEl) startEl.value = nd.getFullYear() + '-' + pad(nd.getMonth()+1) + '-' + pad(nd.getDate()) + 'T' + pad(nd.getHours()) + ':' + pad(nd.getMinutes());
+      });
     });
-  });
 
-  function updateFlashPlans() {
-    var pid = $('flashProd').value;
-    var p = products.find(function (x) { return x.id === pid; });
-    var plans = p ? (Array.isArray(p.plans) ? p.plans : []) : [];
-    $('flashPlan').innerHTML = plans.map(function (pl) {
-      var soles = (pl[1] * TC_ADMIN).toFixed(2);
-      return '<option value="' + esc(String(pl[0])) + '">' + esc(String(pl[0])) + ' — S/ ' + soles + '</option>';
-    }).join('');
+    // Botones +horas para fin
+    container.querySelectorAll('[data-add-hours-' + i + ']').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var hours = parseInt(btn.getAttribute('data-add-hours-' + i));
+        var base = endEl && endEl.value ? new Date(endEl.value) : new Date();
+        var nd = new Date(base.getTime() + hours * 3600000);
+        var pad = function(n) { return String(n).padStart(2,'0'); };
+        if (endEl) endEl.value = nd.getFullYear() + '-' + pad(nd.getMonth()+1) + '-' + pad(nd.getDate()) + 'T' + pad(nd.getHours()) + ':' + pad(nd.getMinutes());
+      });
+    });
+
+    // Toggle visual
+    if (toggleEl) {
+      toggleEl.addEventListener('change', function() {
+        if (trackEl && thumbEl) {
+          if (toggleEl.checked) { trackEl.style.background = 'var(--ok)'; thumbEl.style.left = '25px'; }
+          else { trackEl.style.background = 'var(--border)'; thumbEl.style.left = '3px'; }
+        }
+      });
+    }
+
+    // Mostrar estado inicial
+    updateFlashStatus(cfg, i);
   }
 
-  $('flashProd').addEventListener('change', updateFlashPlans);
+  function loadFlashSelects() {
+    // Intentar cargar flash_list primero, fallback a flash
+    sbFetch('settings?key=eq.flash_list&select=value').then(function(rows) {
+      if (rows && rows[0]) {
+        try {
+          var list = JSON.parse(rows[0].value);
+          if (Array.isArray(list) && list.length > 0) {
+            renderFlashOfferBlocks(list.slice(0, 5));
+            return;
+          }
+        } catch(e) {}
+      }
+      // Fallback a clave flash
+      sbFetch('settings?key=eq.flash&select=value').then(function(rows2) {
+        if (rows2 && rows2[0]) {
+          try {
+            var cfg = JSON.parse(rows2[0].value);
+            renderFlashOfferBlocks([cfg]);
+          } catch(e) { renderFlashOfferBlocks([{}]); }
+        } else {
+          renderFlashOfferBlocks([{}]);
+        }
+      }).catch(function() { renderFlashOfferBlocks([{}]); });
+    }).catch(function() { renderFlashOfferBlocks([{}]); });
+  }
+
+  // Delegación: botón + agregar oferta
+  $('btnAddFlashOffer').addEventListener('click', function() {
+    var blocks = $('flashOffersList').querySelectorAll('.flash-offer-block');
+    if (blocks.length >= 5) { toast('Máximo 5 ofertas', true); return; }
+    // Leer estado actual de todos los bloques
+    var currentList = _readAllBlocks();
+    currentList.push({});
+    renderFlashOfferBlocks(currentList);
+  });
+
+  // Delegación: botón eliminar oferta
+  $('flashOffersList').addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-del-offer]');
+    if (!btn) return;
+    var blocks = $('flashOffersList').querySelectorAll('.flash-offer-block');
+    if (blocks.length <= 1) { toast('Debe haber al menos una oferta', true); return; }
+    var idx = parseInt(btn.dataset.delOffer);
+    var list = _readAllBlocks();
+    list.splice(idx, 1);
+    renderFlashOfferBlocks(list);
+  });
+
+  function _readAllBlocks() {
+    var blocks = $('flashOffersList').querySelectorAll('.flash-offer-block');
+    var list = [];
+    blocks.forEach(function(block, idx) {
+      var startVal = $('flashStart_' + idx) ? $('flashStart_' + idx).value : '';
+      var endVal = $('flashEnd_' + idx) ? $('flashEnd_' + idx).value : '';
+      list.push({
+        active: $('flashToggle_' + idx) ? $('flashToggle_' + idx).checked : false,
+        productId: $('flashProd_' + idx) ? $('flashProd_' + idx).value : '',
+        plan: $('flashPlan_' + idx) ? $('flashPlan_' + idx).value : '',
+        price: Math.round((parseFloat(($('flashPriceSoles_' + idx) || {}).value) || 0) / TC_ADMIN * 10000) / 10000,
+        regular: Math.round((parseFloat(($('flashRegularSoles_' + idx) || {}).value) || 0) / TC_ADMIN * 10000) / 10000,
+        start: startVal ? new Date(startVal).getTime() : Date.now(),
+        end: endVal ? new Date(endVal).getTime() : 0
+      });
+    });
+    return list;
+  }
 
   $('btnSaveFlash').addEventListener('click', function () {
-    if (!$('flashEnd').value) return toast('Ingresa la fecha de fin del flash sale', true);
-    var TC_ADMIN = 3.95;
-    var startVal = $('flashStart').value;
-    var config = {
-      active: $('flashToggle').checked,
-      productId: $('flashProd').value,
-      plan: $('flashPlan').value,
-      price: Math.round((parseFloat($('flashPriceSoles').value) || 0) / TC_ADMIN * 10000) / 10000,
-      regular: Math.round((parseFloat($('flashRegularSoles').value) || 0) / TC_ADMIN * 10000) / 10000,
-      start: startVal ? new Date(startVal).getTime() : Date.now(),
-      end: new Date($('flashEnd').value).getTime()
-    };
-    if (config.end <= config.start) return toast('La fecha de fin debe ser posterior al inicio', true);
-    sbFetch('settings', {
-      method: 'POST',
-      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify({ key: 'flash', value: JSON.stringify(config) })
-    }).then(function () {
-      toast('✅ Flash sale guardado');
-      updateFlashStatus(config);
-    }).catch(function () { toast('Error al guardar flash sale', true); });
+    var blocks = $('flashOffersList').querySelectorAll('.flash-offer-block');
+    if (!blocks.length) return toast('No hay ofertas para guardar', true);
+    // Validar al menos una tenga fecha de fin
+    for (var vi = 0; vi < blocks.length; vi++) {
+      var endEl = $('flashEnd_' + vi);
+      if (!endEl || !endEl.value) return toast('La oferta #' + (vi+1) + ' no tiene fecha de fin', true);
+    }
+    var flashList = _readAllBlocks();
+    // Validar fechas
+    for (var vj = 0; vj < flashList.length; vj++) {
+      var f = flashList[vj];
+      if (f.end <= f.start) return toast('La oferta #' + (vj+1) + ': la fecha de fin debe ser posterior al inicio', true);
+    }
+    var first = flashList[0];
+    // Guardar flash_list y flash (compatibilidad)
+    Promise.all([
+      sbFetch('settings', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ key: 'flash_list', value: JSON.stringify(flashList) })
+      }),
+      sbFetch('settings', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ key: 'flash', value: JSON.stringify(first) })
+      })
+    ]).then(function() {
+      toast('✅ Flash sales guardados');
+      // Actualizar estado global
+      var active = flashList.filter(function(f) { return f.active !== false && f.end > Date.now(); }).length;
+      $('flashStatusText').textContent = active > 0 ? ('✅ ' + active + ' oferta' + (active !== 1 ? 's' : '') + ' activa' + (active !== 1 ? 's' : '')) : '⭕ Sin ofertas activas';
+    }).catch(function() { toast('Error al guardar flash sales', true); });
   });
 
   $('btnClearFlash').addEventListener('click', function() {
-    if (!window.confirm('¿Desactivar el flash sale?')) return;
-    var config = { active: false, productId: '', plan: '', price: 0, regular: 0, start: 0, end: 0 };
-    sbFetch('settings', {
-      method: 'POST',
-      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify({ key: 'flash', value: JSON.stringify(config) })
-    }).then(function() {
-      toast('⭕ Flash sale desactivado');
-      updateFlashStatus(config);
-      $('flashStart').value = '';
+    if (!window.confirm('¿Desactivar todos los flash sales?')) return;
+    var blocks = $('flashOffersList').querySelectorAll('.flash-offer-block');
+    var flashList = _readAllBlocks().map(function(f) { f.active = false; return f; });
+    var first = flashList[0] || { active: false, productId: '', plan: '', price: 0, regular: 0, start: 0, end: 0 };
+    Promise.all([
+      sbFetch('settings', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ key: 'flash_list', value: JSON.stringify(flashList) })
+      }),
+      sbFetch('settings', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ key: 'flash', value: JSON.stringify(first) })
+      })
+    ]).then(function() {
+      toast('⭕ Flash sales desactivados');
+      $('flashStatusText').textContent = '⭕ Sin ofertas activas';
+      // Re-renderizar con todos desactivados
+      renderFlashOfferBlocks(flashList);
     }).catch(function() { toast('Error al desactivar', true); });
-  });
-
-  // Botones de inicio rápido
-  document.querySelectorAll('[data-add-hours-start]').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var hours = parseInt(this.dataset.addHoursStart);
-      var base = $('flashStart').value ? new Date($('flashStart').value) : new Date();
-      var newDate = new Date(base.getTime() + hours * 3600000);
-      var pad = function(n) { return String(n).padStart(2,'0'); };
-      $('flashStart').value = newDate.getFullYear() + '-' + pad(newDate.getMonth()+1) + '-' + pad(newDate.getDate()) + 'T' + pad(newDate.getHours()) + ':' + pad(newDate.getMinutes());
-    });
   });
 
   // --- SETTINGS ---
