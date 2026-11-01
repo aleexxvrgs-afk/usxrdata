@@ -628,19 +628,28 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
 
   function _renderCarousel(sec, active) {
     if (_carouselIdx >= active.length) _carouselIdx = 0;
-    var slidesHTML = active.map(function(f, idx) {
+    var n = active.length;
+    // Duplicar slides al final para loop infinito (siempre hacia la izquierda)
+    var allSlides = active.concat(active).map(function(f, idx) {
       var p = byId(f.productId);
+      if (!p) return '';
       var fi = p.plans.map(function(x){return x[0];}).indexOf(f.plan);
-      return '<div class="flash-slide" data-bp="' + esc(p.id) + '" data-bi="' + fi + '">' + _flashCardInnerHTML(f, p) + '</div>';
+      return '<div class="flash-slide" data-idx="' + (idx % n) + '">' + _flashCardInnerHTML(f, p) + '</div>';
     }).join('');
     var dotsHTML = active.map(function(_, idx) {
       return '<button class="flash-dot' + (idx === _carouselIdx ? ' active' : '') + '" data-dot="' + idx + '" aria-label="Oferta ' + (idx+1) + '"></button>';
     }).join('');
     sec.className = 'flash flash-carousel-wrap';
     sec.innerHTML = '<div class="flash-carousel-track" id="flashTrack" style="transform:translateX(-' + (_carouselIdx * 100) + '%)">'
-      + slidesHTML + '</div>'
+      + allSlides + '</div>'
       + '<div style="display:flex;justify-content:center;padding:0 18px 4px"><button type="button" class="btn hot" id="flashBuy" style="margin-top:8px;height:52px;font-size:17px;max-width:400px;width:100%">Comprar</button></div>'
       + '<div class="flash-dots" id="flashDots">' + dotsHTML + '</div>';
+    // El track tiene 2n slides, cada uno ocupa 50% del track (100%/2)
+    var track = document.getElementById('flashTrack');
+    if (track) {
+      var slides = track.querySelectorAll('.flash-slide');
+      slides.forEach(function(s) { s.style.minWidth = (100 / (2 * n)) + '%'; });
+    }
     sec.querySelectorAll('.flash-dot').forEach(function(dot) {
       dot.addEventListener('click', function() { _goToSlide(active, parseInt(this.dataset.dot)); });
     });
@@ -653,21 +662,48 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       var still = active.filter(function(f) { return f.end > nowT; });
       if (!still.length) { FLASH_LIST = []; renderFlash(); renderGrid(); return; }
       if (still.length !== active.length) { FLASH_LIST = still; renderFlash(); return; }
-      _goToSlide(active, (_carouselIdx + 1) % active.length);
+      var nextIdx = _carouselIdx + 1;
+      var track2 = document.getElementById('flashTrack');
+      if (!track2) return;
+      // Si llegamos a la copia del primer slide (posición n), reset invisible
+      if (nextIdx >= n) {
+        // Avanzar a la copia (sin animación al resetear)
+        _carouselIdx = nextIdx;
+        var pct = (nextIdx / (2 * n)) * 100;
+        track2.style.transform = 'translateX(-' + pct + '%)';
+        document.querySelectorAll('.flash-dot').forEach(function(d,i){d.classList.toggle('active',i===0);});
+        FLASH = active[0];
+        _updateCarouselBuy(document.querySelector('.flash'), active, 0);
+        tick();
+        // Después de la transición, reset sin animación al inicio real
+        setTimeout(function() {
+          track2.style.transition = 'none';
+          track2.style.transform = 'translateX(0%)';
+          _carouselIdx = 0;
+          setTimeout(function() {
+            track2.style.transition = '';
+          }, 50);
+        }, 1200);
+      } else {
+        _goToSlide(active, nextIdx);
+      }
     }, 4000);
   }
 
   function _goToSlide(active, idx) {
     _carouselIdx = idx;
     var track = document.getElementById('flashTrack');
-    if (track) track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+    var n = active.length;
+    if (track) {
+      var pct = (idx / (2 * n)) * 100;
+      track.style.transform = 'translateX(-' + pct + '%)';
+    }
     document.querySelectorAll('.flash-dot').forEach(function(d,i){d.classList.toggle('active',i===idx);});
     FLASH = active[idx];
     var sec = document.querySelector('.flash');
     _updateCarouselBuy(sec, active, idx);
     tick();
   }
-
   function _updateCarouselBuy(sec, active, idx) {
     var f = active[idx];
     var p = byId(f.productId);
