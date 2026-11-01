@@ -524,10 +524,19 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   var _carouselIdx = 0;
   var _carouselTimer = null;
   var eff = function (p) {
-    if (p.id !== FLASH.productId) return p.plans;
+    // Buscar si este producto está en alguna oferta activa de FLASH_LIST
+    var nowTs = Date.now();
+    var activeFlash = FLASH_LIST.find(function(f) {
+      return f.productId === p.id && f.active !== false && f.end > nowTs && (!f.start || f.start <= nowTs);
+    });
+    // Fallback al FLASH simple si no hay FLASH_LIST
+    if (!activeFlash && flashOn() && FLASH.productId === p.id) {
+      activeFlash = FLASH;
+    }
+    if (!activeFlash) return p.plans;
     return p.plans.map(function (pl) {
-      if (pl[0] !== FLASH.plan) return pl;
-      return flashOn() ? [pl[0], FLASH.price, pl[2], FLASH.regular] : [pl[0], FLASH.regular, pl[2]];
+      if (pl[0] !== activeFlash.plan) return pl;
+      return [pl[0], activeFlash.price, pl[2], activeFlash.regular];
     });
   };
 
