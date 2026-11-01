@@ -137,9 +137,9 @@ button { cursor: pointer; }
 .sticker b { font: 700 38px/1 var(--font-mono); }
 .flash .btn { grid-column: 1 / -1; height: 52px; font-size: 17px; margin-top: 8px; }
 
-.flash-carousel-wrap { overflow: hidden; position: relative; display: block !important; }
-.flash-carousel-track { display: flex; transition: transform 0.45s cubic-bezier(.77,0,.18,1); will-change: transform; width: 100%; overflow: hidden; }
-.flash-carousel-track .flash-slide { min-width: 100%; width: 100%; flex-shrink: 0; box-sizing: border-box; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: center; overflow: hidden; }
+.flash-carousel-wrap { overflow: hidden; position: relative; display: block !important; padding: 0 !important; }
+.flash-carousel-track { display: flex; transition: transform 0.45s cubic-bezier(.77,0,.18,1); will-change: transform; width: 100%; }
+.flash-carousel-track .flash-slide { min-width: 100%; width: 100%; flex-shrink: 0; box-sizing: border-box; padding: 18px; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: center; }
 .flash-dots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
 .flash-dot { width: 10px; height: 10px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--surface); cursor: pointer; transition: background .2s; padding: 0; }
 .flash-dot.active { background: var(--accent); }
