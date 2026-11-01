@@ -1506,12 +1506,17 @@ select.fld{cursor:pointer}
     });
 
     // Toggle visual
-    if (toggleEl) {
+    if (toggleEl && trackEl) {
+      // Limpiar onclick inline y usar listener
+      trackEl.onclick = function() {
+        toggleEl.checked = !toggleEl.checked;
+        if (toggleEl.checked) { trackEl.style.background = 'var(--ok)'; thumbEl.style.left = '25px'; }
+        else { trackEl.style.background = 'var(--border)'; thumbEl.style.left = '3px'; }
+        updateFlashStatus(null, i);
+      };
       toggleEl.addEventListener('change', function() {
-        if (trackEl && thumbEl) {
-          if (toggleEl.checked) { trackEl.style.background = 'var(--ok)'; thumbEl.style.left = '25px'; }
-          else { trackEl.style.background = 'var(--border)'; thumbEl.style.left = '3px'; }
-        }
+        if (toggleEl.checked) { trackEl.style.background = 'var(--ok)'; thumbEl.style.left = '25px'; }
+        else { trackEl.style.background = 'var(--border)'; thumbEl.style.left = '3px'; }
       });
     }
 
