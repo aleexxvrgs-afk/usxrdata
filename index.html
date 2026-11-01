@@ -589,7 +589,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         var renderWidget = function() {
           if (window.turnstile) {
             window.turnstile.render(tw, {
-              sitekey: '0x4AAAAAAFuQJamtmwL4EPnb',
+              sitekey: window._turnstileSiteKey || '0x4AAAAAAFuQJamtmwL4EPnb',
               theme: 'auto'
             });
           } else {
@@ -639,7 +639,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   }
   function closeAll() { $('#ovPlans').hidden = true; $('#ovPay').hidden = true; $('#ovMenu').hidden = true; $('#ovLogin').hidden = true; $('#ovAdmin').hidden = true; }
   var admin = { on: false, unlocked: false, tries: 0, cred: null, draft: null, db: null, sample: null, ids: [] };
-  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#x27;'); }
   function sha(s) {
     return crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)).then(function (b) {
       return Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');

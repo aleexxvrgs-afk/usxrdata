@@ -718,14 +718,10 @@ select.fld{cursor:pointer}
       _supa.from('admins').select('email').eq('email', email)
         .then(function(result) {
           if (result.error) {
-            // Error de conexión - permitir acceso si es INITIAL_SESSION (ya autenticado antes)
-            if (event === 'INITIAL_SESSION') {
-              showPanel(session.user);
-            } else {
-              _supa.auth.signOut();
-              showLogin();
-              $('loginErr').textContent = '❌ Error al verificar permisos: ' + result.error.message;
-            }
+            // Siempre denegar si hay error al verificar - no hay bypass
+            _supa.auth.signOut();
+            showLogin();
+            $('loginErr').textContent = '❌ Error al verificar permisos. Intenta de nuevo.';
             return;
           }
           if (result.data && result.data.length > 0) {
@@ -1355,7 +1351,12 @@ select.fld{cursor:pointer}
   }
 
   function esc(s) {
-    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/'/g, '&#x27;');
   }
 
   // --- CATEGORÍAS ---
