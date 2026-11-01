@@ -363,6 +363,10 @@ select.fld{cursor:pointer}
               <input class="fld" id="cfgWAGroup" placeholder="https://chat.whatsapp.com/xxxxx">
             </div>
             <div class="field">
+              <label>Nombre del grupo (texto del botón)</label>
+              <input class="fld" id="cfgWAGroupName" placeholder="Ej: Grupo USXR Store">
+            </div>
+            <div class="field">
               <label>Telegram (sin @)</label>
               <input class="fld" id="cfgTG" placeholder="Ej: mitienda">
             </div>
@@ -1272,6 +1276,7 @@ select.fld{cursor:pointer}
       var s = map.store || {};
       $('cfgWA').value = s.whatsapp || '';
       $('cfgWAGroup').value = s.whatsapp_group || '';
+      $('cfgWAGroupName').value = s.whatsapp_group_name || '';
       $('cfgTG').value = s.telegram || '';
       $('cfgTC').value = s.tc || '';
       $('cfgYapeNum').value = s.yape_number || '';
@@ -1320,6 +1325,7 @@ select.fld{cursor:pointer}
     var config = {
       whatsapp: $('cfgWA').value.trim(),
       whatsapp_group: $('cfgWAGroup').value.trim(),
+      whatsapp_group_name: $('cfgWAGroupName').value.trim(),
       telegram: $('cfgTG').value.trim(),
       tc: parseFloat($('cfgTC').value) || 3.95,
       yape_active: $('cfgYapeActive').checked,
