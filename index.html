@@ -531,6 +531,14 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     var items = PRODUCTS.filter(function (p) {
       return (state.cat === 'all' || p.cat === state.cat) && (!q || p.name.toLowerCase().indexOf(q) > -1);
     });
+    // Si hay flash sale activo, poner ese producto primero en el catálogo
+    if (flashOn() && FLASH.productId) {
+      items.sort(function(a, b) {
+        if (a.id === FLASH.productId) return -1;
+        if (b.id === FLASH.productId) return 1;
+        return 0;
+      });
+    }
     $('#count').textContent = items.length + (items.length === 1 ? ' producto disponible' : ' productos disponibles');
     $('#grid').className = 'grid' + (state.list ? ' list' : '');
     if (!items.length) { $('#grid').innerHTML = '<div class="empty">No hay productos con ese nombre. Prueba con otra búsqueda.</div>'; return; }
@@ -539,8 +547,10 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       var min = Math.min.apply(null, pls.map(function (x) { return x[1]; }));
       var flash = flashOn() && p.id === FLASH.productId;
       var sinStock = p.stock <= 0;
-      return '<article class="card' + (p.hot ? ' is-hot' : '') + (sinStock ? ' out-of-stock' : '') + '">' +
-        (p.hot ? '<span class="hot-tag">🔥 HOT!</span>' : '') +
+      // El producto en flash sale aparece como HOT automáticamente
+      var isHot = p.hot || flash;
+      return '<article class="card' + (isHot ? ' is-hot' : '') + (sinStock ? ' out-of-stock' : '') + '">' +
+        (isHot ? '<span class="hot-tag">' + (flash ? '⚡ OFERTA!' : '🔥 HOT!') + '</span>' : '') +
         '<div class="art" style="background-color:' + p.tile + '">' +
         (p.img ? '<img src="' + p.img + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '<b>' + p.glyph + '</b>') +
         (sinStock
