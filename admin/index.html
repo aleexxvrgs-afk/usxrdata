@@ -211,6 +211,9 @@ select.fld{cursor:pointer}
       <span class="badge" id="navCatsCount">4</span>
     </button>
     <span class="nav-section">Tienda</span>
+    <button class="nav-item" data-view="control">
+      <span class="ic">🔌</span> Control
+    </button>
     <button class="nav-item" data-view="settings">
       <span class="ic">⚙️</span> Configuración
     </button>
@@ -377,6 +380,70 @@ select.fld{cursor:pointer}
             </div>
             <div id="categoriesTable"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- VISTA: CONTROL -->
+      <div id="viewControl" hidden>
+        <div style="max-width:560px;display:flex;flex-direction:column;gap:20px">
+
+          <!-- Tienda ON/OFF -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <div>
+                <div style="font-weight:700;font-size:16px">🔌 Estado de la tienda</div>
+                <div style="color:var(--muted);font-size:13px;margin-top:4px" id="storeStatusDesc">La tienda está abierta</div>
+              </div>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                <div style="position:relative;width:56px;height:28px">
+                  <input type="checkbox" id="storeToggle" checked style="opacity:0;width:0;height:0;position:absolute">
+                  <div id="storeToggleTrack" onclick="var cb=$('storeToggle');cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'))" style="position:absolute;inset:0;border-radius:14px;background:var(--ok);cursor:pointer;transition:background .2s;border:2px solid var(--ink)">
+                    <div id="storeToggleThumb" style="position:absolute;top:2px;left:26px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;border:1px solid rgba(0,0,0,.1)"></div>
+                  </div>
+                </div>
+              </label>
+            </div>
+            <button class="btn btn-primary" id="btnSaveStoreStatus" style="width:100%">💾 Guardar estado</button>
+          </div>
+
+          <!-- Modo Mantenimiento -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <div>
+                <div style="font-weight:700;font-size:16px">🔧 Modo mantenimiento</div>
+                <div style="color:var(--muted);font-size:13px;margin-top:4px">Muestra un mensaje especial en la tienda</div>
+              </div>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                <div style="position:relative;width:56px;height:28px">
+                  <input type="checkbox" id="maintenanceToggle" style="opacity:0;width:0;height:0;position:absolute">
+                  <div id="maintenanceToggleTrack" onclick="var cb=$('maintenanceToggle');cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'))" style="position:absolute;inset:0;border-radius:14px;background:var(--border);cursor:pointer;transition:background .2s;border:2px solid var(--ink)">
+                    <div id="maintenanceToggleThumb" style="position:absolute;top:2px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;border:1px solid rgba(0,0,0,.1)"></div>
+                  </div>
+                </div>
+              </label>
+            </div>
+            <div class="field" style="margin-bottom:12px">
+              <label>Mensaje de mantenimiento</label>
+              <textarea class="fld" rows="3" id="maintenanceMsg" placeholder="Estamos mejorando la tienda. Volvemos pronto 🚀"></textarea>
+            </div>
+            <div class="field" style="margin-bottom:16px">
+              <label>Tiempo estimado (opcional)</label>
+              <input class="fld" id="maintenanceTime" placeholder="Ej: 2 horas, esta noche, mañana...">
+            </div>
+            <button class="btn btn-primary" id="btnSaveMaintenance" style="width:100%">💾 Guardar mantenimiento</button>
+          </div>
+
+          <!-- Accesos rápidos -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px">
+            <div style="font-weight:700;font-size:16px;margin-bottom:16px">⚡ Accesos rápidos</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button class="btn btn-ghost" onclick="window.open('/', '_blank')">🌐 Ver tienda</button>
+              <button class="btn btn-ghost" onclick="window.open('https://supabase.com/dashboard/project/epubjmcysdfncoiegqlc', '_blank')">🗄️ Supabase Dashboard</button>
+              <button class="btn btn-ghost" onclick="window.open('https://vercel.com/dashboard', '_blank')">▲ Vercel Dashboard</button>
+              <button class="btn btn-ghost" onclick="window.open('https://dash.cloudflare.com', '_blank')">🔶 Cloudflare Dashboard</button>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -821,10 +888,12 @@ select.fld{cursor:pointer}
       $('viewProducts').hidden = view !== 'products';
       $('viewFlash').hidden = view !== 'flash';
       $('viewCategories').hidden = view !== 'categories';
+      $('viewControl').hidden = view !== 'control';
       $('viewSettings').hidden = view !== 'settings';
-      $('viewTitle').textContent = { products: 'Productos', flash: 'Flash Sale', categories: 'Categorías', settings: 'Configuración' }[view];
+      $('viewTitle').textContent = { products: 'Productos', flash: 'Flash Sale', categories: 'Categorías', control: 'Control', settings: 'Configuración' }[view];
       if (view === 'flash') loadFlashSelects();
       if (view === 'categories') loadCategories();
+      if (view === 'control') loadControlStatus();
     });
   });
 
@@ -1723,6 +1792,70 @@ select.fld{cursor:pointer}
     });
   });
   
+  // --- CONTROL ---
+  function updateControlToggle(id, trackId, thumbId, checked) {
+    var track = $(trackId), thumb = $(thumbId);
+    if (checked) { track.style.background = 'var(--ok)'; thumb.style.left = '26px'; }
+    else { track.style.background = 'var(--border)'; thumb.style.left = '4px'; }
+  }
+
+  function loadControlStatus() {
+    sbFetch('settings?key=eq.control&select=value').then(function(rows) {
+      var cfg = {};
+      if (rows && rows[0]) { try { cfg = JSON.parse(rows[0].value); } catch(e) {} }
+      
+      var storeOn = cfg.store_open !== false;
+      $('storeToggle').checked = storeOn;
+      updateControlToggle('storeToggle', 'storeToggleTrack', 'storeToggleThumb', storeOn);
+      $('storeStatusDesc').textContent = storeOn ? '✅ La tienda está abierta' : '🔴 La tienda está cerrada';
+      
+      var maintOn = !!cfg.maintenance;
+      $('maintenanceToggle').checked = maintOn;
+      updateControlToggle('maintenanceToggle', 'maintenanceToggleTrack', 'maintenanceToggleThumb', maintOn);
+      $('maintenanceMsg').value = cfg.maintenance_msg || '';
+      $('maintenanceTime').value = cfg.maintenance_time || '';
+    }).catch(function() {});
+  }
+
+  $('storeToggle').addEventListener('change', function() {
+    updateControlToggle('storeToggle', 'storeToggleTrack', 'storeToggleThumb', this.checked);
+    $('storeStatusDesc').textContent = this.checked ? '✅ La tienda está abierta' : '🔴 La tienda está cerrada';
+  });
+
+  $('maintenanceToggle').addEventListener('change', function() {
+    updateControlToggle('maintenanceToggle', 'maintenanceToggleTrack', 'maintenanceToggleThumb', this.checked);
+  });
+
+  $('btnSaveStoreStatus').addEventListener('click', function() {
+    sbFetch('settings?key=eq.control&select=value').then(function(rows) {
+      var cfg = {};
+      if (rows && rows[0]) { try { cfg = JSON.parse(rows[0].value); } catch(e) {} }
+      cfg.store_open = $('storeToggle').checked;
+      return sbFetch('settings', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ key: 'control', value: JSON.stringify(cfg) })
+      });
+    }).then(function() { toast(($('storeToggle').checked ? '✅ Tienda activada' : '🔴 Tienda desactivada')); })
+    .catch(function() { toast('Error al guardar', true); });
+  });
+
+  $('btnSaveMaintenance').addEventListener('click', function() {
+    sbFetch('settings?key=eq.control&select=value').then(function(rows) {
+      var cfg = {};
+      if (rows && rows[0]) { try { cfg = JSON.parse(rows[0].value); } catch(e) {} }
+      cfg.maintenance = $('maintenanceToggle').checked;
+      cfg.maintenance_msg = $('maintenanceMsg').value.trim();
+      cfg.maintenance_time = $('maintenanceTime').value.trim();
+      return sbFetch('settings', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify({ key: 'control', value: JSON.stringify(cfg) })
+      });
+    }).then(function() { toast('✅ Mantenimiento guardado'); })
+    .catch(function() { toast('Error al guardar', true); });
+  });
+
   } // fin initAdmin
 })();
 </script>
