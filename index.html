@@ -543,11 +543,21 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     var items = PRODUCTS.filter(function (p) {
       return (state.cat === 'all' || p.cat === state.cat) && (!q || p.name.toLowerCase().indexOf(q) > -1);
     });
-    // Si hay flash sale activo, poner ese producto primero en el catálogo
-    if (flashOn() && FLASH.productId) {
+    // Poner TODOS los productos en flash sale activo primero en el catálogo
+    var flashIds = FLASH_LIST.filter(function(f) {
+      return f.active !== false && f.end > Date.now() && (!f.start || f.start <= Date.now());
+    }).map(function(f) { return f.productId; });
+    // Fallback: si no hay FLASH_LIST usar FLASH simple
+    if (!flashIds.length && flashOn() && FLASH.productId) {
+      flashIds = [FLASH.productId];
+    }
+    if (flashIds.length) {
       items.sort(function(a, b) {
-        if (a.id === FLASH.productId) return -1;
-        if (b.id === FLASH.productId) return 1;
+        var ai = flashIds.indexOf(a.id);
+        var bi = flashIds.indexOf(b.id);
+        if (ai !== -1 && bi === -1) return -1;
+        if (ai === -1 && bi !== -1) return 1;
+        if (ai !== -1 && bi !== -1) return ai - bi;
         return 0;
       });
     }
@@ -557,7 +567,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     $('#grid').innerHTML = items.map(function (p) {
       var pls = eff(p);
       var min = Math.min.apply(null, pls.map(function (x) { return x[1]; }));
-      var flash = flashOn() && p.id === FLASH.productId;
+      var flash = flashIds.indexOf(p.id) !== -1;
       var sinStock = p.stock <= 0;
       // El producto en flash sale aparece como HOT automáticamente
       var isHot = p.hot || flash;
