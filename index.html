@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://epubjmcysdfncoiegqlc.supabase.co">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Bricolage+Grotesque:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Bricolage+Grotesque:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Bricolage+Grotesque:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap"></noscript>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>
@@ -314,7 +314,10 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
 .adm-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .adm-acts .btn { height: 40px; font-size: 12px; }
 .adm-foot { position: sticky; bottom: 0; background: var(--bg); padding-top: 10px; display: flex; gap: 10px; }
-.art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Skeleton loader */
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.art { aspect-ratio: 1 / 1; }
+.art img { width: 100%; height: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
 .card .desc { font-size: 13px; color: var(--muted); margin: 4px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .adm-th { width: 72px; height: 72px; border-radius: 12px; border: 2px solid var(--ink); object-fit: cover; margin-top: 10px; display: block; }
 .adm-b textarea.fld { height: auto; padding: 10px 14px; resize: vertical; font-family: inherit; }
@@ -395,10 +398,12 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
 </div>
 
 <div class="overlay drawer-ov" id="ovMenu" hidden>
-  <nav class="drawer" role="dialog" aria-modal="true" aria-label="Menú">
+  <div class="drawer" role="dialog" aria-modal="true" aria-label="Menú">
+    <nav aria-label="Menú principal">
     <div class="drawer-head"><span class="logo">USXR DATA</span><button class="x" data-close aria-label="Cerrar">✕</button></div>
     <div id="menuList"></div>
-  </nav>
+    </nav>
+  </div>
 </div>
 
 <div class="overlay" id="ovAdmin" hidden>
@@ -1241,8 +1246,12 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   }
 
   renderChips(); initAdmin();
-  // Mostrar loading mientras carga Supabase
-  $('#grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px;margin-bottom:12px">⏳</div><div>Cargando productos...</div></div>';
+  // Skeleton loaders mientras carga Supabase (evita CLS)
+  var skeletons = '';
+  for (var sk = 0; sk < 8; sk++) {
+    skeletons += '<article class="card" style="pointer-events:none"><div class="art" style="background:linear-gradient(90deg,var(--surface) 25%,var(--muted) 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite"></div><div class="body"><div style="height:20px;background:var(--surface);border-radius:6px;margin-bottom:8px;animation:shimmer 1.5s infinite"></div><div style="height:14px;width:60%;background:var(--surface);border-radius:6px;animation:shimmer 1.5s infinite"></div></div></article>';
+  }
+  $('#grid').innerHTML = skeletons;
   loadFromSupabase();
   loadStoreSettings();
   // Verificar sesión activa al cargar
