@@ -1093,7 +1093,7 @@ select.fld{cursor:pointer}
     var row = document.createElement('div');
     row.className = 'plan-row';
     row.dataset.pi = i;
-    var TC = 3.95;
+    var TC = TC_ADMIN;
     row.innerHTML =
       '<input class="fld" placeholder="Nombre (ej: 1 mes)" data-pi="' + i + '" data-pk="0" value="' + esc(String(pl[0] || '')) + '">' +
       '<input class="fld" type="number" step="0.01" min="0" placeholder="S/ precio" data-pi="' + i + '" data-pk="1" data-soles="price" value="' + (pl[1] ? (pl[1] * TC).toFixed(2) : '') + '">' +
@@ -1105,7 +1105,8 @@ select.fld{cursor:pointer}
     $('plansList').appendChild(row);
   }
 
-  var TC_PLANS = 3.95;
+  // Tipo de cambio global (se actualiza desde Supabase settings)
+  var TC_ADMIN = 3.95;
   $('plansList').addEventListener('input', function (e) {
     var t = e.target; if (t.dataset.pi === undefined) return;
     var i = +t.dataset.pi, k = +t.dataset.pk;
@@ -1114,7 +1115,7 @@ select.fld{cursor:pointer}
     if (k === 1 || k === 3) {
       // Convertir Soles a USDT para guardar
       var soles = parseFloat(t.value) || 0;
-      var usdt = Math.round(soles / TC_PLANS * 10000) / 10000;
+      var usdt = Math.round(soles / TC_ADMIN * 10000) / 10000;
       plans[i][k] = usdt;
       // Mostrar el equivalente en USDT
       var span = t.nextElementSibling;
@@ -1280,11 +1281,11 @@ select.fld{cursor:pointer}
           }, 100);
         }
         if (cfg.price) {
-          $('flashPriceSoles').value = (cfg.price * 3.95).toFixed(2);
+          $('flashPriceSoles').value = (cfg.price * TC_ADMIN).toFixed(2);
           $('flashPriceUSDT').textContent = '= ' + cfg.price + ' USDT';
         }
         if (cfg.regular) {
-          $('flashRegularSoles').value = (cfg.regular * 3.95).toFixed(2);
+          $('flashRegularSoles').value = (cfg.regular * TC_ADMIN).toFixed(2);
           $('flashRegularUSDT').textContent = '= ' + cfg.regular + ' USDT';
         }
         if (cfg.end && cfg.end > 0 && !isNaN(cfg.end)) {
@@ -1307,15 +1308,15 @@ select.fld{cursor:pointer}
   }
 
   // Conversión automática Soles → USDT en tiempo real
-  var TC_FLASH = 3.95;
+  var TC_ADMIN = 3.95;
   $('flashPriceSoles').addEventListener('input', function() {
     var soles = parseFloat(this.value) || 0;
-    var usdt = Math.round(soles / TC_FLASH * 100) / 100;
+    var usdt = Math.round(soles / TC_ADMIN * 100) / 100;
     $('flashPriceUSDT').textContent = '= ' + usdt.toFixed(2) + ' USDT';
   });
   $('flashRegularSoles').addEventListener('input', function() {
     var soles = parseFloat(this.value) || 0;
-    var usdt = Math.round(soles / TC_FLASH * 100) / 100;
+    var usdt = Math.round(soles / TC_ADMIN * 100) / 100;
     $('flashRegularUSDT').textContent = '= ' + usdt.toFixed(2) + ' USDT';
   });
 
@@ -1335,7 +1336,7 @@ select.fld{cursor:pointer}
     var p = products.find(function (x) { return x.id === pid; });
     var plans = p ? (Array.isArray(p.plans) ? p.plans : []) : [];
     $('flashPlan').innerHTML = plans.map(function (pl) {
-      var soles = (pl[1] * 3.95).toFixed(2);
+      var soles = (pl[1] * TC_ADMIN).toFixed(2);
       return '<option value="' + esc(String(pl[0])) + '">' + esc(String(pl[0])) + ' — S/ ' + soles + '</option>';
     }).join('');
   }
@@ -1344,14 +1345,14 @@ select.fld{cursor:pointer}
 
   $('btnSaveFlash').addEventListener('click', function () {
     if (!$('flashEnd').value) return toast('Ingresa la fecha de fin del flash sale', true);
-    var TC_FLASH = 3.95;
+    var TC_ADMIN = 3.95;
     var startVal = $('flashStart').value;
     var config = {
       active: $('flashToggle').checked,
       productId: $('flashProd').value,
       plan: $('flashPlan').value,
-      price: Math.round((parseFloat($('flashPriceSoles').value) || 0) / TC_FLASH * 10000) / 10000,
-      regular: Math.round((parseFloat($('flashRegularSoles').value) || 0) / TC_FLASH * 10000) / 10000,
+      price: Math.round((parseFloat($('flashPriceSoles').value) || 0) / TC_ADMIN * 10000) / 10000,
+      regular: Math.round((parseFloat($('flashRegularSoles').value) || 0) / TC_ADMIN * 10000) / 10000,
       start: startVal ? new Date(startVal).getTime() : Date.now(),
       end: new Date($('flashEnd').value).getTime()
     };
@@ -1402,6 +1403,8 @@ select.fld{cursor:pointer}
       $('cfgWAGroupName').value = s.whatsapp_group_name || '';
       $('cfgTG').value = s.telegram || '';
       $('cfgTC').value = s.tc || '';
+      // Actualizar tipo de cambio global
+      if (s.tc) TC_ADMIN = parseFloat(s.tc) || TC_ADMIN;
       $('cfgYapeNum').value = s.yape_number || '';
       $('cfgYapeName').value = s.yape_name || '';
       $('cfgBinanceId').value = s.binance_id || '';
@@ -1443,6 +1446,12 @@ select.fld{cursor:pointer}
   }
   setupQrUpload('btnPickYapeQr', 'yapeQrFile', 'yapeQrPreview', 'cfgYapeQr');
   setupQrUpload('btnPickBinanceQr', 'binanceQrFile', 'binanceQrPreview', 'cfgBinanceQr');
+
+  // Actualizar TC_ADMIN en tiempo real cuando se cambia el campo
+  $('cfgTC').addEventListener('input', function() {
+    var val = parseFloat(this.value);
+    if (val > 0) TC_ADMIN = val;
+  });
 
   $('btnSaveSettings').addEventListener('click', function () {
     var config = {
