@@ -481,16 +481,6 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
         auth: { detectSessionInUrl: true, persistSession: true }
       });
-      // Verificar sesión inmediatamente después de inicializar
-      _supa.auth.getSession().then(function(res) {
-        if (res.data && res.data.session && res.data.session.user) {
-          var u = res.data.session.user;
-          setUser({
-            name: (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || u.email.split('@')[0],
-            mail: u.email
-          });
-        }
-      });
       initApp();
     })
     .catch(function() { console.error('Error cargando configuración'); });
