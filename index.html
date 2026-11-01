@@ -135,8 +135,11 @@ button { cursor: pointer; }
 .seg button svg { width: 22px; height: 22px; stroke: var(--ink); fill: none; stroke-width: 2.2; stroke-linecap: round; }
 .seg button[aria-pressed="true"] { background: var(--ink); }
 .seg button[aria-pressed="true"] svg { stroke: var(--bg); }
-.chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; }
-.chip { border: 2.5px solid var(--ink); border-radius: 999px; background: var(--surface); padding: 6px 14px; font-weight: 600; font-size: 14px; }
+.chips { overflow: hidden; margin: 14px 0 6px; position: relative; }
+.chips-track { display: flex; gap: 8px; width: max-content; animation: chips-scroll 18s linear infinite; }
+.chips-track:hover { animation-play-state: paused; }
+@keyframes chips-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.chip { border: 2.5px solid var(--ink); border-radius: 999px; background: var(--surface); padding: 6px 14px; font-weight: 600; font-size: 14px; white-space: nowrap; flex-shrink: 0; }
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: 3px 3px 0 var(--shadow); }
 .count { color: var(--muted); margin: 12px 0 28px; }
 
@@ -525,9 +528,11 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   };
 
   function renderChips() {
-    $('#chips').innerHTML = CATS.map(function (c) {
+    var html = CATS.map(function (c) {
       return '<button class="chip" data-cat="' + c[0] + '" aria-pressed="' + (state.cat === c[0]) + '">' + c[1] + '</button>';
     }).join('');
+    // Duplicar para crear el efecto de scroll infinito sin corte
+    $('#chips').innerHTML = '<div class="chips-track">' + html + html + '</div>';
   }
   function renderGrid() {
     var q = state.q.trim().toLowerCase();
