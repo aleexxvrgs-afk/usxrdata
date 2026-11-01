@@ -929,9 +929,11 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         if (s.yape_number) YAPE.number = s.yape_number;
         if (s.yape_name) YAPE.name = s.yape_name;
         if (s.yape_qr) YAPE.qr = s.yape_qr;
+        YAPE.active = s.yape_active !== false;
         if (s.binance_id) BINANCE.id = s.binance_id;
         if (s.binance_name) BINANCE.name = s.binance_name;
         if (s.binance_qr) BINANCE.qr = s.binance_qr;
+        BINANCE.active = s.binance_active !== false;
         
         // Cargar flash sale desde Supabase
         var f = map.flash;
@@ -990,7 +992,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     return '<div class="cond"><b>Antes de comprar</b><ul>' + L.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div>';
   };
   /* DATOS DE YAPE (de ejemplo: cámbialos por los tuyos). qr: imagen del QR como data:image/png;base64,... (los enlaces externos a imágenes no cargan en esta página). */
-  var YAPE = { number: '', name: '', qr: '' };
+  var YAPE = { number: '', name: '', qr: '', active: true };
   function copyTxt(txt) {
     var ok = function () { toast('Copiado'); };
     var fb = function () { var a = document.createElement('textarea'); a.value = txt; a.style.position = 'fixed'; a.style.opacity = '0'; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); ok(); } catch (e) { toast('Copia el número manualmente'); } document.body.removeChild(a); };
@@ -1018,8 +1020,8 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       '<button type="button" class="btn light block" style="margin-top:10px" data-bp="' + esc(p.id) + '" data-bi="' + bi + '">← Cambiar plan o método</button>';
     closeAll(); openSheet($('#ovPay'));
   }
-  /* DATOS DE BINANCE (de ejemplo: cámbialos por los tuyos). qr: imagen del QR como data:image/png;base64,... */
-  var BINANCE = { id: '123456789', name: 'USXR STORE', qr: '' };
+  /* DATOS DE BINANCE */
+  var BINANCE = { id: '', name: '', qr: '', active: true };
   function openBinance(pid, bi) {
     var p = byId(pid); if (!p) return;
     var pl = eff(p)[bi]; if (!pl) return;
@@ -1061,8 +1063,9 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     $('#payTitle').textContent = p.name;
     $('#payBody').innerHTML = sel + '<div class="pay-sum"><b>' + esc(p.name) + ' · ' + esc(pl[0]) + '</b><div class="pay-pr">' + fmt(pl[1]) + ' <small>(' + fmtU(pl[1]) + ')</small></div></div>' +
       '<div class="note" style="margin:0 0 10px">¿Con qué vas a pagar?</div>' +
-      '<button type="button" class="btn accent block" data-yp="' + esc(p.id) + '" data-yi="' + bi + '">📱 Yape · ' + fmt(pl[1]) + '</button>' +
-      '<button type="button" class="btn light block" style="margin-top:10px" data-bn="' + esc(p.id) + '" data-bj="' + bi + '">🟡 Binance · ' + fmtU(pl[1]) + '</button>' +
+      (YAPE.active ? '<button type="button" class="btn accent block" data-yp="' + esc(p.id) + '" data-yi="' + bi + '">📱 Yape · ' + fmt(pl[1]) + '</button>' : '') +
+      (BINANCE.active ? '<button type="button" class="btn light block" style="margin-top:10px" data-bn="' + esc(p.id) + '" data-bj="' + bi + '">🟡 Binance · ' + fmtU(pl[1]) + '</button>' : '') +
+      (!YAPE.active && !BINANCE.active ? '<div class="note" style="color:var(--hot)">⚠️ No hay métodos de pago activos. Contacta al vendedor.</div>' : '') +
       '<p class="note">Al elegir, se abre WhatsApp con tu pedido ya escrito y ahí te enviamos los datos para pagar.</p>';
     closeAll(); openSheet($('#ovPay'));
   }
