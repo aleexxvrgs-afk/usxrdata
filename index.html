@@ -168,8 +168,8 @@ button { cursor: pointer; }
   background: var(--hot); color: #fff; border: 2.5px solid var(--ink); border-radius: 12px;
   padding: 3px 16px; font: 700 14px var(--font-mono); letter-spacing: .12em; white-space: nowrap;
 }
-.stock { position: absolute; top: 10px; right: 10px; z-index: 2; background: var(--ok-bg); color: var(--ok-fg); border-radius: 999px; padding: 3px 10px; font: 700 11px var(--font-mono); letter-spacing: .06em; max-width: calc(100% - 20px); }
-.stock.out { background: rgba(232,64,47,.15); color: #e8402f; }
+.stock { position: absolute; top: 10px; right: 10px; z-index: 2; background: var(--ok-bg); color: var(--ok-fg); border-radius: 999px; padding: 3px 10px; font: 700 11px var(--font-mono); letter-spacing: .06em; max-width: calc(100% - 20px); border: 2px solid var(--ink); }
+.stock.out { background: #e8402f; color: #fff; border-color: var(--ink); }
 .art {
   aspect-ratio: 1 / 1; max-width: 100%; border-radius: 18px 18px 0 0; border-bottom: 2.5px solid var(--ink);
   display: grid; place-items: center; overflow: hidden; position: relative;
@@ -554,7 +554,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         '<div class="art" style="background-color:' + p.tile + '">' +
         (p.img ? '<img src="' + p.img + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '<b>' + p.glyph + '</b>') +
         (sinStock
-          ? '<span class="stock out">❌ Sin stock</span>'
+          ? '<span class="stock out">SIN STOCK</span>'
           : '<span class="stock">' + p.stock + ' DISP.</span>') +
         '</div>' +
         '<div class="body"><h2>' + p.name + '</h2>' + (p.desc ? '<p class="desc">' + esc(p.desc) + '</p>' : '') +
