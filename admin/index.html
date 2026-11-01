@@ -359,6 +359,10 @@ select.fld{cursor:pointer}
               <input class="fld" id="cfgWA" placeholder="Ej: 51999999999">
             </div>
             <div class="field">
+              <label>Grupo de WhatsApp (enlace de invitación)</label>
+              <input class="fld" id="cfgWAGroup" placeholder="https://chat.whatsapp.com/xxxxx">
+            </div>
+            <div class="field">
               <label>Telegram (sin @)</label>
               <input class="fld" id="cfgTG" placeholder="Ej: mitienda">
             </div>
@@ -1267,6 +1271,7 @@ select.fld{cursor:pointer}
       (rows || []).forEach(function (r) { try { map[r.key] = JSON.parse(r.value); } catch (e) { map[r.key] = r.value; } });
       var s = map.store || {};
       $('cfgWA').value = s.whatsapp || '';
+      $('cfgWAGroup').value = s.whatsapp_group || '';
       $('cfgTG').value = s.telegram || '';
       $('cfgTC').value = s.tc || '';
       $('cfgYapeNum').value = s.yape_number || '';
@@ -1314,6 +1319,7 @@ select.fld{cursor:pointer}
   $('btnSaveSettings').addEventListener('click', function () {
     var config = {
       whatsapp: $('cfgWA').value.trim(),
+      whatsapp_group: $('cfgWAGroup').value.trim(),
       telegram: $('cfgTG').value.trim(),
       tc: parseFloat($('cfgTC').value) || 3.95,
       yape_active: $('cfgYapeActive').checked,

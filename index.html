@@ -955,7 +955,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         
         // Actualizar links de WhatsApp en la página
         var waGroup = document.getElementById('waGroup');
-        if (waGroup) waGroup.href = 'https://chat.whatsapp.com/';
+        if (waGroup) waGroup.href = s.whatsapp_group || 'https://chat.whatsapp.com/';
         var waSupport = document.getElementById('waSupport');
         if (waSupport) waSupport.href = waLink('Hola USXR Store, necesito soporte.');
         // Re-renderizar
