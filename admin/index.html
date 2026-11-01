@@ -1017,9 +1017,9 @@ select.fld{cursor:pointer}
     row.innerHTML =
       '<input class="fld" placeholder="Nombre (ej: 1 mes)" data-pi="' + i + '" data-pk="0" value="' + esc(String(pl[0] || '')) + '">' +
       '<input class="fld" type="number" step="0.01" min="0" placeholder="S/ precio" data-pi="' + i + '" data-pk="1" data-soles="price" value="' + (pl[1] ? (pl[1] * TC).toFixed(2) : '') + '">' +
-      '<span style="font-size:10px;color:var(--muted);text-align:center" data-usdt-price-' + i + '>' + (pl[1] ? pl[1].toFixed(2) + '$' : '') + '</span>' +
+      '<span style="font-size:10px;color:var(--muted);text-align:center" data-usdt-price-' + i + '>' + (pl[1] ? pl[1].toFixed(4) + ' USDT' : '') + '</span>' +
       '<input class="fld" type="number" step="0.01" min="0" placeholder="S/ antes" data-pi="' + i + '" data-pk="3" data-soles="before" value="' + (pl[3] ? (pl[3] * TC).toFixed(2) : '') + '">' +
-      '<span style="font-size:10px;color:var(--muted);text-align:center" data-usdt-before-' + i + '>' + (pl[3] ? pl[3].toFixed(2) + '$' : '') + '</span>' +
+      '<span style="font-size:10px;color:var(--muted);text-align:center" data-usdt-before-' + i + '>' + (pl[3] ? pl[3].toFixed(4) + ' USDT' : '') + '</span>' +
       '<input class="fld" placeholder="30 días" data-pi="' + i + '" data-pk="2" value="' + esc(String(pl[2] || '')) + '">' +
       '<button class="del-plan" data-del-plan="' + i + '">✕</button>';
     $('plansList').appendChild(row);
@@ -1193,7 +1193,8 @@ select.fld{cursor:pointer}
     var p = products.find(function (x) { return x.id === pid; });
     var plans = p ? (Array.isArray(p.plans) ? p.plans : []) : [];
     $('flashPlan').innerHTML = plans.map(function (pl) {
-      return '<option value="' + esc(String(pl[0])) + '">' + esc(String(pl[0])) + ' — $' + pl[1] + '</option>';
+      var soles = (pl[1] * 3.95).toFixed(2);
+      return '<option value="' + esc(String(pl[0])) + '">' + esc(String(pl[0])) + ' — S/ ' + soles + '</option>';
     }).join('');
   }
 
