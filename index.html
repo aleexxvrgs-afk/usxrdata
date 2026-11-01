@@ -629,10 +629,11 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   function _renderCarousel(sec, active) {
     if (_carouselIdx >= active.length) _carouselIdx = 0;
     var n = active.length;
-    var slidesHTML = active.map(function(f, idx) {
+    // Slides: [1][2][3][1_clon] para bucle infinito hacia la izquierda
+    var clonedSlides = active.concat([active[0]]);
+    var slidesHTML = clonedSlides.map(function(f) {
       var p = byId(f.productId);
-      if (!p) return '';
-      var fi = p.plans.map(function(x){return x[0];}).indexOf(f.plan);
+      if (!p) return '<div class="flash-slide"></div>';
       return '<div class="flash-slide">' + _flashCardInnerHTML(f, p) + '</div>';
     }).join('');
     var dotsHTML = active.map(function(_, idx) {
@@ -655,16 +656,34 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       var still = active.filter(function(f) { return f.end > nowT; });
       if (!still.length) { FLASH_LIST = []; renderFlash(); renderGrid(); return; }
       if (still.length !== active.length) { FLASH_LIST = still; renderFlash(); return; }
-      var nextIdx = (_carouselIdx + 1) % n;
-      // Si volvemos al inicio, reset sin animación primero
-      if (nextIdx === 0 && _carouselIdx === n - 1) {
-        var track2 = document.getElementById('flashTrack');
-        if (track2) {
-          // Ir al último slide → luego saltar sin animación al inicio y animar
-          _goToSlide(active, nextIdx);
-        }
-      } else {
+      var nextIdx = _carouselIdx + 1;
+      var track2 = document.getElementById('flashTrack');
+      if (!track2) return;
+      if (nextIdx < n) {
+        // Avance normal
         _goToSlide(active, nextIdx);
+      } else {
+        // Llegamos al clon del 1 — deslizar hasta él con animación
+        _carouselIdx = n;
+        track2.style.transform = 'translateX(-' + (n * 100) + '%)';
+        document.querySelectorAll('.flash-dot').forEach(function(d,i){d.classList.toggle('active',i===0);});
+        FLASH = active[0];
+        _updateCarouselBuy(document.querySelector('.flash'), active, 0);
+        tick();
+        // Después de que termina la animación, reset invisible al slide 1 real
+        setTimeout(function() {
+          var t = document.getElementById('flashTrack');
+          if (!t) return;
+          t.style.transition = 'none';
+          t.style.transform = 'translateX(0%)';
+          _carouselIdx = 0;
+          // Restaurar transición después del reset
+          requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+              if (t) t.style.transition = '';
+            });
+          });
+        }, 1300); // un poco más que la duración de la transición (1.2s)
       }
     }, 4000);
   }
