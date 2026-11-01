@@ -504,9 +504,10 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   var CATS = [['all', 'Todo'], ['ai', 'Inteligencia Artificial'], ['stream', 'Streaming'], ['game', 'Juegos'], ['multi', 'Multiservicios']];
   var state = { cat: 'all', q: '', list: false };
   var $ = function (s) { return document.querySelector(s); };
-  var TC = 3.40; /* soles por 1 USDT (1 USDT = 1 USD). Cambia este valor para actualizar todos los precios. */
-  var fmt = function (n) { return 'S/ ' + (n * TC).toFixed(2); };
-  var fmtU = function (n) { return n.toFixed(2) + ' USDT'; };
+  var TC = 3.125; /* tipo de cambio: Soles por 1 USDT */
+  /* Los precios se guardan en Soles. USDT se calcula dividiendo por TC */
+  var fmt = function (n) { return 'S/ ' + Number(n).toFixed(2); };
+  var fmtU = function (n) { return (n / TC).toFixed(2) + ' USDT'; };
   var byId = function (id) { return PRODUCTS.filter(function (p) { return p.id === id; })[0]; };
   /* FLASH SALE: se carga desde Supabase. Por defecto desactivado. */
   var FLASH = { productId: '', plan: '', price: 0, regular: 0, end: 0 };
@@ -959,6 +960,8 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         if (s.whatsapp) WA_NUMBER = s.whatsapp;
         if (s.telegram) TG_USER = s.telegram;
         if (s.tc) TC = parseFloat(s.tc) || TC;
+        // Recalcular precios con nuevo TC
+        renderGrid(); renderFlash();
         if (s.yape_number) YAPE.number = s.yape_number;
         if (s.yape_name) YAPE.name = s.yape_name;
         if (s.yape_qr) YAPE.qr = s.yape_qr;
