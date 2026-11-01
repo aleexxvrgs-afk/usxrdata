@@ -135,7 +135,8 @@ button { cursor: pointer; }
 }
 .sticker small { display: block; font: 700 12px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
 .sticker b { font: 700 38px/1 var(--font-mono); }
-.flash .btn { grid-column: 1 / -1; height: 52px; font-size: 17px; margin-top: 8px; max-width: 400px; margin-left: auto; margin-right: auto; }
+.flash .btn { grid-column: 1 / -1; height: 52px; font-size: 17px; margin-top: 8px; max-width: 400px; width: 100%; display: block; margin-left: auto; margin-right: auto; text-align: center; }
+.flash-carousel-wrap .btn#flashBuy { display: block; max-width: 400px; width: calc(100% - 36px); margin: 8px auto 0; height: 52px; font-size: 17px; }
 
 .flash-carousel-wrap { overflow: hidden; position: relative; display: block !important; padding: 0 !important; }
 .flash-carousel-track { display: flex; transition: transform 0.45s cubic-bezier(.77,0,.18,1); will-change: transform; width: 100%; }
@@ -620,7 +621,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     var fi = p.plans.map(function(x){return x[0];}).indexOf(f.plan);
     sec.className = 'flash';
     sec.innerHTML = _flashCardInnerHTML(f, p) +
-      '<button type="button" class="btn hot block" id="flashBuy" data-bp="' + esc(p.id) + '" data-bi="' + fi + '">Comprar</button>';
+      '<div style="grid-column:1/-1;display:flex;justify-content:center"><button type="button" class="btn hot" id="flashBuy" data-bp="' + esc(p.id) + '" data-bi="' + fi + '" style="max-width:400px;width:100%;height:52px;font-size:17px">Comprar</button></div>';
     FLASH = f;
     tick();
   }
@@ -638,7 +639,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     sec.className = 'flash flash-carousel-wrap';
     sec.innerHTML = '<div class="flash-carousel-track" id="flashTrack" style="transform:translateX(-' + (_carouselIdx * 100) + '%)">'
       + slidesHTML + '</div>'
-      + '<button type="button" class="btn hot block" id="flashBuy" style="margin-top:8px">Comprar</button>'
+      + '<div style="display:flex;justify-content:center;padding:0 18px 4px"><button type="button" class="btn hot" id="flashBuy" style="margin-top:8px;height:52px;font-size:17px;max-width:400px;width:100%">Comprar</button></div>'
       + '<div class="flash-dots" id="flashDots">' + dotsHTML + '</div>';
     sec.querySelectorAll('.flash-dot').forEach(function(dot) {
       dot.addEventListener('click', function() { _goToSlide(active, parseInt(this.dataset.dot)); });
