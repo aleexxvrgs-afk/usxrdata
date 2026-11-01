@@ -508,8 +508,8 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   var fmt = function (n) { return 'S/ ' + (n * TC).toFixed(2); };
   var fmtU = function (n) { return n.toFixed(2) + ' USDT'; };
   var byId = function (id) { return PRODUCTS.filter(function (p) { return p.id === id; })[0]; };
-  /* OFERTA RELÁMPAGO REAL: fecha de cierre fija, igual para todos y sin reinicio al recargar. Al vencer, la sección desaparece y el plan vuelve a su precio normal. Para una oferta nueva, cambia estos datos. */
-  var FLASH = { productId: 'gemini', plan: 'Pro 12 meses', price: 4.20, regular: 6.00, end: Date.UTC(2026, 10, 2, 4, 59, 59) }; /* dom 1 nov 2026, 11:59 pm hora de Lima (UTC-5) */
+  /* FLASH SALE: se carga desde Supabase. Por defecto desactivado. */
+  var FLASH = { productId: '', plan: '', price: 0, regular: 0, end: 0 };
   var flashOn = function () { return Date.now() < FLASH.end; };
   var eff = function (p) {
     if (p.id !== FLASH.productId) return p.plans;
@@ -960,12 +960,21 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         
         // Cargar flash sale desde Supabase
         var f = map.flash;
-        if (f && f.productId && f.end && f.end > Date.now()) {
-          FLASH.productId = f.productId;
-          FLASH.plan = f.plan || '';
-          FLASH.price = parseFloat(f.price) || FLASH.price;
-          FLASH.regular = parseFloat(f.regular) || FLASH.regular;
-          FLASH.end = f.end;
+        if (f && f.productId && f.end && f.end > 0 && !isNaN(f.end)) {
+          // Solo activar si la fecha NO ha vencido
+          if (f.end > Date.now()) {
+            FLASH.productId = f.productId;
+            FLASH.plan = f.plan || '';
+            FLASH.price = parseFloat(f.price) || FLASH.price;
+            FLASH.regular = parseFloat(f.regular) || FLASH.regular;
+            FLASH.end = f.end;
+          } else {
+            // Flash vencido — desactivar poniendo end en el pasado
+            FLASH.end = 0;
+          }
+        } else {
+          // Sin flash en Supabase — desactivar
+          FLASH.end = 0;
         }
         
         // Cargar categorías dinámicas desde Supabase
