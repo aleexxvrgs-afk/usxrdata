@@ -955,7 +955,25 @@ select.fld{cursor:pointer}
         : '<span style="font-size:16px;font-weight:700">' + esc(p.emoji || '?') + '</span>';
       var isFirst = idx === 0;
       var isLast = idx === rows.length - 1;
-      return '<div class="table-row">' +
+      // Panel de detalles expandible
+      var plansDetail = plans.map(function(pl) {
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">' +
+          '<span style="font-size:13px;font-weight:600">' + esc(String(pl[0])) + '</span>' +
+          '<div style="display:flex;gap:12px;align-items:center">' +
+          (pl[3] ? '<span style="font-size:12px;color:var(--muted);text-decoration:line-through">S/ ' + Number(pl[3]).toFixed(2) + '</span>' : '') +
+          '<span style="font-size:14px;font-weight:700;color:var(--ok)">S/ ' + Number(pl[1]).toFixed(2) + '</span>' +
+          '<span style="font-size:11px;color:var(--muted)">' + esc(String(pl[2])) + '</span>' +
+          '</div></div>';
+      }).join('');
+      var detailPanel = '<div id="detail-' + esc(p.id) + '" hidden style="grid-column:1/-1;padding:16px;background:var(--surface2);border-top:1px solid var(--border);display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start">' +
+        '<img src="' + esc(p.image_url || '') + '" alt="" style="width:120px;height:120px;border-radius:12px;object-fit:cover;border:2px solid var(--border)"' + (!p.image_url ? ' hidden' : '') + '>' +
+        '<div>' +
+          '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em">Planes de precios</div>' +
+          plansDetail +
+          '<div style="margin-top:10px;font-size:12px;color:var(--muted)">ID: <span style="font-family:var(--mono)">' + esc(p.id) + '</span></div>' +
+        '</div>' +
+      '</div>';
+      return '<div class="table-row" style="cursor:pointer" data-expand="' + esc(p.id) + '">' +
         '<div class="prod-thumb" style="background:' + esc(p.color || '#333') + '">' + thumb + '</div>' +
         '<div><div class="prod-name">' + (p.is_hot ? '<span class="hot-dot"></span>' : '') + esc(p.name) + '</div>' +
         '<div class="prod-desc">' + esc(p.description || '—') + '</div></div>' +
@@ -971,7 +989,7 @@ select.fld{cursor:pointer}
         '<div class="actions">' +
         '<button class="btn btn-ghost btn-sm" data-edit="' + esc(p.id) + '">✏️ Editar</button>' +
         '<button class="btn btn-sm" style="background:rgba(232,64,47,.15);color:#f87171;border:1px solid rgba(232,64,47,.3)" data-del="' + esc(p.id) + '">🗑</button>' +
-        '</div></div>';
+        '</div></div>' + detailPanel;
     }).join('');
   }
 
@@ -994,6 +1012,18 @@ select.fld{cursor:pointer}
     var upBtn = e.target.closest('[data-move-up]');
     var downBtn = e.target.closest('[data-move-down]');
     var toggleStockBtn = e.target.closest('[data-toggle-stock]');
+    var expandRow = e.target.closest('[data-expand]');
+
+    // Expandir/colapsar detalles al click en la fila
+    if (expandRow && !editBtn && !delBtn && !upBtn && !downBtn && !toggleStockBtn) {
+      var pid = expandRow.dataset.expand;
+      var detail = document.getElementById('detail-' + pid);
+      if (detail) {
+        detail.hidden = !detail.hidden;
+        expandRow.style.background = detail.hidden ? '' : 'var(--surface2)';
+      }
+      return;
+    }
 
     if (toggleStockBtn) {
       var pid = toggleStockBtn.dataset.toggleStock;
@@ -1116,7 +1146,14 @@ select.fld{cursor:pointer}
 
   function fillForm(p) {
     $('fName').value = p.name || '';
-    $('fCat').value = p.cat || 'stream';
+    // Esperar a que el select tenga opciones antes de setear el valor
+    var catVal = p.cat || 'stream';
+    var catSel = $('fCat');
+    catSel.value = catVal;
+    // Si no seleccionó (opción no existe aún), intentar de nuevo tras un tick
+    if (catSel.value !== catVal) {
+      setTimeout(function() { catSel.value = catVal; }, 200);
+    }
     $('fStock').value = p.stock || 0;
     $('fEmoji').value = p.emoji || '';
     $('fColor').value = p.color || '';
