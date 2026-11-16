@@ -709,7 +709,6 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
           return pillsHtml + textHtml;
         })() : '') +
         '<div class="offer">' + (flash && !sinStock ? '⏰ Oferta: <span class="left"></span>' : '') + '</div>' +
-        (!sinStock ? '<div class="stock-bar-wrap"><div class="stock-bar"><div class="stock-bar-fill" style="width:' + stockPct + '%;background:' + stockColor + '"></div></div></div>' : '') +
         '<div class="foot"><div class="since">DESDE</div>' + (oldPrice ? '<div class="price-old">' + fmt(oldPrice) + '</div>' : '') + '<div class="price-row"><span class="price">' + fmt(min) + '</span></div>' + (SHOW_USDT ? '<div class="usdt">' + fmtU(min) + '</div>' : '') +
         (sinStock
           ? '<button type="button" class="btn" disabled style="background:var(--surface);color:var(--muted);border:2.5px solid var(--ink);opacity:.6;cursor:not-allowed">Sin stock</button>'
