@@ -1,5 +1,12 @@
 // Edge Function: recibe imagen base64, la sube a Supabase Storage
-// Las credenciales vienen de variables de entorno, nunca del código
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb'
+    }
+  }
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
@@ -11,10 +18,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { imageBase64, fileName } = req.body;
-    if (!imageBase64 || !fileName) {
-      return res.status(400).json({ error: 'imageBase64 y fileName son requeridos' });
+    const body = req.body;
+    if (!body || !body.imageBase64 || !body.fileName) {
+      return res.status(400).json({ error: 'imageBase64 y fileName son requeridos', received: Object.keys(body || {}) });
     }
+
+    const { imageBase64, fileName } = body;
 
     // Convertir base64 a buffer
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
@@ -24,7 +33,7 @@ export default async function handler(req, res) {
     const mimeMatch = imageBase64.match(/^data:(image\/\w+);base64,/);
     const mimeType = mimeMatch ? mimeMatch[1] : 'image/webp';
 
-    // Nombre único para evitar colisiones
+    // Nombre único
     const uniqueName = Date.now() + '-' + fileName.replace(/[^a-z0-9.\-_]/gi, '-').toLowerCase();
 
     // Subir a Supabase Storage bucket "products"
@@ -40,10 +49,10 @@ export default async function handler(req, res) {
 
     if (!uploadRes.ok) {
       const err = await uploadRes.text();
-      return res.status(500).json({ error: 'Error subiendo imagen: ' + err });
+      return res.status(500).json({ error: 'Error subiendo a Storage: ' + err });
     }
 
-    // Construir URL pública
+    // URL pública
     const publicUrl = `${SUPA_URL}/storage/v1/object/public/products/${uniqueName}`;
     res.status(200).json({ url: publicUrl });
 
