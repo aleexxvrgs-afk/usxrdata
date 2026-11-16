@@ -1184,10 +1184,10 @@ select.fld{cursor:pointer}
     var TC = TC_ADMIN;
     row.innerHTML =
       '<input class="fld" placeholder="Nombre (ej: 1 mes)" data-pi="' + i + '" data-pk="0" value="' + esc(String(pl[0] || '')) + '">' +
-      '<input class="fld" type="number" step="0.01" min="0" placeholder="S/ precio" data-pi="' + i + '" data-pk="1" data-soles="price" value="' + (pl[1] ? (pl[1] * TC).toFixed(2) : '') + '">' +
-      '<span style="font-size:10px;color:var(--muted);text-align:center" data-usdt-price-' + i + '>' + (pl[1] ? pl[1].toFixed(4) + ' USDT' : '') + '</span>' +
-      '<input class="fld" type="number" step="0.01" min="0" placeholder="S/ antes" data-pi="' + i + '" data-pk="3" data-soles="before" value="' + (pl[3] ? (pl[3] * TC).toFixed(2) : '') + '">' +
-      '<span style="font-size:10px;color:var(--muted);text-align:center" data-usdt-before-' + i + '>' + (pl[3] ? pl[3].toFixed(4) + ' USDT' : '') + '</span>' +
+      '<input class="fld" type="number" step="0.01" min="0" placeholder="S/ precio" data-pi="' + i + '" data-pk="1" data-soles="price" value="' + (pl[1] ? Number(pl[1]).toFixed(2) : '') + '">' +
+      '<span style="font-size:10px;color:var(--muted);text-align:center" data-usdt-price-' + i + '>' + (pl[1] ? (pl[1] / TC).toFixed(4) + ' USDT' : '') + '</span>' +
+      '<input class="fld" type="number" step="0.01" min="0" placeholder="S/ antes" data-pi="' + i + '" data-pk="3" data-soles="before" value="' + (pl[3] ? Number(pl[3]).toFixed(2) : '') + '">' +
+      '<span style="font-size:10px;color:var(--muted);text-align:center" data-usdt-before-' + i + '>' + (pl[3] ? (pl[3] / TC).toFixed(4) + ' USDT' : '') + '</span>' +
       '<input class="fld" placeholder="30 días" data-pi="' + i + '" data-pk="2" value="' + esc(String(pl[2] || '')) + '">' +
       '<button class="del-plan" data-del-plan="' + i + '">✕</button>';
     $('plansList').appendChild(row);
@@ -1201,13 +1201,12 @@ select.fld{cursor:pointer}
     if (!plans[i]) return;
     plans[i] = plans[i].slice();
     if (k === 1 || k === 3) {
-      // Convertir Soles a USDT para guardar
+      // Guardar en Soles directamente (ya no convertir a USDT)
       var soles = parseFloat(t.value) || 0;
-      var usdt = Math.round(soles / TC_ADMIN * 10000) / 10000;
-      plans[i][k] = usdt;
+      plans[i][k] = soles;
       // Mostrar el equivalente en USDT
       var span = t.nextElementSibling;
-      if (span) span.textContent = usdt > 0 ? usdt.toFixed(2) + '$' : '';
+      if (span) span.textContent = soles > 0 ? (soles / TC_ADMIN).toFixed(4) + ' USDT' : '';
     } else {
       plans[i][k] = t.value;
     }
