@@ -215,6 +215,16 @@ button { cursor: pointer; }
 
 /* Cat badge en imagen */
 .cat-badge { position: absolute; bottom: 8px; left: 8px; z-index: 2; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); color: #fff; border-radius: 8px; padding: 3px 8px; font: 600 11px var(--font-mono); letter-spacing: .06em; border: 1px solid rgba(255,255,255,.15); }
+/* Info button */
+.info-btn { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,.1); border: 1.5px solid rgba(255,255,255,.2); color: var(--muted); font: 700 13px var(--font-body); cursor: pointer; display: grid; place-items: center; transition: all .15s; }
+.info-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* Modal descripción */
+.info-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.info-modal { background: var(--surface); border: 3px solid var(--ink); border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; box-shadow: 8px 8px 0 var(--shadow); position: relative; }
+.info-modal h3 { margin: 0 0 12px; font-size: 20px; font-weight: 800; padding-right: 32px; }
+.info-modal-close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 8px; background: var(--surface); border: 2px solid var(--ink); cursor: pointer; font-size: 16px; display: grid; place-items: center; }
+.info-modal .pills { margin-bottom: 10px; }
+.info-modal p { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0; }
 
 /* Barra de stock */
 .stock-bar-wrap { margin-top: 6px; }
@@ -697,17 +707,8 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
           : '<span class="stock">' + p.stock + ' DISP.</span>') +
         (catEmoji || catName ? '<span class="cat-badge">' + catEmoji + ' ' + catName + '</span>' : '') +
         '</div>' +
-        '<div class="body"><h2>' + p.name + '</h2>' +
-        (p.desc ? (function() {
-          var parts = p.desc.split('||');
-          var pillsPart = parts[0];
-          var textPart = parts[1] ? parts[1].trim() : '';
-          var pillsHtml = pillsPart.indexOf('|') !== -1
-            ? '<div class="pills">' + pillsPart.split('|').map(function(b) { return '<span class="pill">' + esc(b.trim()) + '</span>'; }).join('') + '</div>'
-            : '<p class="desc">' + esc(pillsPart) + '</p>';
-          var textHtml = textPart ? '<p class="pill-desc">' + esc(textPart) + '</p>' : '';
-          return pillsHtml + textHtml;
-        })() : '') +
+        '<div class="body" style="position:relative"><h2>' + p.name + '</h2>' +
+        (p.desc ? '<button class="info-btn" data-info="' + esc(p.id) + '" aria-label="Ver descripción">ℹ</button>' : '') +
         '<div class="offer">' + (flash && !sinStock ? '⏰ Oferta: <span class="left"></span>' : '') + '</div>' +
         '<div class="foot"><div class="since">DESDE</div>' + (oldPrice ? '<div class="price-old">' + fmt(oldPrice) + '</div>' : '') + '<div class="price-row"><span class="price">' + fmt(min) + '</span></div>' + (SHOW_USDT ? '<div class="usdt">' + fmtU(min) + '</div>' : '') +
         (sinStock
@@ -1421,6 +1422,25 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     var t = e.target.closest('button, a, .overlay'); if (!t) return;
     if (t.dataset.um === 'logout') { logOut(); return; }
     if (t.dataset.um === 'admin') { $('#userMenu').hidden = true; openAdmin(); return; }
+    // Info modal
+    if (t.dataset.info) {
+      e.preventDefault(); e.stopPropagation();
+      var prod = PRODUCTS.find(function(x){ return x.id === t.dataset.info; });
+      if (!prod || !prod.desc) return;
+      var parts = prod.desc.split('||');
+      var pillsPart = parts[0];
+      var textPart = parts[1] ? parts[1].trim() : '';
+      var pillsHtml = pillsPart.indexOf('|') !== -1
+        ? '<div class="pills">' + pillsPart.split('|').map(function(b){ return '<span class="pill">' + esc(b.trim()) + '</span>'; }).join('') + '</div>'
+        : '';
+      var descText = textPart || (pillsPart.indexOf('|') === -1 ? pillsPart : '');
+      var overlay = document.createElement('div');
+      overlay.className = 'info-modal-overlay';
+      overlay.innerHTML = '<div class="info-modal"><h3>' + esc(prod.name) + '</h3><button class="info-modal-close">✕</button>' + pillsHtml + (descText ? '<p>' + esc(descText) + '</p>' : '') + '</div>';
+      overlay.addEventListener('click', function(ev){ if(ev.target===overlay||ev.target.classList.contains('info-modal-close')) overlay.remove(); });
+      document.body.appendChild(overlay);
+      return;
+    }
     // Verificar sesión antes de comprar - TODOS los métodos de pago
     if (t.dataset.bp || t.dataset.sp || t.dataset.yp || t.dataset.bn || t.dataset.plans) {
       if (!auth.user) {
