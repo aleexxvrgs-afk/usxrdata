@@ -1147,21 +1147,47 @@ select.fld{cursor:pointer}
     });
   });
 
-  // Image upload
+  // Image upload — comprime y sube a Supabase Storage via /api/upload-image
   $('btnPickImg').addEventListener('click', function () { $('fImgFile').click(); });
   $('fImgFile').addEventListener('change', function () {
     var f = this.files[0]; if (!f) return;
+    var btnPick = $('btnPickImg');
+    btnPick.textContent = '⏳ Subiendo...';
+    btnPick.disabled = true;
     var fr = new FileReader();
     fr.onload = function () {
       var img = new Image();
       img.onload = function () {
-        var s = 400, c = document.createElement('canvas');
-        var k = Math.max(s / img.width, s / img.height);
-        c.width = c.height = s;
-        c.getContext('2d').drawImage(img, (s - img.width * k) / 2, (s - img.height * k) / 2, img.width * k, img.height * k);
-        var data = c.toDataURL('image/jpeg', 0.82);
-        $('fImgUrl').value = data;
+        // Comprimir a 600x600 WebP
+        var s = 600, c = document.createElement('canvas');
+        var ratio = Math.min(s / img.width, s / img.height);
+        c.width = Math.round(img.width * ratio);
+        c.height = Math.round(img.height * ratio);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        var data = c.toDataURL('image/webp', 0.80);
+        // Mostrar preview inmediato
         $('imgPreview').innerHTML = '<img src="' + data + '" alt="">';
+        // Subir a Supabase Storage via API
+        var fileName = f.name.replace(/\.[^.]+$/, '') + '.webp';
+        fetch('/api/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: data, fileName: fileName })
+        }).then(function(r) { return r.json(); })
+          .then(function(res) {
+            if (res.url) {
+              $('fImgUrl').value = res.url;
+              $('imgPreview').innerHTML = '<img src="' + res.url + '" alt="">';
+              toast('✅ Imagen subida a Storage');
+            } else {
+              toast('Error: ' + (res.error || 'No se pudo subir'), true);
+            }
+          })
+          .catch(function() { toast('Error al subir imagen', true); })
+          .finally(function() {
+            btnPick.textContent = '📷 Subir';
+            btnPick.disabled = false;
+          });
       };
       img.src = fr.result;
     };
