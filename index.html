@@ -221,10 +221,11 @@ button { cursor: pointer; }
 .info-btn { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,.1); border: 1.5px solid rgba(255,255,255,.2); color: var(--muted); font: 700 13px var(--font-body); cursor: pointer; display: grid; place-items: center; transition: all .15s; }
 .info-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 /* Modal descripción */
-.info-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
-.info-modal { background: var(--surface); border: 3px solid var(--ink); border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; box-shadow: 8px 8px 0 var(--shadow); position: relative; }
+.info-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.info-modal { background: var(--surface); border: 3px solid var(--ink); border-radius: 24px; padding: 20px; max-width: 420px; width: 100%; box-shadow: 10px 10px 0 var(--shadow); position: relative; max-height: 90vh; overflow-y: auto; }
 .info-modal h3 { margin: 0 0 12px; font-size: 20px; font-weight: 800; padding-right: 32px; }
-.info-modal-close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 8px; background: var(--surface); border: 2px solid var(--ink); cursor: pointer; font-size: 16px; display: grid; place-items: center; }
+.info-modal-close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 10px; background: var(--surface2); border: 2px solid var(--ink); cursor: pointer; font-size: 16px; display: grid; place-items: center; }
+.info-modal-close:hover { background: var(--hot); color: #fff; }
 .info-modal .pills { margin-bottom: 10px; }
 .info-modal p { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0; }
 
@@ -1428,17 +1429,43 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     if (t.dataset.info) {
       e.preventDefault(); e.stopPropagation();
       var prod = PRODUCTS.find(function(x){ return x.id === t.dataset.info; });
-      if (!prod || !prod.desc) return;
-      var parts = prod.desc.split('||');
+      if (!prod) return;
+      var parts = (prod.desc || '').split('||');
       var pillsPart = parts[0];
       var textPart = parts[1] ? parts[1].trim() : '';
       var pillsHtml = pillsPart.indexOf('|') !== -1
-        ? '<div class="pills">' + pillsPart.split('|').map(function(b){ return '<span class="pill">' + esc(b.trim()) + '</span>'; }).join('') + '</div>'
+        ? '<div class="pills" style="margin-bottom:12px">' + pillsPart.split('|').map(function(b){ return '<span class="pill">' + esc(b.trim()) + '</span>'; }).join('') + '</div>'
         : '';
       var descText = textPart || (pillsPart.indexOf('|') === -1 ? pillsPart : '');
+      // Planes
+      var pls = eff(prod);
+      var plansHtml = '<div style="margin-top:14px"><div style="font:700 11px var(--font-mono);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Planes disponibles</div>' +
+        pls.map(function(pl){
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:10px;margin-bottom:6px;border:1px solid var(--border)">' +
+            '<div><div style="font-weight:700;font-size:14px">' + esc(String(pl[0])) + '</div><div style="font-size:11px;color:var(--muted)">' + esc(String(pl[2])) + '</div></div>' +
+            '<div style="text-align:right">' + (pl[3] ? '<div style="font-size:11px;color:var(--muted);text-decoration:line-through">' + fmt(pl[3]) + '</div>' : '') +
+            '<div style="font-weight:800;font-size:16px;color:var(--ok-fg)">' + fmt(pl[1]) + '</div>' +
+            (SHOW_USDT ? '<div style="font-size:10px;color:var(--muted)">' + fmtU(pl[1]) + '</div>' : '') + '</div>' +
+            '</div>';
+        }).join('') + '</div>';
+      // Categoría
+      var catData = (window._catsData||[]).find(function(x){return x.id===prod.cat;});
+      var catBadge = catData ? '<span style="background:rgba(91,60,245,.15);color:var(--accent);border:1px solid rgba(91,60,245,.3);border-radius:6px;padding:3px 10px;font:600 12px var(--font-mono)">' + (catData.emoji||'') + ' ' + catData.name + '</span>' : '';
       var overlay = document.createElement('div');
       overlay.className = 'info-modal-overlay';
-      overlay.innerHTML = '<div class="info-modal"><h3>' + esc(prod.name) + '</h3><button class="info-modal-close">✕</button>' + pillsHtml + (descText ? '<p>' + esc(descText) + '</p>' : '') + '</div>';
+      overlay.innerHTML =
+        '<div class="info-modal">' +
+          '<button class="info-modal-close">✕</button>' +
+          (prod.img ? '<img src="' + esc(prod.img) + '" alt="" style="width:100%;height:160px;object-fit:cover;border-radius:14px;margin-bottom:14px;border:2px solid var(--ink)">' : '') +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+            '<h3 style="margin:0;font-size:20px;font-weight:800">' + esc(prod.name) + '</h3>' +
+            catBadge +
+          '</div>' +
+          pillsHtml +
+          (descText ? '<p style="color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 4px">' + esc(descText) + '</p>' : '') +
+          plansHtml +
+          (!prod.stock || prod.stock <= 0 ? '<div style="margin-top:12px;padding:10px;background:rgba(232,64,47,.1);border-radius:10px;color:var(--hot);font-weight:700;text-align:center">❌ Sin stock disponible</div>' : '') +
+        '</div>';
       overlay.addEventListener('click', function(ev){ if(ev.target===overlay||ev.target.classList.contains('info-modal-close')) overlay.remove(); });
       document.body.appendChild(overlay);
       return;
