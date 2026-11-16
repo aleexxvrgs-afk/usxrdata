@@ -202,11 +202,12 @@ button { cursor: pointer; }
 .pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
 .pill { background: rgba(91,60,245,.12); color: var(--accent); border: 1px solid rgba(91,60,245,.3); border-radius: 5px; padding: 1px 7px; font: 600 10px var(--font-mono); white-space: nowrap; letter-spacing: .04em; }
 .pill-desc { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.foot { margin-top: auto; padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.foot { margin-top: auto; padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .since { color: var(--muted); font: 500 11px var(--font-mono); letter-spacing: .1em; }
-.price { font: 700 26px/1 var(--font-mono); }
-.price-old { color: var(--muted); font: 500 13px var(--font-mono); text-decoration: line-through; margin-left: 6px; }
-.usdt { color: var(--muted); font: 500 12px var(--font-mono); margin-top: 4px; display: block; }
+.price-row { display: flex; align-items: baseline; gap: 6px; flex-wrap: nowrap; }
+.price { font: 700 24px/1 var(--font-mono); white-space: nowrap; }
+.price-old { color: var(--muted); font: 500 13px var(--font-mono); text-decoration: line-through; white-space: nowrap; }
+.usdt { color: var(--muted); font: 500 11px var(--font-mono); display: block; }
 .card .btn { height: 42px; font-size: 13px; width: 100%; padding: 0 10px; }
 
 /* Cat badge en imagen */
@@ -361,8 +362,11 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
 .adm-foot { position: sticky; bottom: 0; background: var(--bg); padding-top: 10px; display: flex; gap: 10px; }
 /* Skeleton loader */
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-.art { aspect-ratio: 1 / 1; }
-.art img { width: 100%; height: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
+.art { aspect-ratio: 1 / 1; width: 100%; flex-shrink: 0; }
+.art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Tarjeta de altura uniforme */
+.card { height: 100%; }
+.body { flex: 1; display: flex; flex-direction: column; }
 .card .desc { font-size: 13px; color: var(--muted); margin: 4px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .adm-th { width: 72px; height: 72px; border-radius: 12px; border: 2px solid var(--ink); object-fit: cover; margin-top: 10px; display: block; }
 .adm-b textarea.fld { height: auto; padding: 10px 14px; resize: vertical; font-family: inherit; }
@@ -703,7 +707,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         })() : '') +
         '<div class="offer">' + (flash && !sinStock ? '⏰ Oferta: <span class="left"></span>' : '') + '</div>' +
         (!sinStock ? '<div class="stock-bar-wrap"><div class="stock-bar"><div class="stock-bar-fill" style="width:' + stockPct + '%;background:' + stockColor + '"></div></div></div>' : '') +
-        '<div class="foot"><div><div class="since">DESDE</div><div class="price">' + fmt(min) + (oldPrice ? '<span class="price-old">' + fmt(oldPrice) + '</span>' : '') + '</div>' + (SHOW_USDT ? '<div class="usdt">' + fmtU(min) + '</div>' : '') + '</div>' +
+        '<div class="foot"><div class="since">DESDE</div><div class="price-row"><span class="price">' + fmt(min) + '</span>' + (oldPrice ? '<span class="price-old">' + fmt(oldPrice) + '</span>' : '') + '</div>' + (SHOW_USDT ? '<div class="usdt">' + fmtU(min) + '</div>' : '') +
         (sinStock
           ? '<button type="button" class="btn" disabled style="background:var(--surface);color:var(--muted);border:2.5px solid var(--ink);opacity:.6;cursor:not-allowed">Sin stock</button>'
           : '<button type="button" class="btn accent" data-plans="' + esc(p.id) + '">Comprar</button>') +
