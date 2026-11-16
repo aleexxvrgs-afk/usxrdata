@@ -201,8 +201,31 @@ button { cursor: pointer; }
 .foot { margin-top: auto; padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
 .since { color: var(--muted); font: 500 11px var(--font-mono); letter-spacing: .1em; }
 .price { font: 700 26px/1 var(--font-mono); }
+.price-old { color: var(--muted); font: 500 13px var(--font-mono); text-decoration: line-through; margin-left: 6px; }
 .usdt { color: var(--muted); font: 500 12px var(--font-mono); margin-top: 4px; display: block; }
 .card .btn { height: 42px; font-size: 13px; width: 100%; padding: 0 10px; }
+
+/* Cat badge en imagen */
+.cat-badge { position: absolute; bottom: 8px; left: 8px; z-index: 2; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); color: #fff; border-radius: 8px; padding: 3px 8px; font: 600 11px var(--font-mono); letter-spacing: .06em; border: 1px solid rgba(255,255,255,.15); }
+
+/* Barra de stock */
+.stock-bar-wrap { margin-top: 6px; }
+.stock-bar-label { font: 600 11px var(--font-mono); color: var(--muted); margin-bottom: 3px; display: flex; justify-content: space-between; }
+.stock-bar { height: 5px; background: var(--border); border-radius: 999px; overflow: hidden; border: 1px solid var(--ink); }
+.stock-bar-fill { height: 100%; border-radius: 999px; transition: width .4s; }
+
+/* 3D Tilt hover */
+.card { transform-style: preserve-3d; transition: transform .15s, box-shadow .15s; }
+.card:hover { transform: perspective(600px) rotateX(2deg) rotateY(-2deg) translateY(-3px); box-shadow: 8px 12px 0 var(--shadow); }
+.card.is-hot:hover { box-shadow: 8px 12px 0 var(--hot); }
+
+/* Shimmer en imagen hover */
+.art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.12) 50%, transparent 60%); transform: translateX(-100%); transition: transform 0s; border-radius: inherit; }
+.card:hover .art::after { transform: translateX(100%); transition: transform .5s ease; }
+
+/* Aparición en cascada */
+@keyframes card-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.card { animation: card-in .35s ease both; }
 
 .grid.list { grid-template-columns: 1fr; gap: 24px; }
 .grid.list .card { flex-direction: row; align-items: stretch; }
@@ -635,24 +658,38 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
     $('#count').textContent = items.length + (items.length === 1 ? ' producto disponible' : ' productos disponibles');
     $('#grid').className = 'grid' + (state.list ? ' list' : '');
     if (!items.length) { $('#grid').innerHTML = '<div class="empty">No hay productos con ese nombre. Prueba con otra búsqueda.</div>'; return; }
-    $('#grid').innerHTML = items.map(function (p) {
+    $('#grid').innerHTML = items.map(function (p, idx) {
       var pls = eff(p);
       var min = Math.min.apply(null, pls.map(function (x) { return x[1]; }));
+      // Precio anterior (el más bajo antes del flash o el precio regular si tiene)
+      var minPl = pls.find(function(pl) { return pl[1] === min; });
+      var oldPrice = minPl && minPl[3] ? minPl[3] : null;
       var flash = flashIds.indexOf(p.id) !== -1;
       var sinStock = p.stock <= 0;
-      // El producto en flash sale aparece como HOT automáticamente
       var isHot = p.hot || flash;
-      return '<article class="card' + (isHot ? ' is-hot' : '') + (sinStock ? ' out-of-stock' : '') + '">' +
+      // Categoría para el badge
+      var catData = (window._catsData || []).find(function(x) { return x.id === p.cat; });
+      var catEmoji = catData ? (catData.emoji || '') : '';
+      var catName = catData ? catData.name : p.cat;
+      // Barra de stock (max referencia 20)
+      var stockMax = Math.max(p.stock, 20);
+      var stockPct = sinStock ? 0 : Math.min(100, Math.round((p.stock / stockMax) * 100));
+      var stockColor = stockPct > 50 ? 'var(--ok-fg)' : stockPct > 20 ? 'var(--warn)' : 'var(--hot)';
+      // Delay de aparición en cascada
+      var delay = (idx * 0.05) + 's';
+      return '<article class="card' + (isHot ? ' is-hot' : '') + (sinStock ? ' out-of-stock' : '') + '" style="animation-delay:' + delay + '">' +
         (isHot ? '<span class="hot-tag">' + (flash ? '⚡ OFERTA!' : '🔥 HOT!') + '</span>' : '') +
         '<div class="art" style="background-color:' + p.tile + '">' +
         (p.img ? '<img src="' + p.img + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '<b>' + p.glyph + '</b>') +
         (sinStock
           ? '<span class="stock out">SIN STOCK</span>'
           : '<span class="stock">' + p.stock + ' DISP.</span>') +
+        (catEmoji || catName ? '<span class="cat-badge">' + catEmoji + ' ' + catName + '</span>' : '') +
         '</div>' +
         '<div class="body"><h2>' + p.name + '</h2>' + (p.desc ? '<p class="desc">' + esc(p.desc) + '</p>' : '') +
         '<div class="offer">' + (flash && !sinStock ? '⏰ Oferta: <span class="left"></span>' : '') + '</div>' +
-        '<div class="foot"><div><div class="since">DESDE</div><div class="price">' + fmt(min) + '</div>' + (SHOW_USDT ? '<div class="usdt">' + fmtU(min) + '</div>' : '') + '</div>' +
+        (!sinStock ? '<div class="stock-bar-wrap"><div class="stock-bar"><div class="stock-bar-fill" style="width:' + stockPct + '%;background:' + stockColor + '"></div></div></div>' : '') +
+        '<div class="foot"><div><div class="since">DESDE</div><div class="price">' + fmt(min) + (oldPrice ? '<span class="price-old">' + fmt(oldPrice) + '</span>' : '') + '</div>' + (SHOW_USDT ? '<div class="usdt">' + fmtU(min) + '</div>' : '') + '</div>' +
         (sinStock
           ? '<button type="button" class="btn" disabled style="background:var(--surface);color:var(--muted);border:2.5px solid var(--ink);opacity:.6;cursor:not-allowed">Sin stock</button>'
           : '<button type="button" class="btn accent" data-plans="' + esc(p.id) + '">Comprar</button>') +
