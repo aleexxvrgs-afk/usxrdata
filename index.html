@@ -157,13 +157,21 @@ button { cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--ink); }
 .seg button[aria-pressed="true"] svg { stroke: var(--bg); }
 .chips { display: flex; align-items: center; gap: 8px; margin: 14px 0 6px; position: relative; }
-.chips-fixed { flex-shrink: 0; z-index: 2; }
-.chips-scroll { flex: 1; overflow: hidden; position: relative; min-width: 0; }
-.chips-track { display: flex; gap: 8px; width: max-content; animation: chips-scroll 18s linear infinite; }
-.chips-track:hover { animation-play-state: paused; }
+.chips-fixed { flex-shrink: 0; z-index: 2; padding-right: 8px; border-right: 2.5px solid var(--ink); margin-right: 4px; }
+.chips-scroll { flex: 1; overflow: hidden; position: relative; min-width: 0; cursor: grab; user-select: none; }
+.chips-scroll:active { cursor: grabbing; }
+/* Fade en los bordes */
+.chips-scroll::before, .chips-scroll::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40px; z-index: 1; pointer-events: none; }
+.chips-scroll::before { left: 0; background: linear-gradient(to right, var(--bg), transparent); }
+.chips-scroll::after { right: 0; background: linear-gradient(to left, var(--bg), transparent); }
+.chips-track { display: flex; gap: 8px; width: max-content; animation: chips-scroll 22s linear infinite; }
+.chips-track.paused, .chips-scroll:active .chips-track { animation-play-state: paused; }
 @keyframes chips-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-.chip { border: 2.5px solid var(--ink); border-radius: 999px; background: var(--surface); padding: 6px 14px; font-weight: 600; font-size: 14px; white-space: nowrap; flex-shrink: 0; }
-.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: 3px 3px 0 var(--shadow); }
+/* Chip base */
+.chip { border: 2.5px solid var(--ink); border-radius: 999px; background: var(--surface); padding: 6px 14px; font-weight: 600; font-size: 14px; white-space: nowrap; flex-shrink: 0; transition: all .15s; display: flex; align-items: center; gap: 5px; }
+.chip:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+/* Chip activo con glow neón */
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); box-shadow: 0 0 12px var(--accent), 0 0 24px color-mix(in srgb, var(--accent) 40%, transparent), 3px 3px 0 var(--shadow); transform: translateY(-1px); }
 .count { color: var(--muted); margin: 12px 0 28px; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 30px 14px; min-height: 200px; }
@@ -545,11 +553,61 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
   function renderChips() {
     var todoCat = CATS[0];
     var restCats = CATS.slice(1);
-    var todoBtn = '<div class="chips-fixed"><button class="chip" data-cat="' + todoCat[0] + '" aria-pressed="' + (state.cat === todoCat[0]) + '">' + todoCat[1] + '</button></div>';
+    var todoBtn = '<div class="chips-fixed"><button class="chip" data-cat="' + todoCat[0] + '" aria-pressed="' + (state.cat === todoCat[0]) + '">🛒 ' + todoCat[1] + '</button></div>';
     var restHtml = restCats.map(function(c) {
-      return '<button class="chip" data-cat="' + c[0] + '" aria-pressed="' + (state.cat === c[0]) + '">' + c[1] + '</button>';
+      // Buscar emoji desde _catsData si está disponible
+      var catData = (window._catsData || []).find(function(x) { return x.id === c[0]; });
+      var emoji = catData ? (catData.emoji || '') : '';
+      var label = emoji ? emoji + ' ' + c[1] : c[1];
+      return '<button class="chip" data-cat="' + c[0] + '" aria-pressed="' + (state.cat === c[0]) + '">' + label + '</button>';
     }).join('');
-    $('#chips').innerHTML = todoBtn + '<div class="chips-scroll"><div class="chips-track">' + restHtml + restHtml + '</div></div>';
+    $('#chips').innerHTML = todoBtn + '<div class="chips-scroll" id="chipsScroll"><div class="chips-track" id="chipsTrack">' + restHtml + restHtml + '</div></div>';
+    initChipsDrag();
+  }
+
+  function initChipsDrag() {
+    var scroll = document.getElementById('chipsScroll');
+    var track = document.getElementById('chipsTrack');
+    if (!scroll || !track) return;
+    var isDown = false, startX = 0, scrollLeft = 0;
+    var manualOffset = 0;
+
+    function pauseAnim() { track.classList.add('paused'); }
+    function resumeAnim() { track.classList.remove('paused'); }
+
+    // Mouse drag
+    scroll.addEventListener('mousedown', function(e) {
+      isDown = true; startX = e.pageX; scrollLeft = manualOffset;
+      pauseAnim();
+    });
+    document.addEventListener('mouseup', function() {
+      if (!isDown) return;
+      isDown = false;
+      setTimeout(resumeAnim, 1500);
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (!isDown) return;
+      e.preventDefault();
+      var walk = (e.pageX - startX);
+      manualOffset = scrollLeft - walk;
+      track.style.animationDelay = (manualOffset / 100) + 's';
+    });
+
+    // Touch swipe
+    var touchStartX = 0;
+    scroll.addEventListener('touchstart', function(e) {
+      touchStartX = e.touches[0].pageX;
+      pauseAnim();
+    }, { passive: true });
+    scroll.addEventListener('touchend', function(e) {
+      var diff = touchStartX - e.changedTouches[0].pageX;
+      if (Math.abs(diff) > 10) {
+        // Ajustar velocidad según dirección del swipe
+        var currentDuration = parseFloat(getComputedStyle(track).animationDuration) || 22;
+        track.style.animationDuration = Math.max(8, currentDuration + (diff > 0 ? -2 : 2)) + 's';
+      }
+      setTimeout(resumeAnim, 1000);
+    }, { passive: true });
   }
   function renderGrid() {
     var q = state.q.trim().toLowerCase();
