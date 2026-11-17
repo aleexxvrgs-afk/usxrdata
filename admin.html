@@ -1243,8 +1243,8 @@ select.fld{cursor:pointer}
       img.onload = function () {
         // Para banner modal usar mayor resolución
         var isBanner = maxSize === 420;
-        var targetW = isBanner ? 840 : maxSize;  // doble para retina
-        var targetH = isBanner ? 360 : maxSize;
+        var targetW = isBanner ? 1200 : maxSize;  // alta resolución para retina
+        var targetH = isBanner ? 514 : maxSize;
         var ratio = isBanner 
           ? Math.max(targetW / img.width, targetH / img.height)
           : Math.min(maxSize / img.width, maxSize / img.height);
