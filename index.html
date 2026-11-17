@@ -1434,7 +1434,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       var pillsPart = parts[0];
       var textPart = parts[1] ? parts[1].trim() : '';
       var pillsHtml = pillsPart.indexOf('|') !== -1
-        ? '<div class="pills" style="margin-bottom:12px">' + pillsPart.split('|').map(function(b){ return '<span class="pill">' + esc(b.trim()) + '</span>'; }).join('') + '</div>'
+        ? '<div class="pills" style="display:flex;flex-wrap:wrap;gap:4px">' + pillsPart.split('|').map(function(b){ return '<span class="pill">' + esc(b.trim()) + '</span>'; }).join('') + '</div>'
         : '';
       var descText = textPart || (pillsPart.indexOf('|') === -1 ? pillsPart : '');
       // Categoría
@@ -1449,15 +1449,15 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       
       overlay.innerHTML =
         '<div class="info-modal" style="padding:0;overflow:hidden;border-radius:16px;max-width:420px">' +
-          '<div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">' +
-            '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">' +
-              '<h3 style="margin:0;font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(prod.name) + '</h3>' +
-              catBadge + stockBadge +
+          '<div style="padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:8px">' +
+            '<div style="flex:1;min-width:0">' +
+              '<h3 style="margin:0 0 8px;font-size:17px;font-weight:800;line-height:1.2">' + esc(prod.name) + '</h3>' +
+              (pillsHtml ? pillsHtml : '') +
+              '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px">' + catBadge + stockBadge + '</div>' +
             '</div>' +
-            '<button class="info-modal-close" style="width:28px;height:28px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;font-size:14px;display:grid;place-items:center;color:var(--muted);font-weight:700;margin-left:8px;flex-shrink:0">✕</button>' +
+            '<button class="info-modal-close" style="width:28px;height:28px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;font-size:14px;display:grid;place-items:center;color:var(--muted);font-weight:700;flex-shrink:0">✕</button>' +
           '</div>' +
           '<div style="padding:14px 18px;overflow-y:auto;max-height:55vh">' +
-            (pillsHtml ? '<div style="margin-bottom:12px">' + pillsHtml + '</div>' : '') +
             (descText ? '<p style="color:var(--muted);font-size:13px;line-height:1.5;margin:0;white-space:pre-line">' + esc(descText) + '</p>' : '') +
           '</div>' +
         '</div>';
