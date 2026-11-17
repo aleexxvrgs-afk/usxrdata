@@ -248,16 +248,21 @@ button { cursor: pointer; }
 @keyframes card-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 .card { animation: card-in .35s ease both; }
 
-.grid.list { grid-template-columns: 1fr; gap: 24px; }
-.grid.list .card { flex-direction: row; align-items: stretch; }
-.grid.list .art { aspect-ratio: auto; width: 96px; flex: none; border-bottom: 0; border-right: 2.5px solid var(--ink); border-radius: 18px 0 0 18px; }
-.grid.list .art b { font-size: 36px; }
-.grid.list .body { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 12px; }
-.grid.list .stock { top: 8px; }
-.grid.list .foot { margin: 0; padding: 0; grid-column: 2; grid-row: 1 / span 3; align-items: flex-end; }
-.grid.list .card .btn { width: auto; padding: 0 14px; }
-.grid.list .body h2, .grid.list .plans, .grid.list .offer { grid-column: 1; }
+.grid.list { grid-template-columns: 1fr; gap: 10px; }
+.grid.list .card { flex-direction: row; align-items: stretch; min-height: 90px; }
+.grid.list .art { aspect-ratio: auto; width: 90px; min-height: 90px; flex: none; border-bottom: 0; border-right: 2.5px solid var(--ink); border-radius: 18px 0 0 18px; }
+.grid.list .art b { font-size: 28px; }
+.grid.list .art .stock { top: 6px; left: 50%; transform: translateX(-50%); font-size: 9px; padding: 2px 5px; white-space: nowrap; }
+.grid.list .body { display: flex; flex-direction: row; align-items: center; padding: 10px 12px; gap: 10px; flex: 1; }
+.grid.list .body h2 { font-size: 14px; font-weight: 800; margin: 0; line-height: 1.2; flex: 1; min-width: 0; }
+.grid.list .foot { margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
 .grid.list .since { display: none; }
+.grid.list .price { font-size: 18px; }
+.grid.list .price-old { font-size: 11px; }
+.grid.list .usdt { font-size: 10px; }
+.grid.list .offer { display: none; }
+.grid.list .card .btn { height: 36px; font-size: 12px; padding: 0 14px; width: auto; white-space: nowrap; }
+.grid.list .body .info-btn { position: static; margin-left: 4px; }
 .empty { grid-column: 1 / -1; border: 3px dashed var(--ink); border-radius: 18px; padding: 28px 18px; text-align: center; color: var(--muted); }
 
 /* Confianza */
