@@ -1462,7 +1462,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
             catBadge +
           '</div>' +
           pillsHtml +
-          (descText ? '<p style="color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 4px">' + esc(descText) + '</p>' : '') +
+          (descText ? '<p style="color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 4px;white-space:pre-line">' + esc(descText) + '</p>' : '') +
           plansHtml +
           (!prod.stock || prod.stock <= 0 ? '<div style="margin-top:12px;padding:10px;background:rgba(232,64,47,.1);border-radius:10px;color:var(--hot);font-weight:700;text-align:center">❌ Sin stock disponible</div>' : '') +
         '</div>';
