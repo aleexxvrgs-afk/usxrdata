@@ -222,10 +222,9 @@ button { cursor: pointer; }
 .info-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 /* Modal descripción */
 .info-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
-.info-modal { background: var(--surface); border: 3px solid var(--ink); border-radius: 24px; padding: 20px; max-width: 480px; width: 100%; box-shadow: 10px 10px 0 var(--shadow); position: relative; max-height: 90vh; overflow-y: auto; }
+.info-modal { background: var(--surface); border: 2px solid var(--ink); border-radius: 20px; max-width: 480px; width: 100%; box-shadow: 8px 8px 0 var(--shadow),0 20px 40px rgba(0,0,0,.4); position: relative; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
 .info-modal h3 { margin: 0 0 12px; font-size: 20px; font-weight: 800; }
-.info-modal-close { position: absolute; top: -10px; right: -10px; width: 36px; height: 36px; border-radius: 50%; background: var(--hot); border: 3px solid var(--ink); cursor: pointer; font-size: 18px; display: grid; place-items: center; color: #fff; font-weight: 800; z-index: 10; box-shadow: 4px 4px 0 rgba(0,0,0,.3); }
-.info-modal-close:hover { transform: scale(1.1); background: #dc2626; }
+.info-modal-close:hover { background: var(--hot); color: #fff; transform: scale(1.05); }
 .info-modal-close:hover { transform: scale(1.05); }
 .info-modal .pills { margin-bottom: 10px; }
 .info-modal p { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0; }
@@ -1454,18 +1453,27 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
       var catBadge = catData ? '<span style="background:rgba(91,60,245,.15);color:var(--accent);border:1px solid rgba(91,60,245,.3);border-radius:6px;padding:3px 10px;font:600 12px var(--font-mono)">' + (catData.emoji||'') + ' ' + catData.name + '</span>' : '';
       var overlay = document.createElement('div');
       overlay.className = 'info-modal-overlay';
+      // Diseño mejorado del modal
+      var stockBadge = (!prod.stock || prod.stock <= 0) 
+        ? '<span style="background:rgba(232,64,47,.15);color:#f87171;padding:4px 10px;border-radius:8px;font:700 11px var(--mono)">❌ SIN STOCK</span>'
+        : '<span style="background:rgba(34,197,94,.15);color:#4ade80;padding:4px 10px;border-radius:8px;font:700 11px var(--mono)">✅ ' + prod.stock + ' DISP.</span>';
+      
       overlay.innerHTML =
-        '<div class="info-modal">' +
-          '<button class="info-modal-close">✕</button>' +
-          
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
-            '<h3 style="margin:0;font-size:20px;font-weight:800">' + esc(prod.name) + '</h3>' +
-            catBadge +
+        '<div class="info-modal" style="padding:0;overflow:hidden">' +
+          '<div style="background:linear-gradient(135deg,var(--surface2) 0%,var(--surface) 100%);padding:20px 24px 16px;border-bottom:2px solid var(--border)">' +
+            '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">' +
+              '<div style="flex:1">' +
+                '<h3 style="margin:0 0 8px;font-size:22px;font-weight:800;line-height:1.2">' + esc(prod.name) + '</h3>' +
+                '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' + catBadge + stockBadge + '</div>' +
+              '</div>' +
+              '<button class="info-modal-close" style="flex-shrink:0;width:36px;height:36px;border-radius:10px;background:var(--surface2);border:2px solid var(--border);cursor:pointer;font-size:16px;display:grid;place-items:center;color:var(--muted);font-weight:700">✕</button>' +
+            '</div>' +
           '</div>' +
-          pillsHtml +
-          (descText ? '<p style="color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 4px;white-space:pre-line">' + esc(descText) + '</p>' : '') +
-          plansHtml +
-          (!prod.stock || prod.stock <= 0 ? '<div style="margin-top:12px;padding:10px;background:rgba(232,64,47,.1);border-radius:10px;color:var(--hot);font-weight:700;text-align:center">❌ Sin stock disponible</div>' : '') +
+          '<div style="padding:20px 24px;overflow-y:auto;max-height:60vh">' +
+            (pillsHtml ? '<div style="margin-bottom:16px">' + pillsHtml + '</div>' : '') +
+            (descText ? '<p style="color:var(--muted);font-size:14px;line-height:1.7;margin:0 0 20px;white-space:pre-line">' + esc(descText) + '</p>' : '') +
+            plansHtml +
+          '</div>' +
         '</div>';
       overlay.addEventListener('click', function(ev){ if(ev.target===overlay||ev.target.classList.contains('info-modal-close')) overlay.remove(); });
       document.body.appendChild(overlay);
