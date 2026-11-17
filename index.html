@@ -1437,16 +1437,6 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
         ? '<div class="pills" style="margin-bottom:12px">' + pillsPart.split('|').map(function(b){ return '<span class="pill">' + esc(b.trim()) + '</span>'; }).join('') + '</div>'
         : '';
       var descText = textPart || (pillsPart.indexOf('|') === -1 ? pillsPart : '');
-      // Planes
-      var pls = eff(prod);
-      var plansHtml = '<div style="margin-top:10px"><div style="font:600 10px var(--font-mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Planes</div>' +
-        pls.map(function(pl){
-          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--surface2);border-radius:8px;margin-bottom:4px;border:1px solid var(--border)">' +
-            '<div><div style="font-weight:600;font-size:13px">' + esc(String(pl[0])) + '</div><div style="font-size:10px;color:var(--muted)">' + esc(String(pl[2])) + '</div></div>' +
-            '<div style="text-align:right">' + (pl[3] ? '<div style="font-size:10px;color:var(--muted);text-decoration:line-through">' + fmt(pl[3]) + '</div>' : '') +
-            '<div style="font-weight:700;font-size:14px;color:var(--ok-fg)">' + fmt(pl[1]) + '</div>' +
-            '</div>';
-        }).join('') + '</div>';
       // Categoría
       var catData = (window._catsData||[]).find(function(x){return x.id===prod.cat;});
       var catBadge = catData ? '<span style="background:rgba(91,60,245,.15);color:var(--accent);border:1px solid rgba(91,60,245,.3);border-radius:6px;padding:3px 10px;font:600 12px var(--font-mono)">' + (catData.emoji||'') + ' ' + catData.name + '</span>' : '';
@@ -1468,8 +1458,7 @@ textarea.order { width: 100%; min-height: 120px; margin-top: 12px; border: 2.5px
           '</div>' +
           '<div style="padding:14px 18px;overflow-y:auto;max-height:55vh">' +
             (pillsHtml ? '<div style="margin-bottom:12px">' + pillsHtml + '</div>' : '') +
-            (descText ? '<p style="color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 14px;white-space:pre-line">' + esc(descText) + '</p>' : '') +
-            plansHtml +
+            (descText ? '<p style="color:var(--muted);font-size:13px;line-height:1.5;margin:0;white-space:pre-line">' + esc(descText) + '</p>' : '') +
           '</div>' +
         '</div>';
       overlay.addEventListener('click', function(ev){ if(ev.target===overlay||ev.target.classList.contains('info-modal-close')) overlay.remove(); });
