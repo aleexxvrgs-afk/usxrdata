@@ -620,11 +620,30 @@ select.fld{cursor:pointer}
           </div>
         </div>
         <div class="field form-full">
-          <label>Descripción corta</label>
-          <textarea class="fld" rows="2" id="fDesc" placeholder="Qué incluye, cómo se entrega…" maxlength="200"></textarea>
+          <label>🏷️ Pills / Beneficios rápidos</label>
+          <small style="color:var(--muted);font-size:11px">Separa con | — Ej: Sin anuncios|Offline|4K|Música</small>
+          <input class="fld" id="fPills" placeholder="Sin anuncios|Offline|4K|YouTube Music" maxlength="300" style="margin-top:6px">
+          <div id="pillsPreview" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px"></div>
         </div>
         <div class="field form-full">
-          <label>Imagen (URL o sube un archivo)</label>
+          <label>📝 Descripción detallada (modal)</label>
+          <textarea class="fld" rows="3" id="fDesc" placeholder="Describe qué incluye, cómo se entrega, garantía…" maxlength="500"></textarea>
+        </div>
+        <div class="field form-full">
+          <label>🖼️ Imagen del modal (banner 420×180px)</label>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div>
+              <div id="modalImgPreview" style="width:120px;height:52px;border-radius:10px;border:2px solid var(--border);background:var(--surface2);display:grid;place-items:center;overflow:hidden;margin-bottom:6px"><span style="color:var(--muted);font-size:18px">🖼</span></div>
+              <input type="file" accept="image/*" id="fModalImgFile" hidden>
+              <button class="btn btn-ghost btn-sm" id="btnPickModalImg">📷 Subir banner</button>
+            </div>
+            <div style="flex:1">
+              <input class="fld" id="fModalImgUrl" placeholder="URL del banner 420×180px">
+            </div>
+          </div>
+        </div>
+        <div class="field form-full">
+          <label>🖼️ Imagen catálogo (500×500px cuadrada)</label>
           <div style="display:flex;gap:10px;align-items:flex-start">
             <div>
               <div class="img-preview" id="imgPreview"><span style="color:var(--muted);font-size:24px">🖼</span></div>
@@ -1134,41 +1153,56 @@ select.fld{cursor:pointer}
   });
 
   function clearForm() {
-    ['fName','fDesc','fEmoji','fColor','fImgUrl'].forEach(function (id) { $(id).value = ''; });
+    ['fName','fDesc','fPills','fEmoji','fColor','fImgUrl','fModalImgUrl'].forEach(function (id) { $(id).value = ''; });
     $('fColorPicker').value = '#E5E5EE';
     $('fCat').value = 'stream';
     $('fStock').value = '10';
     $('fHot').checked = false;
     $('imgPreview').innerHTML = '<span style="color:var(--muted);font-size:24px">🖼</span>';
+    $('modalImgPreview').innerHTML = '<span style="color:var(--muted);font-size:18px">🖼</span>';
+    $('pillsPreview').innerHTML = '';
     $('plansList').innerHTML = '';
     plans = [];
   }
 
   function fillForm(p) {
     $('fName').value = p.name || '';
-    // Esperar a que el select tenga opciones antes de setear el valor
     var catVal = p.cat || 'stream';
     var catSel = $('fCat');
     catSel.value = catVal;
-    // Si no seleccionó (opción no existe aún), intentar de nuevo tras un tick
-    if (catSel.value !== catVal) {
-      setTimeout(function() { catSel.value = catVal; }, 200);
-    }
+    if (catSel.value !== catVal) setTimeout(function() { catSel.value = catVal; }, 200);
     $('fStock').value = p.stock || 0;
     $('fEmoji').value = p.emoji || '';
     $('fColor').value = p.color || '';
     $('fColorPicker').value = p.color || '#E5E5EE';
-    $('fDesc').value = p.description || '';
+    // Separar pills y descripción
+    var desc = p.description || '';
+    var parts = desc.split('||');
+    var pillsPart = parts[0].indexOf('|') !== -1 ? parts[0] : '';
+    var textPart = parts[1] ? parts[1].trim() : (parts[0].indexOf('|') === -1 ? parts[0] : '');
+    $('fPills').value = pillsPart;
+    $('fDesc').value = textPart;
+    renderPillsPreview(pillsPart);
     $('fHot').checked = !!p.is_hot;
     $('fImgUrl').value = p.image_url || '';
+    $('fModalImgUrl').value = p.modal_image_url || '';
     if (p.color) $('fColorPicker').value = p.color;
-    if (p.image_url) {
-      $('imgPreview').innerHTML = '<img src="' + esc(p.image_url) + '" alt="">';
-    }
+    if (p.image_url) $('imgPreview').innerHTML = '<img src="' + esc(p.image_url) + '" alt="">';
+    if (p.modal_image_url) $('modalImgPreview').innerHTML = '<img src="' + esc(p.modal_image_url) + '" alt="" style="width:100%;height:100%;object-fit:cover">';
     var rawPlans = Array.isArray(p.plans) ? p.plans : [];
     rawPlans.forEach(function (pl) { addPlanRow(pl); });
     if (!rawPlans.length) addPlanRow(['', 1, '30 días', '']);
   }
+
+  function renderPillsPreview(val) {
+    var el = $('pillsPreview');
+    if (!val || !val.trim()) { el.innerHTML = ''; return; }
+    el.innerHTML = val.split('|').map(function(b) {
+      return '<span style="background:rgba(91,60,245,.15);color:#a78bfa;border:1px solid rgba(91,60,245,.3);border-radius:5px;padding:2px 8px;font:600 11px var(--mono)">' + esc(b.trim()) + '</span>';
+    }).join('');
+  }
+
+  $('fPills').addEventListener('input', function() { renderPillsPreview(this.value); });
 
   $('fColor').addEventListener('input', function () {
     $('fColorPicker').value = this.value;
@@ -1186,50 +1220,47 @@ select.fld{cursor:pointer}
 
   // Image upload — comprime y sube a Supabase Storage via /api/upload-image
   $('btnPickImg').addEventListener('click', function () { $('fImgFile').click(); });
-  $('fImgFile').addEventListener('change', function () {
-    var f = this.files[0]; if (!f) return;
-    var btnPick = $('btnPickImg');
-    btnPick.textContent = '⏳ Subiendo...';
-    btnPick.disabled = true;
+  $('fImgFile').addEventListener('change', function () { uploadImg(this, 'fImgUrl', 'imgPreview', 600); });
+
+  // Banner modal upload
+  $('btnPickModalImg').addEventListener('click', function () { $('fModalImgFile').click(); });
+  $('fModalImgFile').addEventListener('change', function () { uploadImg(this, 'fModalImgUrl', 'modalImgPreview', 420); });
+
+  $('fImgUrl').addEventListener('input', function () {
+    if (this.value.startsWith('http')) $('imgPreview').innerHTML = '<img src="' + esc(this.value) + '" alt="" onerror="this.parentNode.innerHTML=\'<span style=color:var(--muted)>Error</span>\'">';
+  });
+  $('fModalImgUrl').addEventListener('input', function () {
+    if (this.value.startsWith('http')) $('modalImgPreview').innerHTML = '<img src="' + esc(this.value) + '" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML=\'<span style=color:var(--muted)>Error</span>\'">';
+  });
+
+  function uploadImg(input, urlId, previewId, maxSize) {
+    var f = input.files[0]; if (!f) return;
+    var btn = input.previousElementSibling;
+    if (btn) { btn.textContent = '⏳ Subiendo...'; btn.disabled = true; }
     var fr = new FileReader();
     fr.onload = function () {
       var img = new Image();
       img.onload = function () {
-        // Comprimir a 600x600 WebP
-        var s = 600, c = document.createElement('canvas');
-        var ratio = Math.min(s / img.width, s / img.height);
-        c.width = Math.round(img.width * ratio);
-        c.height = Math.round(img.height * ratio);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        var data = c.toDataURL('image/webp', 0.80);
-        // Mostrar preview inmediato
-        $('imgPreview').innerHTML = '<img src="' + data + '" alt="">';
-        // Subir a Supabase Storage via API
-        var fileName = f.name.replace(/\.[^.]+$/, '') + '.webp';
+        var ratio = Math.min(maxSize / img.width, maxSize / img.height);
+        var w = Math.round(img.width * ratio), h = Math.round(img.height * ratio);
+        var c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        var data = c.toDataURL('image/webp', 0.82);
+        $(previewId).innerHTML = '<img src="' + data + '" alt="" style="width:100%;height:100%;object-fit:cover">';
         fetch('/api/upload-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: data, fileName: fileName })
-        }).then(function(r) { return r.json(); })
-          .then(function(res) {
-            if (res.url) {
-              $('fImgUrl').value = res.url;
-              $('imgPreview').innerHTML = '<img src="' + res.url + '" alt="">';
-              toast('✅ Imagen subida a Storage');
-            } else {
-              toast('Error: ' + (res.error || 'No se pudo subir'), true);
-            }
-          })
-          .catch(function() { toast('Error al subir imagen', true); })
-          .finally(function() {
-            btnPick.textContent = '📷 Subir';
-            btnPick.disabled = false;
-          });
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: data, fileName: f.name.replace(/\.[^.]+$/, '') + '.webp' })
+        }).then(function(r){ return r.json(); })
+          .then(function(res){
+            if (res.url) { $(urlId).value = res.url; toast('✅ Imagen subida'); }
+            else toast('Error: ' + (res.error||''), true);
+          }).catch(function(){ toast('Error al subir', true); })
+          .finally(function(){ if (btn) { btn.textContent = '📷 Subir'; btn.disabled = false; } });
       };
       img.src = fr.result;
     };
     fr.readAsDataURL(f);
-  });
+  }
 
   $('fImgUrl').addEventListener('input', function () {
     if (this.value.startsWith('http')) {
@@ -1312,9 +1343,16 @@ select.fld{cursor:pointer}
       stock: Math.max(0, parseInt($('fStock').value) || 0),
       emoji: $('fEmoji').value.trim() || name.slice(0, 2),
       color: $('fColor').value.trim() || '#E5E5EE',
-      description: $('fDesc').value.trim(),
+      description: (function() {
+        var pills = $('fPills').value.trim();
+        var desc = $('fDesc').value.trim();
+        if (pills && desc) return pills + '||' + desc;
+        if (pills) return pills;
+        return desc;
+      })(),
       is_hot: $('fHot').checked,
       image_url: $('fImgUrl').value.trim(),
+      modal_image_url: $('fModalImgUrl').value.trim(),
       plans: cleanPlans
     };
 
