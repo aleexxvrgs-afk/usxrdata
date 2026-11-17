@@ -1227,10 +1227,14 @@ select.fld{cursor:pointer}
   $('fModalImgFile').addEventListener('change', function () { uploadImg(this, 'fModalImgUrl', 'modalImgPreview', 420); });
 
   $('fImgUrl').addEventListener('input', function () {
-    if (this.value.startsWith('http')) $('imgPreview').innerHTML = '<img src="' + esc(this.value) + '" alt="" onerror="this.parentNode.innerHTML=\'<span style=color:var(--muted)>Error</span>\'">';
+    if (this.value.startsWith('http')) {
+      $('imgPreview').innerHTML = '<img src="' + esc(this.value) + '" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML=\'<span style=color:var(--muted);font-size:24px>❌</span>\'">';
+    }
   });
   $('fModalImgUrl').addEventListener('input', function () {
-    if (this.value.startsWith('http')) $('modalImgPreview').innerHTML = '<img src="' + esc(this.value) + '" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML=\'<span style=color:var(--muted)>Error</span>\'">';
+    if (this.value.startsWith('http')) {
+      $('modalImgPreview').innerHTML = '<img src="' + esc(this.value) + '" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML=\'<span style=color:var(--muted);font-size:18px>❌</span>\'">';
+    }
   });
 
   function uploadImg(input, urlId, previewId, maxSize) {
